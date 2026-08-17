@@ -8,3 +8,13 @@ dist/
 # nothing. Anchored with a leading slash so it means this one directory:
 # an unanchored `data/` matches at any depth.
 /src/data/sweatbox/
+
+# VATSpy's open airport coordinates, served verbatim. 468 KB on one line —
+# formatting it would produce a six-figure line count and change nothing anybody
+# reads. can-web ignores its copy for the same reason.
+#
+# This one is **open data**, unlike src/data/sweatbox/ above: it is what lets the
+# generator locate a destination airport outside the sector packages' area, and
+# without it every generated route planner call fails to find its destination —
+# silently, because the island's fetch has a bare `.catch(() => {})`.
+public/airports.json
