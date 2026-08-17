@@ -1,0 +1,131 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { getLocale, useTranslations } from "@/lib/i18n";
+import { RATING_ADMIN, RATING_INSTRUCTOR, RATING_SUP } from "@/lib/config";
+
+/**
+ * 门户首页 —— 一张按等级过滤的入口清单。
+ *
+ * **不是一个仪表盘。** can-controller 的 `/` 是管制员概览，因为那个站有一件持续
+ * 发生的事可以概览（谁在线、自己的席位权限、时长）。这个站没有：七个页面是七件
+ * 各自独立的工作，没有一个数字是「打开就想看一眼」的。凑一个统计卡片出来只会
+ * 让人以为那些数字有意义。
+ *
+ * 那它为什么不直接 302 去 `/instr/roster`？因为进来的人分三档，而三档的第一页
+ * 不一样：一个只有 SUP 的人没有 `/instr/*`，一个只有 I1 的人没有 `/super/*`。
+ * 按等级挑一个默认页跳过去，等于把侧栏的逻辑再写一遍，而且跳完之后他仍然不知道
+ * 自己还有什么。
+ *
+ * 卡片是**服务端**按 rating 渲染的，和侧栏读同一组常量。它和侧栏一样是便利不是
+ * 边界 —— 中间件已经按同一组常量挡过一次，can-api 每条路由再挡一次。
+ */
+const locale = getLocale(Astro.cookies);
+const t = useTranslations(locale, "portal");
+const tf = useTranslations(locale, "frame");
+
+const rating = Astro.locals.user?.rating ?? 0;
+const name = Astro.locals.user?.name ?? "";
+
+interface Card {
+  href: string;
+  title: string;
+  body: string;
+  group: string;
+}
+
+const cards: Card[] = [
+  ...(rating >= RATING_INSTRUCTOR
+    ? [
+        {
+          href: "/instr/roster",
+          title: tf("instructors.items.roster"),
+          body: t("cards.roster"),
+          group: tf("instructors.title"),
+        },
+        {
+          href: "/instr/promote",
+          title: tf("instructors.items.promotion"),
+          body: t("cards.promote"),
+          group: tf("instructors.title"),
+        },
+        {
+          href: "/instr/sweatbox",
+          title: tf("instructors.items.sweatbox"),
+          body: t("cards.sweatbox"),
+          group: tf("instructors.title"),
+        },
+      ]
+    : []),
+  ...(rating >= RATING_SUP
+    ? [
+        {
+          href: "/super/activities",
+          title: tf("activitiesManage"),
+          body: t("cards.activities"),
+          group: t("groups.sup"),
+        },
+        {
+          href: "/super/prizes",
+          title: tf("prizesManage"),
+          body: t("cards.prizes"),
+          group: t("groups.sup"),
+        },
+        {
+          href: "/super/feedback",
+          title: tf("feedbackManage"),
+          body: t("cards.feedback"),
+          group: t("groups.sup"),
+        },
+      ]
+    : []),
+  ...(rating === RATING_ADMIN
+    ? [
+        {
+          href: "/super/promotions",
+          title: tf("admin.items.promote"),
+          body: t("cards.promotions"),
+          group: tf("admin.title"),
+        },
+      ]
+    : []),
+];
+
+// 分组保留 cards 里的出现顺序，所以教员在前、SUP 居中、ADM 在后 —— 和侧栏一致。
+const groups = [...new Set(cards.map((c) => c.group))];
+---
+
+<AppLayout title="教员与管理 · Cerulean Aviation Network">
+  <div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+    <header class="mb-8">
+      <h1 class="text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+        {name ? t("greeting", { name }) : t("title")}
+      </h1>
+      <p class="mt-2 max-w-2xl text-muted">{t("description")}</p>
+    </header>
+
+    {
+      groups.map((group) => (
+        <section class="mb-10">
+          <h2 class="mb-3 text-xs font-semibold uppercase tracking-wider text-muted">
+            {group}
+          </h2>
+          <ul class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {cards
+              .filter((card) => card.group === group)
+              .map((card) => (
+                <li>
+                  <a
+                    href={card.href}
+                    class="card flex h-full flex-col gap-1.5 p-4 transition hover:border-can/40"
+                  >
+                    <span class="font-semibold text-ink">{card.title}</span>
+                    <span class="text-sm text-muted">{card.body}</span>
+                  </a>
+                </li>
+              ))}
+          </ul>
+        </section>
+      ))
+    }
+  </div>
+</AppLayout>

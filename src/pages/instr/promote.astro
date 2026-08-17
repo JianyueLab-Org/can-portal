@@ -1,0 +1,12 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import SuperPromote from "@/components/SuperPromote.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+const messages = getMessages(getLocale(Astro.cookies), "promotion.super");
+const sessionUserId = Astro.locals.user?.username ?? "";
+---
+
+<AppLayout title="晋升 · Cerulean Aviation Network">
+  <SuperPromote messages={messages} sessionUserId={sessionUserId} client:load />
+</AppLayout>

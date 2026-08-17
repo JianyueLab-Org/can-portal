@@ -1,0 +1,15 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManageActivities from "@/components/ManageActivities.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+const locale = getLocale(Astro.cookies);
+const messages = {
+  ...getMessages(locale, "activities.common"),
+  ...getMessages(locale, "activities.manage"),
+};
+---
+
+<AppLayout title="活动管理 · Cerulean Aviation Network">
+  <ManageActivities messages={messages} client:load />
+</AppLayout>

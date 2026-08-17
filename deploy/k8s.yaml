@@ -1,0 +1,155 @@
+# 教员与管理门户在 jyl-tyo 上的部署。
+#
+# 形状照着 can-controller 来（它照的是 can-efb，can-efb 照的是 can-dev，can-dev
+# 照的是 llm-web）：一个应用一个 namespace，Deployment 和 Service 都叫 app，
+# Service 暴露 80，Ingress 走默认的 cloudflare-tunnel —— 这个集群没有别的
+# ingress class，控制器会顺手把 DNS 记录建好，所以这里**没有** cert-manager 注
+# 解、也**没有** tls: 块，TLS 在 Cloudflare 那一侧终止。
+#
+# **这个站没有应用级 Secret，一个都不需要。**（下面那枚 `ghcr-pull` 不算：它是
+# kubelet 拉私有镜像的凭据，和这个应用运行时读什么无关，Pod 里读不到它。）会话
+# 由 can-api 签在**父域**上，成员在主站登录过，cookie 就跟着同源请求到这里，这
+# 个站只负责把它转发回 can-api。和 can-efb / can-controller 同一条规矩：如果哪
+# 天有人要在这里加 Secret，先确认那件事不能靠转发 cookie 完成。
+#
+# **仓库必须是私有的，而且必须建在 `JianyueLab` 组织下** —— 这一条不是风格问题，
+# 是两个硬约束叠出来的唯一解，`.github/workflows/deploy.yml` 里写了全过程。短版：
+# 数据的许可要求私有，而 JianyueLab-Org 是 Free 计划、组织 secret 到不了私有仓库，
+# 所以 CI 在那儿部署不了（can-efb 就卡在这儿）。JianyueLab 是 team 计划，可以。
+#
+# `src/data/sweatbox/` 是从 Sector 扇区包和一个商用 AIRAC 周期派生出来的 2.8 MB
+# 数据，`scripts/build-sweatbox.mjs` 的头注释写着它不许进公开仓库。can-web 提交
+# 它是因为 can-web 私有；这个站继承了同一件事，也就继承了同一条限制。can-dev /
+# can-radar / can-exam / can-controller / can-docs 是公开的，这个站不能跟它们对
+# 齐。
+#
+# **还没上线。** portal.ceruleanavi.net 至今不解析。清单本身不缺，缺的是两件外
+# 部事项，和 can-efb 当初一样：把它接进 Cloudflare 隧道，确认 can-api 的会话
+# cookie 域覆盖 `.ceruleanavi.net`（它已经覆盖了 controller 和 exam，所以这一条
+# 多半是确认而不是改动）。
+#
+# **不需要**把这个域加进 can-api 的 ALLOWED_ORIGINS —— 浏览器只打本站的同源反
+# 代，从不直连 can-api，那正是 src/pages/api/v1/[...path].ts 存在的理由。
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: can-portal
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  namespace: can-portal
+spec:
+  # 两个副本，和几个兄弟站一致。这个站的用户是教员和管理层，几十个人而不是几千
+  # 个，但副本数是为了滚动更新时不断服务，不是为了吞吐。
+  replicas: 2
+  selector:
+    matchLabels:
+      app: can-portal
+  template:
+    metadata:
+      labels:
+        app: can-portal
+    spec:
+      # 仓库私有 → ghcr 上的包也私有 → kubelet 拉不动，除非有这枚 secret。
+      #
+      # can-controller 的同一段注释记着一个反直觉的点：包的可见性**不跟着仓库
+      # 变**，改仓库为公开之后包仍然是私有的，而且只能在网页上改。这个站的仓库
+      # 本来就该一直私有（见上面 sweatbox 那一段），所以这几行是永久的，不像
+      # can-controller 那里是历史遗留。
+      #
+      # secret 本身不在这份清单里，由本仓库的 `.github/workflows/deploy.yml` 用
+      # GHCR_PULL_TOKEN 现建（那一步是内联的，不是共享工作流 —— 见那个文件里
+      # 「为什么不调用共享工作流」），所以这里只引用名字。
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: app
+          # 按 sha 钉住，别用 :latest —— 那个标签没有回滚故事：没有更早的标签
+          # 可指，而「重启一下」实际上等于「用最后推上去的那个」。CI 两个标签
+          # 都推，所以换成 sha 只是改这一行。
+          image: ghcr.io/jianyuelab/can-portal:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 4321
+          env:
+            # 数据全部来自 can-api。
+            - name: CAN_API_ORIGIN
+              value: https://api.ceruleanavi.net
+            # 登录页，以及侧栏里那一排还留在主站的跨站链接。
+            - name: CAN_WEB_ORIGIN
+              value: https://ceruleanavi.net
+            # 写操作的 Origin 比对基准。必须是显式值：反代后面从 Host 推出来的
+            # 是 http://，浏览器发的是 https://，永远对不上。这个站的写操作是
+            # 晋升、结算积分和发奖品，所以这一条配错的代价比在别处大。
+            - name: PUBLIC_ORIGIN
+              value: https://portal.ceruleanavi.net
+          # 探的是 /healthz，不是 /。`/` 在这个站上会先问一次 can-api 再可能
+          # 302，拿它当探活等于每 10 秒给上游加一次白流量，而且会把上游的抖动放
+          # 大成自己的 Pod 重启。详见 src/pages/healthz.ts。
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 4321
+            initialDelaySeconds: 3
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 4321
+            initialDelaySeconds: 10
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 50m
+              # 比兄弟站高一档（它们是 128Mi）：SweatBox 那一页要把 ~350 个机场
+              # 的索引和整张全国航路图读进内存，`src/server/sweatboxData.ts` 走
+              # 的是 import.meta.glob，所以那些 chunk 是按需加载但不会被释放。
+              memory: 192Mi
+            limits:
+              memory: 640Mi
+          # runAsUser 必须是数字：镜像里写的是 USER 1000，但即使写成名字
+          # kubelet 也不解析，配上 runAsNonRoot 会直接 CreateContainerConfigError。
+          # can-radar 上线时踩过这一脚。
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+            capabilities:
+              drop: ["ALL"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+  namespace: can-portal
+spec:
+  selector:
+    app: can-portal
+  ports:
+    - port: 80
+      targetPort: 4321
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: can-portal
+  namespace: can-portal
+spec:
+  ingressClassName: cloudflare-tunnel
+  rules:
+    - host: portal.ceruleanavi.net
+      http:
+        paths:
+          - backend:
+              service:
+                name: app
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix

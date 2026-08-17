@@ -1,0 +1,12 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import SuperRoster from "@/components/SuperRoster.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+const messages = getMessages(getLocale(Astro.cookies), "roster.super");
+const sessionUserId = Astro.locals.user?.username ?? "";
+---
+
+<AppLayout title="花名册 · Cerulean Aviation Network">
+  <SuperRoster messages={messages} sessionUserId={sessionUserId} client:load />
+</AppLayout>

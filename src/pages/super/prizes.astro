@@ -1,0 +1,12 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManagePrizes from "@/components/ManagePrizes.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "rewards.manage");
+---
+
+<AppLayout title="奖品管理 · Cerulean Aviation Network">
+  <ManagePrizes messages={messages} client:load />
+</AppLayout>

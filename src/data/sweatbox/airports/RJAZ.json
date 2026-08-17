@@ -1,0 +1,1 @@
+{"icao":"RJAZ","fir":"RJJJ","lat":34.189444,"lon":139.133611,"elev":454,"variation":8,"magVar":-8,"runways":[{"id":"11","opposite":"29","hdg":111,"lat":34.190381,"lon":139.1293,"endLat":34.188503,"endLon":139.137681},{"id":"29","opposite":"11","hdg":291,"lat":34.188503,"lon":139.137681,"endLat":34.190381,"endLon":139.1293}],"stands":[],"sids":[],"stars":[]}

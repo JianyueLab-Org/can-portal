@@ -1,0 +1,12 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManageFeedback from "@/components/ManageFeedback.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "feedback.manage");
+---
+
+<AppLayout title="处理结果公示 · Cerulean Aviation Network">
+  <ManageFeedback messages={messages} client:load />
+</AppLayout>

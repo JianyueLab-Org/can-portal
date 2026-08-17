@@ -1,0 +1,101 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# 形状照着 can-api / llm-web —— 那是 **JianyueLab** 这个组织里已经在跑的那一份，
+# 而不是照着 can-controller / can-dev / can-radar。区别是这个仓库在哪个组织、以
+# 及它必须是私有的，下面 `## 为什么不调用共享工作流` 那一段写了全过程。
+#
+# 权限要在这里声明：仓库默认的 GITHUB_TOKEN 只有 packages: read / deployments:
+# none，缺了会在启动阶段被拒 —— 而 startup_failure 是拿不到日志的。
+permissions:
+  contents: read
+  packages: write
+  deployments: write
+
+env:
+  NS: can-portal
+  IMAGE: ghcr.io/jianyuelab/can-portal
+
+# ## 为什么不调用共享工作流
+#
+# 另外五个卫星站写的是
+# `uses: JianyueLab-Org/actions/.github/workflows/deploy-k8s.yml@main`，三行就完
+# 了。这个仓库不能那么写，原因是两件事叠在一起：
+#
+# 1. **这个仓库必须私有。** `src/data/sweatbox/` 是从 Sector 扇区包和一个商用
+#    AIRAC 周期派生出来的数据，不许进公开仓库（`scripts/build-sweatbox.mjs` 的
+#    头注释）。
+# 2. **JianyueLab-Org 是 GitHub Free 计划，组织级 secret 到不了私有仓库。**
+#    `KUBECONFIG_B64` 和 `GHCR_PULL_TOKEN` 都是组织级的，所以一个私有仓库放在那
+#    个组织里，CI 会在「Check cluster credentials」那步失败并报缺少
+#    KUBECONFIG_B64。can-efb 至今没上线就是这么卡住的。
+#
+# 所以这个仓库建在 **JianyueLab**（team 计划，私有仓库拿得到组织 secret），和
+# can-api 一样。而一旦跨了组织，共享工作流就用不了了：
+# `JianyueLab-Org/actions` 里的可复用工作流跑在调用方的上下文里，但
+# `secrets: inherit` 传过去的是 **JianyueLab** 的密钥 —— 那一份能用，可
+# `deploy-k8s.yml` 本身位于另一个组织，而私有仓库调用另一个组织的可复用工作流需
+# 要那边显式放行。can-api 的 deploy.yml 记着同一件事，并给出同一个结论：内联。
+jobs:
+  # 类型错误 docker build 自己会挡下（Dockerfile 里 `bun run build` 会跑
+  # `astro check`）—— 但 format 和 vue-tsc 不会。check.yml 在 PR 和 push 上都跑，
+  # 这里不重复一遍：红的分支不会走到这个工作流的 needs 之后。
+  build-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://portal.ceruleanavi.net
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # can-ui 装在 GitHub Packages 上，而 GitHub 的 npm registry 即使是公开包也
+      # 要求带令牌。用 BuildKit 的 secret 挂载喂进去，不用 --build-arg —— 后者会
+      # 留在镜像的层历史里，`docker history` 就能读出来。
+      - name: Build & push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          secrets: |
+            github_token=${{ secrets.GITHUB_TOKEN }}
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+            ${{ env.IMAGE }}:latest
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 密钥没配齐就只出镜像，不上集群。判空的两个都是必需项 —— 这个站没有任何
+      # 应用级 Secret，所以清单短得只剩集群凭据和拉镜像的凭据。
+      - name: Deploy to cluster
+        if: ${{ env.KUBECONFIG_B64 != '' && env.GHCR_PULL_TOKEN != '' }}
+        env:
+          KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+          GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
+        run: |
+          mkdir -p ~/.kube
+          echo "$KUBECONFIG_B64" | base64 -d > ~/.kube/config
+
+          # 先 apply：光 set image 要求 Deployment 已经存在，第一次部署或者
+          # namespace 被删过之后会直接失败。这一步也把 namespace 建出来。
+          kubectl apply -f deploy/k8s.yaml
+
+          # 镜像是私有的（仓库私有 → 包私有，而且包的可见性不跟着仓库改），
+          # 所以 kubelet 要这枚 secret 才拉得动。清单里只引用名字。
+          kubectl -n "$NS" create secret docker-registry ghcr-pull \
+            --docker-server=ghcr.io \
+            --docker-username='${{ github.actor }}' \
+            --docker-password="$GHCR_PULL_TOKEN" \
+            --dry-run=client -o yaml | kubectl apply -f -
+
+          kubectl -n "$NS" set image deployment/app app=${{ env.IMAGE }}:${{ github.sha }}
+          kubectl -n "$NS" rollout status deployment/app --timeout=180s

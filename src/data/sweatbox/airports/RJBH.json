@@ -1,0 +1,1 @@
+{"icao":"RJBH","fir":"RJJJ","lat":34.366944,"lon":132.413889,"elev":null,"variation":8,"magVar":null,"runways":[{"id":"04","opposite":"22","hdg":35,"lat":34.359644,"lon":132.409194,"endLat":34.373875,"endLon":132.4186},{"id":"22","opposite":"04","hdg":215,"lat":34.373875,"lon":132.4186,"endLat":34.359644,"endLon":132.409194}],"stands":[],"sids":[],"stars":[]}

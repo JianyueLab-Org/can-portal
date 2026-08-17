@@ -1,0 +1,1 @@
+{"icao":"RJDM","fir":"RJJJ","lat":33.325278,"lon":130.413611,"elev":56,"variation":8,"magVar":-8,"runways":[{"id":"04","opposite":"22","hdg":40,"lat":33.322906,"lon":130.4113,"endLat":33.327483,"endLon":130.415786},{"id":"22","opposite":"04","hdg":220,"lat":33.327483,"lon":130.415786,"endLat":33.322906,"endLon":130.4113}],"stands":[],"sids":[],"stars":[]}

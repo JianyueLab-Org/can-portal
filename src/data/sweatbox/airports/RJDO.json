@@ -1,0 +1,1 @@
+{"icao":"RJDO","fir":"RJJJ","lat":33.190833,"lon":129.090278,"elev":25,"variation":8,"magVar":-7,"runways":[{"id":"03","opposite":"21","hdg":30,"lat":33.187467,"lon":129.088869,"endLat":33.194231,"endLon":129.09185},{"id":"21","opposite":"03","hdg":210,"lat":33.194231,"lon":129.09185,"endLat":33.187467,"endLon":129.088869}],"stands":[],"sids":[],"stars":[]}

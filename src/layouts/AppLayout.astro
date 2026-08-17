@@ -1,0 +1,63 @@
+---
+import "@/styles/globals.css";
+import ThemeScript from "@jianyuelab-org/can-ui/components/ThemeScript.astro";
+import AppFrame from "@/components/AppFrame.vue";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+import { buildNavigation, buildSecondary, buildWorkspaces } from "@/lib/nav";
+
+interface Props {
+  title?: string;
+}
+const { title = "教员与管理 · Cerulean Aviation Network" } = Astro.props;
+
+const locale = getLocale(Astro.cookies);
+const frameMessages = getMessages(locale, "frame");
+const t = useTranslations(locale, "frame");
+
+/**
+ * 侧栏按身份分三份 —— 教员（8）、监理（11）、管理员（12）。门槛读的是会话里的
+ * rating，can-api 每个请求都解一次，所以一次晋升在下一次翻页时就生效，而不是等
+ * 到下次登录。分界和它的边角写在 `lib/nav.ts`。
+ *
+ * **这是便利，不是边界** —— 但在这个站上它比在别处更接近边界一点：中间件已经
+ * 按同一组常量把不够格的人挡在门外了（`src/middleware.ts`），所以能走到这一行
+ * 的人至少是教员。即便如此，真正的判断仍然在 can-api 每条路由自己的守卫上，
+ * 外加每个 handler 内部按 division 的那一层 —— 一个 ZGZU 的教员看得见花名册，
+ * 但改不动 ZBPE 的人，那道判断这里一行都没有。
+ */
+const user = Astro.locals.user;
+const navigation = buildNavigation(t, user?.rating);
+const secondary = buildSecondary(t);
+const workspaces = buildWorkspaces(t);
+const pathname = Astro.url.pathname;
+---
+
+<!doctype html>
+<html lang={locale} class="antialiased">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
+    <meta name="theme-color" content="#4c92c1" />
+    <title>{title}</title>
+    <ThemeScript />
+  </head>
+  <body>
+    <AppFrame
+      navigation={navigation}
+      secondary={secondary}
+      workspaces={workspaces}
+      activeWorkspace="controllers"
+      pathname={pathname}
+      messages={frameMessages}
+      userName={user?.name ?? ""}
+      userId={user?.username ?? ""}
+      locale={locale}
+      client:load
+    >
+      <slot />
+    </AppFrame>
+  </body>
+</html>

@@ -1,0 +1,1 @@
+{"icao":"RJBK","fir":"RJJJ","lat":34.591389,"lon":133.933333,"elev":1,"variation":8,"magVar":-8,"runways":[{"id":"09","opposite":"27","hdg":92,"lat":34.590461,"lon":133.926789,"endLat":34.591217,"endLon":133.939839},{"id":"27","opposite":"09","hdg":272,"lat":34.591217,"lon":133.939839,"endLat":34.590461,"endLon":133.926789}],"stands":[],"sids":[],"stars":[]}

@@ -1,0 +1,35 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import { getLocale, useTranslations } from "@/lib/i18n";
+
+const locale = getLocale(Astro.cookies);
+const t = useTranslations(locale, "notFound");
+
+/**
+ * 404 也套在外壳里，而不是像主站那样是一张独立的落地页。
+ *
+ * 主站的 404 会被没登录的访客看见，所以它自带站头、页脚和一张背景图；这个站整
+ * 站要登录**而且要评级**，能看见 404 的人一定是教员或以上，手边留着侧栏比留着
+ * 一张漂亮的图更有用 —— 他们要的是「那我该去哪儿」。can-controller 的 404 上写
+ * 着同一段话。
+ */
+---
+
+<AppLayout title="404 · Cerulean Aviation Network">
+  <div class="flex min-h-[60vh] items-center justify-center px-4 py-16">
+    <div class="mx-auto max-w-md text-center">
+      <p
+        class="text-[6rem] font-bold leading-none tracking-tighter text-can/20 sm:text-[8rem]"
+      >
+        {t("code")}
+      </p>
+      <h1 class="-mt-4 text-2xl font-bold tracking-tight text-ink sm:text-3xl">
+        {t("title")}
+      </h1>
+      <p class="mx-auto mt-4 text-muted">{t("description")}</p>
+      <div class="mt-8 flex flex-wrap items-center justify-center gap-3">
+        <a href="/" class="btn btn-primary px-5 py-2.5">{t("home")}</a>
+      </div>
+    </div>
+  </div>
+</AppLayout>

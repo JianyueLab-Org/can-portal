@@ -1,0 +1,32 @@
+---
+/**
+ * SweatBox 场景生成器 — 教员的模拟机剧本编写器。
+ *
+ * EuroScope 的模拟机场景是教员工具里最后一件还靠手抄传阅的东西：monorepo 的
+ * `SweatBox/` 里躺着五十几份，每一份都是手打的，随附的唯一工具是一个四行的
+ * Python 脚本，而那个脚本的常量还是错的（见 `src/lib/sweatbox.ts`）。写一份意味
+ * 着给每架飞机写一行 `@N:`，坐标要精确到度、分、秒和千分秒 —— 这就是为什么现存
+ * 那些文件大多是彼此的复制品，只改了呼号。
+ *
+ * 机场清单内联；跑道、机位和航路点按机场从 `/instr/sweatbox/<ICAO>.json` 取，
+ * 这样换机场不会重载页面、把写了一半的场景丢掉。
+ *
+ * **什么都不存。** 一份场景是教员带去课上的文件，不是网络数据，所以这一页里一
+ * 个 can-api 调用都没有 —— 这也让它成为这个站上唯一一个数据门槛在本地的页面。
+ * 那是那两个端点的事，写在它们各自的文件里。
+ */
+import AppLayout from "@/layouts/AppLayout.astro";
+import SweatboxGenerator from "@/components/SweatboxGenerator.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+import { readIndex } from "@/server/sweatboxData";
+
+const messages = getMessages(getLocale(Astro.cookies), "sweatbox");
+
+// 只有带跑道的机场才进索引，所以这就是完整清单。~350 条、每条五个字段 —— 比图
+// 标精灵图还小，而它让机场选择器是即时的，而不是每敲一个键一次往返。
+const { airports } = readIndex();
+---
+
+<AppLayout title="模拟机场景 · Cerulean Aviation Network">
+  <SweatboxGenerator messages={messages} airports={airports} client:load />
+</AppLayout>

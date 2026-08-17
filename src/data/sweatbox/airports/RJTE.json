@@ -1,0 +1,1 @@
+{"icao":"RJTE","fir":"RJJJ","lat":34.9875,"lon":139.831944,"elev":10,"variation":8,"magVar":-7,"runways":[{"id":"09","opposite":"27","hdg":90,"lat":34.986858,"lon":139.827511,"endLat":34.987089,"endLon":139.830786},{"id":"27","opposite":"09","hdg":270,"lat":34.987089,"lon":139.830786,"endLat":34.986858,"endLon":139.827511}],"stands":[],"sids":[],"stars":[]}

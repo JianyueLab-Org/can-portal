@@ -1,0 +1,1 @@
+{"icao":"RJSH","fir":"RJJJ","lat":40.551944,"lon":141.467222,"elev":152,"variation":8,"magVar":-9,"runways":[{"id":"07","opposite":"25","hdg":72,"lat":40.547503,"lon":141.455261,"endLat":40.556531,"endLon":141.479067},{"id":"25","opposite":"07","hdg":252,"lat":40.556531,"lon":141.479067,"endLat":40.547503,"endLon":141.455261}],"stands":[],"sids":[],"stars":[]}

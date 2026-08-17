@@ -1,0 +1,1 @@
+{"icao":"RJCT","fir":"RJJJ","lat":42.890278,"lon":143.158333,"elev":281,"variation":8,"magVar":-9,"runways":[{"id":"13","opposite":"31","hdg":130,"lat":42.8941,"lon":143.150894,"endLat":42.886775,"endLon":143.166183},{"id":"31","opposite":"13","hdg":310,"lat":42.886775,"lon":143.166183,"endLat":42.8941,"endLon":143.150894}],"stands":[],"sids":[],"stars":[]}

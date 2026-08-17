@@ -1,0 +1,10 @@
+# Build output and generated types.
+dist/
+.astro/
+
+# SweatBox reference data, built from the sector packages by
+# scripts/build-sweatbox.mjs. 247 generated files, ~2.8 MB, and nobody reads
+# them — formatting them would churn the diff on every AIRAC and change
+# nothing. Anchored with a leading slash so it means this one directory:
+# an unanchored `data/` matches at any depth.
+/src/data/sweatbox/

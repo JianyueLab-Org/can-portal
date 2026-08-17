@@ -1,0 +1,1 @@
+{"icao":"RORK","fir":"RJJJ","lat":25.944722,"lon":131.326944,"elev":71,"variation":8,"magVar":-6,"runways":[{"id":"03","opposite":"21","hdg":30,"lat":25.938572,"lon":131.323525,"endLat":25.950792,"endLon":131.329969},{"id":"21","opposite":"03","hdg":210,"lat":25.950792,"lon":131.329969,"endLat":25.938572,"endLon":131.323525}],"stands":[],"sids":[],"stars":[]}
