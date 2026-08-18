@@ -58,9 +58,20 @@
  * tenth of a degree round the circle.
  *
  * True, not magnetic, is the other half of that: the sector packages publish
- * runway courses and stand headings magnetic, and writing one of those into
- * this field leaves the aircraft skew by the local variation. See
- * `magneticToTrue`.
+ * runway courses magnetic, and writing one of those into this field leaves the
+ * aircraft skew by the local variation. See `magneticToTrue`.
+ *
+ * **An aircraft on the ground is written at altitude 0, not at the field
+ * elevation.** `AIRPORT_ALT` is what puts the ground where it belongs; the
+ * position line then says 0 and lets it. Every hand-written set in `SweatBox/`
+ * does this, at fields from ZSPD's 12 ft to ZBYN's 2578 ft, and those are the
+ * scenarios that have actually been flown — so 0 is the form that is known to
+ * work at a high field, and repeating the elevation in both places is not.
+ * This generator used to write the elevation and parked aircraft came out
+ * wrong.
+ *
+ * It applies to the ground only. An airborne aircraft's altitude is MSL, which
+ * is why the ZUUU approach set carries 13800 against `AIRPORT_ALT:1681.0`.
  */
 
 import { PERFORMANCE } from "@/lib/sweatboxPerf";
@@ -83,12 +94,25 @@ export interface SweatboxRunway {
   endLon: number;
 }
 
+/**
+ * A parking stand.
+ *
+ * **There is no nose heading here, and there used to be.** The fifth field of
+ * `GRpluginStands.txt`'s `STAND:` record was read as one, which put every
+ * parked aircraft at the same heading across a whole field — ZBSJ's 88 stands
+ * all came out at 30° magnetic. The field is a **wingspan in metres**: across
+ * the ten packages it takes exactly two values on the mainland (30 for 10064
+ * stands, 25 for 605, blanket figures nobody varied) and on RCAA it takes the
+ * real ones — 79.8, 68.4, 64.8, 35.79, which are the A380, the 747, the 777
+ * and the 737. A heading takes 360 values, not two.
+ *
+ * Nothing in the tree publishes a stand heading, so the generator does not
+ * invent one; see `generateTraffic`'s GND block.
+ */
 export interface SweatboxStand {
   name: string;
   lat: number;
   lon: number;
-  /** Nose heading when parked, degrees. */
-  hdg: number;
   /** Wingspan in metres, where the ground plugin records one. */
   span?: number;
 }
@@ -169,8 +193,10 @@ export interface SweatboxIndexEntry {
  *        movement and nothing else — they stop at the holding point.
  *   TWR  arrivals on final, 3 NM to 20 NM, descending the glide. This is the
  *        one that puts landing traffic in front of the tower.
- *   DEP  departures already airborne off the departure runway, climbing out
- *        along the extended centreline. Departures only.
+ *   DEP  departures at the departure runway threshold, stopped, waiting for a
+ *        take-off clearance. Departures only. (They used to be strung out
+ *        along the upwind already airborne; `START` spaces them instead, so
+ *        the exercise begins where a departure begins.)
  *   APP  arrivals at level, 15 NM to 70 NM out on a radial, inbound.
  *
  * They compose: GND+TWR is a tower/ground session, all four is the whole
@@ -326,6 +352,17 @@ export interface ScenarioModel {
   airportAlt: number | null;
   metar: string;
   controllers: ScenarioController[];
+  /**
+   * `INITIALPSEUDOPILOT:` for every aircraft that does not name its own.
+   *
+   * An aircraft with no such line belongs to `PSEUDOPILOT:ALL`, which means a
+   * controller logging in has to take each one by hand before it will answer.
+   * Naming a seat here hands the whole scenario to whoever signs in as it —
+   * which is what a trainee opening their own session wants, and what the
+   * hand-written approach sets do (`INITIALPSEUDOPILOT:ZUUU_03_APP` on all
+   * sixteen inbounds). Blank keeps the old behaviour.
+   */
+  defaultPseudopilot: string;
   /** Runways whose `ILS` line should be written, in full. */
   ils: SweatboxRunway[];
   holdings: ScenarioHolding[];
@@ -530,11 +567,82 @@ export function emptyScenario(): ScenarioModel {
     airportAlt: null,
     metar: "",
     controllers: [],
+    defaultPseudopilot: "",
     ils: [],
     holdings: [],
     namedRoutes: [],
     aircraft: [],
   };
+}
+
+// ---------------------------------------------------------------------------
+// The seats a scenario expects staffed
+// ---------------------------------------------------------------------------
+
+/**
+ * Which seat each profile is worked from, and the frequency to start it on.
+ *
+ * `DEP` shares the tower's seat rather than getting a `_DEP` of its own: the
+ * departures are written at the runway threshold, so the exercise begins with a
+ * take-off clearance, and no package here publishes a `_DEP` position anyway.
+ *
+ * The frequencies are **defaults to be corrected, not data**. Nothing in the
+ * tree publishes a position's frequency — can-db carries the airport, its
+ * runways, its stands and its procedures, and no `[POSITIONS]` block — so these
+ * are the commonest values in the hand-written sets (118.100 is ZGGG's and
+ * ZPPP's tower) and the form leaves every one of them editable. An instructor
+ * writing a scenario for their own field will know the real ones.
+ */
+const SEAT_FOR_PROFILE: Record<
+  ScenarioProfile,
+  { suffix: string; frequency: string }
+> = {
+  GND: { suffix: "_GND", frequency: "121.600" },
+  TWR: { suffix: "_TWR", frequency: "118.100" },
+  DEP: { suffix: "_TWR", frequency: "118.100" },
+  APP: { suffix: "_APP", frequency: "119.100" },
+};
+
+/**
+ * The `CONTROLLER:` lines a scenario for these seats starts with.
+ *
+ * One per ticked profile, deduplicated — GND+TWR+DEP is two seats, not three —
+ * and in the declared profile order so the same ticks always produce the same
+ * list.
+ */
+export function defaultControllers(
+  icao: string,
+  profiles: readonly ScenarioProfile[],
+): ScenarioController[] {
+  const field = icao.trim().toUpperCase();
+  if (!field) return [];
+  const seats: ScenarioController[] = [];
+  const seen = new Set<string>();
+  for (const profile of SCENARIO_PROFILES) {
+    if (!profiles.includes(profile)) continue;
+    const seat = SEAT_FOR_PROFILE[profile];
+    const callsign = field + seat.suffix;
+    if (seen.has(callsign)) continue;
+    seen.add(callsign);
+    seats.push({ callsign, frequency: seat.frequency });
+  }
+  return seats;
+}
+
+/**
+ * Which of those seats the traffic should start under.
+ *
+ * The busiest one ticked, reading the profiles in their declared order — an
+ * APP scenario hands everything to approach, a ground-and-tower one to the
+ * tower, a ground-only one to ground. That matches the hand-written sets, whose
+ * `INITIALPSEUDOPILOT` is always the seat the scenario was written for.
+ */
+export function defaultPseudopilotFor(
+  icao: string,
+  profiles: readonly ScenarioProfile[],
+): string {
+  const seats = defaultControllers(icao, profiles);
+  return seats.length ? seats[seats.length - 1].callsign : "";
 }
 
 // ---------------------------------------------------------------------------
@@ -1045,6 +1153,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   if (!airlines.length || !types.length) return [];
 
   const random = seeded(seed);
+  // Only `REQALT` uses this now. Aircraft on the ground are written at 0 and
+  // let `AIRPORT_ALT` place them; see the header comment.
   const elevation = airport.elev ?? 0;
   const usedCallsigns = new Set<string>();
   const usedSquawks = new Set<string>(RESERVED_SQUAWKS);
@@ -1416,8 +1526,13 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       row.destination = partnerAt(index);
       row.lat = stand.lat;
       row.lon = stand.lon;
-      row.heading = trueHeading(stand.hdg);
-      row.altitude = elevation;
+      // No heading: nothing in the tree publishes which way a stand faces, and
+      // the field that looked like it was a wingspan — see `SweatboxStand`. A
+      // north-facing row of aeroplanes is visibly a default; 88 of them all at
+      // 30° was a default wearing the costume of data. The column is editable
+      // per aircraft for an instructor who wants the apron to look right.
+      row.heading = 0;
+      row.altitude = 0;
       row.speed = 0;
       row.pseudoRoute = taxiRoute;
       row.start = nextStart("GND");
@@ -1480,7 +1595,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       row.cruise = cruise;
       row.lat = departureRunway.lat;
       row.lon = departureRunway.lon;
-      row.altitude = elevation;
+      row.altitude = 0;
       row.speed = 0;
       row.heading = trueHeading(departureRunway.hdg);
       row.start = nextStart("DEP");
@@ -1724,8 +1839,13 @@ export function buildScenario(model: ScenarioModel): string {
     if (aircraft.requestAltitude !== null) {
       lines.push(`REQALT::${aircraft.requestAltitude}`);
     }
-    if (aircraft.initialPseudopilot.trim()) {
-      lines.push(`INITIALPSEUDOPILOT:${aircraft.initialPseudopilot.trim()}`);
+    // Under `DELAY`/`START`, and after `REQALT`, which is the order the
+    // hand-written sets use. The aircraft's own seat wins over the scenario's
+    // default so one aircraft can be handed to a different position.
+    const pseudopilot =
+      aircraft.initialPseudopilot.trim() || model.defaultPseudopilot.trim();
+    if (pseudopilot) {
+      lines.push(`INITIALPSEUDOPILOT:${pseudopilot}`);
     }
     lines.push("");
   }
