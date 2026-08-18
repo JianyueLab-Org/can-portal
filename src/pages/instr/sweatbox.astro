@@ -22,9 +22,12 @@ import { readIndex } from "@/server/sweatboxData";
 
 const messages = getMessages(getLocale(Astro.cookies), "sweatbox");
 
-// 只有带跑道的机场才进索引，所以这就是完整清单。~350 条、每条五个字段 —— 比图
-// 标精灵图还小，而它让机场选择器是即时的，而不是每敲一个键一次往返。
-const { airports } = readIndex();
+// 机场清单从 can-db 来，服务端取一次当 prop 传进岛屿 —— 选择器仍然是即时的，
+// 过滤在浏览器里做，不是每敲一个键一次往返。
+//
+// can-db 不可达时这里是空数组，页面照常渲染但选不出机场。刻意不抛：一个说不出话
+// 的错误页帮不了教员，而一个空的选择器至少说明是数据没来，不是页面坏了。
+const { airports } = await readIndex(Astro);
 ---
 
 <AppLayout title="模拟机场景 · Cerulean Aviation Network">

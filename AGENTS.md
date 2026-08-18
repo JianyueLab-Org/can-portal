@@ -38,27 +38,23 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 **没有自己的登录页。** 未登录一律 302 去主站的 `/signin`（`src/lib/config.ts` 的
 `signInUrl()` 上写着为什么不带 `callbackUrl`）。
 
-**仓库必须私有，而且必须建在 `JianyueLab` 组织下。** 这一条和上面三条不一样，它
-不是风格问题，而是两个硬约束叠出来的唯一解。
+**这个仓库可以是公开的。** 它一度不能：`src/data/sweatbox/` 装着从 `Sector/` 扇区
+包和一个商用 AIRAC 周期派生的 2.8 MB 数据，不许进公开仓库。
 
-私有的理由：`src/data/sweatbox/` 是从 `Sector/` 扇区包和一个商用 AIRAC 周期派生出
-来的 2.8 MB 数据，`scripts/build-sweatbox.mjs` 的头注释写着它不许进公开仓库。
-can-web 提交它是因为 can-web 私有；这个站继承了那份数据，也就继承了那条限制。
-can-dev / can-radar / can-exam / can-controller / can-docs 都是公开的，**这个站不
-能跟它们对齐**。
+而私有在这个组织里是有代价的：**JianyueLab-Org 是 GitHub Free 计划，Free 计划的组
+织级 secret 到不了私有仓库**，所以私有仓库拿不到 `KUBECONFIG_B64`，**根本部署不
+了**。can-efb 至今没上线就是卡在这一条上。一份 2.8 MB 的数据锁死了这个站的可见性和
+上线能力。
 
-组织的理由：**JianyueLab-Org 是 GitHub Free 计划，而 Free 计划的组织级 secret 到
-不了私有仓库。** 部署要的 `KUBECONFIG_B64` 和 `GHCR_PULL_TOKEN` 都是组织级的，所
-以一个私有仓库放在那个组织里，CI 会在集群凭据那一步失败 —— **can-efb 至今没上线
-就是卡在这儿**（它私有、在 JianyueLab-Org、清单和工作流都写好了、域名不解析）。
-`JianyueLab` 是 team 计划，私有仓库拿得到组织 secret，can-api 就是这么跑的。
+那份数据现在在 **can-db**（`database.ceruleanavi.net` 那个服务）里，这个仓库一个字
+节都不带 —— 于是它和 can-dev / can-radar / can-exam / can-controller / can-docs 完
+全一样：公开仓库、组织 secret、三行的共享部署工作流、`ghcr.io/jianyuelab-org` 的镜
+像。
 
-由此还有一个连带后果：**`deploy.yml` 不能调用 `JianyueLab-Org/actions` 里的共享
-工作流**，必须把 kubectl 那几步内联，和 can-api 一样。那个文件的头注释写着全过
-程。镜像因此也是 `ghcr.io/jianyuelab/can-portal`，不是 `jianyuelab-org`。
-
-（`.npmrc` 里的 `@jianyuelab-org` **不用改** —— can-ui 是一个公开包，住在哪个组织
-和这个仓库住在哪个组织无关。）
+**一件还没做完的事**：GHCR 上那个包是在仓库还私有时第一次推上去的，而**包的可见性
+不跟着仓库变**（只能在网页上手动改）。所以 `deploy/k8s.yaml` 里那两行
+`imagePullSecrets` 暂时留着，等有人把包改成 public 再删 —— 顺序反了会让全站
+ImagePullBackOff。
 
 ## 两个前缀，一个侧栏 —— 这是这个站的形状
 
@@ -110,26 +106,35 @@ ZGZU 的教员看得见花名册，但改不动 ZBPE 的人，那道判断这个
 鉴权不在这一层判，理由写在那个文件里。注意中间件对 `/api/` 前缀是放行的，所以一
 个不够格的成员理论上可以直接打这些路径 —— 他会拿到 can-api 的 403，这正是设计。
 
-## SweatBox 是这里唯一一个不碰 can-api 的页面
+## SweatBox 的参考数据在 can-db，不在这个仓库
 
-`/instr/sweatbox` 一个 can-api 调用都没有。它读的是 `src/data/sweatbox/` 里的构建
-产物，经由两个本站端点（`src/pages/instr/sweatbox/*.ts`）——那两个端点因此是这个
-站上**唯一**自带鉴权检查的地方，因为上游没有 can-api 可以让它们转发。
+`/instr/sweatbox` 仍然一个 can-api 调用都没有，但它读的东西变了：从前是
+`src/data/sweatbox/` 里 247 个提交进来的文件，现在是 **can-db**。
 
-数据由 `scripts/build-sweatbox.mjs` 从 `Sector/` 生成：
+链路：岛屿打本站的 `/instr/sweatbox/*.json`（**地址一个字都没改**，
+`SweatboxGenerator.vue` 因此完全没动）→ 那两个端点调 `src/server/sweatboxData.ts`
+→ 它调 can-db 并把形状翻译回生成器认识的样子。
 
-```bash
-SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/Sector bun run build:sweatbox
-```
+**那个适配器是刻意留在这一侧的**：can-db 的形状是给「航行资料」设计的（程序是一张
+带 `kind` 的表，航路点叫 `ident`），生成器的是给「EuroScope 场景」设计的（`sids`
+和 `stars` 两个数组，航路点叫 `name`）。两者都对。在 can-db 里加一个
+`?shape=sweatbox` 等于让一个通用资料服务知道某个消费者的界面长什么样；改岛屿等于
+动那 1518 行里的取数逻辑。一个有注释的适配器是三条里唯一可逆的。
 
-日常开发**不需要**跑它 —— 产物已经提交在仓库里。AIRAC 换周期时才跑，而那时要记得
-它也读 `NavData/Airports.xml` 拿场压；那个文件不在时场压留空，表单会问。
+**鉴权不再由这个站兜底。** 那两个端点从前自带一道 rating 检查，注释写着「这是本站
+唯一一处本地守卫就是边界的地方，因为上游根本不存在」—— 上游现在存在了。can-db 按
+会话判：教员（8 级及以上）**或者**持有 `aipAccess` 的人可以读。本地那道检查留着，
+但降成便利：它只是让绕过页面直接打地址的人拿到一句本地化的 403。
 
-`src/lib/sweatbox.ts` 里记着一件重要的事：monorepo 的 `SweatBox/` 目录里那批手写
-场景中，有八份把场压指令拼成了 `AIRPORE_ALT`（正确的是 `AIRPORT_ALT`），随附的
-`ES模拟机机组航向计算.py` 还把航向常量写成了 2.88（十位 pbh 字段要的是
-2.8444…）。`src/lib/sweatboxPerf.ts` 的十四张 `PERFAC` 表是**逐字**从那批文件抄
-的，所以校准某一行时优先挑一份指令拼对了的源文件。
+数据怎么进 can-db、`build-sweatbox.mjs` 现在在哪，看 can-db 的 `AGENTS.md`。那个脚
+本跟着数据搬过去了，因为「从 Sector 提取 → 导入 → 提供」是一条链。
+
+`src/lib/sweatbox.ts` 和 `src/lib/sweatboxPerf.ts` **留在这里**，它们是场景**格式**
+和机型性能表，不是航行资料。里面记着一件重要的事：monorepo 的 `SweatBox/` 目录里那
+批手写场景中，有八份把场压指令拼成了 `AIRPORE_ALT`（正确的是 `AIRPORT_ALT`），随附
+的 `ES模拟机机组航向计算.py` 还把航向常量写成了 2.88（十位 pbh 字段要的是
+2.8444…）。那十四张 `PERFAC` 表是**逐字**从那批文件抄的，所以校准某一行时优先挑一
+份指令拼对了的源文件。
 
 ## 词典是切出来的，不是抄整本
 
@@ -168,9 +173,6 @@ bun install
 bun run dev        # :4328
 bun run lint       # format:check + astro check + vue-tsc —— CI 跑的就是这个
 bun run build && bun run start
-
-# SweatBox 参考数据（换 AIRAC 时才跑）
-SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/Sector bun run build:sweatbox
 ```
 
 没有测试套件，和另外五个卫星站一样。门禁是 `bun run lint` 加一次 `bun run build`。

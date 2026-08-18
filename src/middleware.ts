@@ -60,6 +60,10 @@ function isUnguarded(pathname: string): boolean {
  */
 const FLOORS: Array<{ prefix: string; rating: number }> = [
   { prefix: "/super/promotions", rating: RATING_ADMIN },
+  // 资料库授权也是 ADM。**它必须排在 `/super` 前面**，否则会被那条以 11 匹配
+  // 上，于是一个 SUP 能打开一张发放数据库权限的界面 —— 请求会被 can-api 的
+  // `WithAdmin` 拒掉，但那时他已经看见了完整的持有人名单。
+  { prefix: "/super/aip-access", rating: RATING_ADMIN },
   { prefix: "/super", rating: RATING_SUP },
   { prefix: "/instr", rating: RATING_INSTRUCTOR },
 ];

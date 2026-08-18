@@ -18,8 +18,7 @@
     "typecheck": "astro check && node ./scripts/typecheck-vue.mjs",
     "typecheck:astro": "astro check",
     "typecheck:vue": "node ./scripts/typecheck-vue.mjs",
-    "lint": "bun run format:check && bun run typecheck",
-    "build:sweatbox": "node ./scripts/build-sweatbox.mjs"
+    "lint": "bun run format:check && bun run typecheck"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.0",

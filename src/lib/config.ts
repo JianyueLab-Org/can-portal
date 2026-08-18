@@ -47,6 +47,19 @@ export const CAN_WEB_ORIGIN =
   "https://ceruleanavi.net";
 
 /**
+ * can-db 的 API，SweatBox 参考数据从它来。
+ *
+ * **集群内地址，不是公网主机名。** can-db 没有 Ingress —— 它服务的是有许可限制的
+ * 航行资料，只在集群内监听。所以兜底值是 localhost 而不是某个 https 地址：写一个
+ * 公网地址当兜底，会让「忘了配」悄悄变成「打到了别的东西上」。
+ *
+ * 这是**服务端专用**的值，只有 `src/server/sweatboxData.ts` 读它。岛屿仍然打本站
+ * 的 `/instr/sweatbox/*`，一个字都没改。
+ */
+export const CAN_DB_ORIGIN =
+  clean(process.env.CAN_DB_ORIGIN) || "http://127.0.0.1:8080";
+
+/**
  * 本站自己的 origin，写操作的 Origin 头要和它比对。
  *
  * 必须是**显式配置**的值，不能从 `Host` 头推：这个站跑在 TLS 终止的反代后面，

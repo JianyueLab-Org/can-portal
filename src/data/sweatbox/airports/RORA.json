@@ -1,1 +1,0 @@
-{"icao":"RORA","fir":"RJJJ","lat":26.592778,"lon":127.240278,"elev":38,"variation":8,"magVar":-6,"runways":[{"id":"01","opposite":"19","hdg":9,"lat":26.589169,"lon":127.240006,"endLat":26.596364,"endLon":127.240689},{"id":"19","opposite":"01","hdg":189,"lat":26.596364,"lon":127.240689,"endLat":26.589169,"endLon":127.240006}],"stands":[],"sids":[],"stars":[]}

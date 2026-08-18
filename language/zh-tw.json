@@ -17,7 +17,8 @@
     "admin": {
       "title": "管理員",
       "items": {
-        "promote": "晉升審核"
+        "promote": "晉升審核",
+        "aipAccess": "资料库权限"
       }
     },
     "activitiesManage": "活動管理",
@@ -650,6 +651,41 @@
       "prizes": "維護積分商城的獎品，處理兌換。",
       "feedback": "發布處理結果公示。",
       "promotions": "審批教員提交的晉升申請。"
+    }
+  },
+  "aipAccess": {
+    "eyebrow": "管理员",
+    "title": "航行资料库权限",
+    "description": "谁能打开 database.ceruleanavi.net。这一列只有 ADM 能改，而且和管制评级是两回事 —— 校对航图的人不一定有评级，有评级也不等于该编辑程序编码。",
+    "loading": "载入中…",
+    "granted": "已给 {id} 开通：{level}",
+    "revoked": "已撤销 {id} 的资料库权限",
+    "columns": {
+      "member": "成员",
+      "rating": "评级",
+      "access": "权限"
+    },
+    "levels": {
+      "none": "无",
+      "read": "只读",
+      "write": "可编辑"
+    },
+    "grant": {
+      "title": "授予权限",
+      "help": "搜 CAN ID 或姓名。只读能浏览全部资料；可编辑还能改 —— 编辑功能还没上线，但级别现在就可以先发。",
+      "search": "搜索成员",
+      "searchPlaceholder": "CAN ID 或姓名…",
+      "action": "授予",
+      "noMatches": "没有匹配的成员。"
+    },
+    "current": {
+      "title": "当前有权限的人",
+      "empty": "还没有人有资料库权限",
+      "emptyHelp": "在上面搜一个成员来授予。",
+      "you": "你自己",
+      "promote": "升为可编辑",
+      "demote": "降为只读",
+      "revoke": "撤销"
     }
   }
 }

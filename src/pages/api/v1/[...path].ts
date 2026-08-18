@@ -85,7 +85,15 @@ const ALLOW_LIST: Record<string, Allowed> = {
 
   // 公示要点名一个成员，所以要一个搜人的接口。这是 can-api 上唯一一条会返回
   // 「调用者本来没有别的理由读到的成员」的 staff 路由，它自己是 SUP/ADM 门槛。
-  "super/members": { methods: ["GET"], who: "ManageFeedback.vue 成员搜索" },
+  // 资料库授权页也用它来挑人。
+  "super/members": {
+    methods: ["GET"],
+    who: "ManageFeedback.vue 成员搜索 / AipAccess.vue 挑人授权",
+  },
+
+  // 航行资料库（can-db）的访问授权名单。can-api 那边是 `WithAdmin` —— 全服务仅
+  // 有的两条 ADM 路由。这一层照旧不判等级，只判「这个路径允许被转发吗」。
+  "super/aip-access": { methods: ["GET"], who: "AipAccess.vue 读持有人名单" },
 };
 
 /**
@@ -134,6 +142,14 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     test: /^super\/feedback\/[0-9]{1,20}$/,
     methods: ["PATCH", "DELETE"],
     who: "ManageFeedback.vue 改一条公示 / 撤下",
+  },
+  {
+    // 授予或撤销一个人的资料库权限。动态段是 **CAN ID**（用户名），不是数字主
+    // 键 —— `user` 表按 username 找人，所以这条的字符集比上面几条宽。仍然是收紧
+    // 的：字母数字加连字符下划线，最多 32 位。
+    test: /^super\/aip-access\/[A-Za-z0-9_-]{1,32}$/,
+    methods: ["PATCH"],
+    who: "AipAccess.vue 授予 / 升降级 / 撤销",
   },
 ];
 

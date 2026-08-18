@@ -70,6 +70,9 @@ const SUP: Array<{ key: string; href: string; icon: string }> = [
  */
 const ADMIN: Array<{ key: string; href: string }> = [
   { key: "admin.items.promote", href: "/super/promotions" },
+  // 航行资料库（can-db）的访问授权。和晋升审批同一组，因为它们是 ADM 仅有的两件
+  // 事 —— 都是「决定别人能做什么」，而不是网络的日常运营。
+  { key: "admin.items.aipAccess", href: "/super/aip-access" },
 ];
 
 /**

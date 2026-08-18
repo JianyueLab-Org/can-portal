@@ -1,30 +1,29 @@
 /**
  * 某一个机场的跑道、机位和所在 FIR 的航路点，供 SweatBox 生成器用。
  *
- * **这不是一条 API 路由，也不是 can-api 的。** 这个仓库遵守的规矩是
- * `/api/v1/...` 属于 can-api、本站一条都不实现；这里给出的是一份**构建产物**
- * —— `scripts/build-sweatbox.mjs` 从扇区包里提取出来的 JSON —— 上游没有一个
- * can-api 端点可以让它去转发。它放在这里而不是 `public/` 只有一个理由：这份数据
- * 是 AIRAC 派生的，而 `public/` 下的东西谁猜到路径谁就能取。
+ * **现在是一个组合转发，不再是本地文件。** 数据在 can-db 里；这里把两次上游调用
+ * （机场详情 + 那个 FIR 的航路点）合成岛屿一直在读的那一个形状 —— 所以
+ * `SweatboxGenerator.vue` 一个字都没改。
  *
- * ## 这个站上唯一一处本地鉴权，以及为什么这次它不算例外
+ * ## 鉴权：这里不再是边界
  *
- * 在 can-web 上，这段注释写的是「这是『守卫是便利、边界在上游』的例外，因为上
- * 游根本不存在」。搬到这里之后那句话仍然成立，但少了一半的份量：这个站的中间件
- * 已经按 rating 把不够教员的人整个挡在门外了（`src/middleware.ts`，`/instr` 前
- * 缀要 8 级），所以能走到这个端点的请求本来就过了同一道门。
+ * 从前这个端点自带一道 rating 检查，注释里写着「这是本站唯一一处本地守卫就是边界
+ * 的地方，因为上游根本不存在」。**上游现在存在了。** can-db 的 `guard` 按会话判：
+ * 教员（8 级及以上）或者持有 `aipAccess` 的人可以读，其余人 403。
  *
- * 下面这道检查因此是**第二道**而不是唯一一道，但它必须留着：中间件对
- * `/api/` 前缀放行，将来若有人把这两个端点挪到那底下（看起来很合理，它们确实是
- * 数据接口），第一道门就没了 —— 而这一行会让那次搬动仍然是安全的。它读的
- * `rating` 是 can-api 每个请求解出来的，从来不是这里算的。
+ * 下面那道检查因此留着但降了一级 —— 它是**便利**：中间件已经按 `/instr` 前缀挡过
+ * 一次 8 级，这一行只是让一个绕过页面直接打这个地址的人拿到一句本地化的 403，而
+ * 不是等一次跨服务往返再拿到英文的那句。真正拦住数据的是 can-db。
+ *
+ * 两处判断用的是同一个常量（`RATING_INSTRUCTOR`），而 can-db 那边独立地也写着 8。
+ * 两边不一致时**宽的那一份不会生效** —— 这里放宽只会让请求多走一趟再被拒。
  */
 import type { APIRoute } from "astro";
 import { readAirport, readFirFixes } from "@/server/sweatboxData";
 import { RATING_INSTRUCTOR } from "@/lib/config";
 
-export const GET: APIRoute = async ({ params, locals }) => {
-  const rating = locals.user?.rating;
+export const GET: APIRoute = async (context) => {
+  const rating = context.locals.user?.rating;
   if (typeof rating !== "number" || rating < RATING_INSTRUCTOR) {
     return new Response(JSON.stringify({ error: "forbidden" }), {
       status: 403,
@@ -32,7 +31,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     });
   }
 
-  const icao = (params.icao ?? "").toUpperCase();
+  const icao = (context.params.icao ?? "").toUpperCase();
   if (!/^[A-Z0-9]{4}$/.test(icao)) {
     return new Response(JSON.stringify({ error: "bad_request" }), {
       status: 400,
@@ -40,7 +39,7 @@ export const GET: APIRoute = async ({ params, locals }) => {
     });
   }
 
-  const airport = await readAirport(icao);
+  const airport = await readAirport(context, icao);
   if (!airport) {
     return new Response(JSON.stringify({ error: "not_found" }), {
       status: 404,
@@ -48,14 +47,15 @@ export const GET: APIRoute = async ({ params, locals }) => {
     });
   }
 
-  const fixes = await readFirFixes(airport.fir);
+  const fixes = await readFirFixes(context, airport.fir);
 
   return new Response(JSON.stringify({ airport, fixes }), {
     status: 200,
     headers: {
       "Content-Type": "application/json",
-      // 这份数据只有在有人重跑构建脚本并提交之后才会动，所以缓存一节课的时长
-      // 不花什么代价，而它省掉了教员在两个机场之间来回切时反复取 500 个机位。
+      // 一节课的时长。数据只有在有人导入新一期并激活之后才会动，而这个缓存省掉的
+      // 是教员在两个机场之间来回切时反复取 500 个机位 —— 现在那是两次跨服务调用
+      // 而不是两次本地读，所以它比从前更值。
       "Cache-Control": "private, max-age=3600",
     },
   });

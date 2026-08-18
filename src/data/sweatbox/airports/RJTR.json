@@ -1,1 +1,0 @@
-{"icao":"RJTR","fir":"RJJJ","lat":35.513806,"lon":139.393639,"elev":361,"variation":8,"magVar":-7,"runways":[{"id":"02","opposite":"20","hdg":21,"lat":35.511761,"lon":139.393278,"endLat":35.515839,"endLon":139.394022},{"id":"20","opposite":"02","hdg":201,"lat":35.515839,"lon":139.394022,"endLat":35.511761,"endLon":139.393278}],"stands":[],"sids":[],"stars":[]}

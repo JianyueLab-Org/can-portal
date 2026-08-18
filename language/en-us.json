@@ -17,7 +17,8 @@
     "admin": {
       "title": "Admin (ADM)",
       "items": {
-        "promote": "Promotion Approval"
+        "promote": "Promotion Approval",
+        "aipAccess": "Database access"
       }
     },
     "activitiesManage": "Manage Activities",
@@ -650,6 +651,41 @@
       "prizes": "Maintain the prize store and process redemptions.",
       "feedback": "Publish the outcome of a handled case.",
       "promotions": "Approve promotion requests submitted by instructors."
+    }
+  },
+  "aipAccess": {
+    "eyebrow": "Administrator",
+    "title": "Aeronautical database access",
+    "description": "Who may open database.ceruleanavi.net. Only an ADM can change it, and it is separate from controlling rating — someone who proofreads charts may hold no rating, and holding one does not mean editing procedure coding.",
+    "loading": "Loading…",
+    "granted": "Granted {id}: {level}",
+    "revoked": "Revoked {id}'s database access",
+    "columns": {
+      "member": "Member",
+      "rating": "Rating",
+      "access": "Access"
+    },
+    "levels": {
+      "none": "None",
+      "read": "Read",
+      "write": "Write"
+    },
+    "grant": {
+      "title": "Grant access",
+      "help": "Search by CAN ID or name. Read browses everything; write also edits — editing is not built yet, but the level can be issued now.",
+      "search": "Search members",
+      "searchPlaceholder": "CAN ID or name…",
+      "action": "Grant",
+      "noMatches": "No matching members."
+    },
+    "current": {
+      "title": "Current holders",
+      "empty": "Nobody holds database access yet",
+      "emptyHelp": "Search for a member above to grant it.",
+      "you": "you",
+      "promote": "Make writable",
+      "demote": "Read only",
+      "revoke": "Revoke"
     }
   }
 }

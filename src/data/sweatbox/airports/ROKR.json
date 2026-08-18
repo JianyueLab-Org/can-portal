@@ -1,1 +1,0 @@
-{"icao":"ROKR","fir":"RJJJ","lat":26.168333,"lon":127.293333,"elev":156,"variation":8,"magVar":-6,"runways":[{"id":"02","opposite":"20","hdg":20,"lat":26.164867,"lon":127.292361,"endLat":26.171817,"endLon":127.294531},{"id":"20","opposite":"02","hdg":200,"lat":26.171817,"lon":127.294531,"endLat":26.164867,"endLon":127.292361}],"stands":[],"sids":[],"stars":[]}

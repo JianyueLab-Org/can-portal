@@ -1,0 +1,20 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import AipAccess from "@/components/AipAccess.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+/**
+ * 航行资料库的访问授权 —— **ADM only**。
+ *
+ * 门槛在 `src/middleware.ts` 的 FLOORS 里，和 `/super/promotions` 并列在 12 级那
+ * 一档。它在 `/super/*` 底下而不是 `/instr/*`，因为它确实要 ADM；页面本身不判等
+ * 级，判的是中间件和 can-api 的 `WithAdmin`。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "aipAccess");
+const sessionUserId = Astro.locals.user?.username ?? "";
+---
+
+<AppLayout title="资料库权限 · Cerulean Aviation Network">
+  <AipAccess messages={messages} sessionUserId={sessionUserId} client:load />
+</AppLayout>

@@ -1,1 +1,0 @@
-{"icao":"ROMD","fir":"RJJJ","lat":25.846667,"lon":131.263611,"elev":158,"variation":8,"magVar":-6,"runways":[{"id":"02","opposite":"20","hdg":21,"lat":25.839983,"lon":131.261461,"endLat":25.853019,"endLon":131.2655},{"id":"20","opposite":"02","hdg":201,"lat":25.853019,"lon":131.2655,"endLat":25.839983,"endLon":131.261461}],"stands":[],"sids":[],"stars":[]}
