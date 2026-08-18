@@ -43,7 +43,8 @@
     "atcRoster": "ATC Roster",
     "activities": "Activities",
     "rewards": "Points store",
-    "feedback": "Feedback outcomes"
+    "feedback": "Feedback outcomes",
+    "servers": "Server directory"
   },
   "notFound": {
     "code": "404",
@@ -693,6 +694,47 @@
       "promote": "Make writable",
       "demote": "Read only",
       "revoke": "Revoke"
+    }
+  },
+  "servers": {
+    "eyebrow": "Operations",
+    "title": "Server directory",
+    "description": "Clients ask this for the FSD, voice and datafeed addresses instead of compiling them in. Edit a row here and the next server move costs no desktop releases.",
+    "current": "Current directory",
+    "empty": "The directory is empty",
+    "emptyHelp": "Add one above. While it is empty, clients fall back to their own compiled-in addresses.",
+    "created": "Added {name}",
+    "retired": "Retired {name}",
+    "restored": "Restored {name}",
+    "columns": {
+      "name": "Name",
+      "kind": "Kind",
+      "address": "Address",
+      "location": "Location",
+      "state": "State"
+    },
+    "kinds": {
+      "fsd": "FSD",
+      "audio": "Voice",
+      "datafeed": "Datafeed"
+    },
+    "states": {
+      "active": "In use",
+      "retired": "Retired"
+    },
+    "actions": {
+      "retire": "Retire",
+      "restore": "Restore"
+    },
+    "add": {
+      "title": "Add a server",
+      "help": "The kind decides what to fill in: FSD and voice want a host and port, a datafeed wants a full URL. Lower sort keys come first; clients treat the first as the default.",
+      "namePlaceholder": "CAN primary",
+      "locationPlaceholder": "Mainland China",
+      "host": "Host",
+      "port": "Port",
+      "sortKey": "Sort",
+      "action": "Add"
     }
   }
 }

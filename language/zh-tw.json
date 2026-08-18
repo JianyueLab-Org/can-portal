@@ -43,7 +43,8 @@
     "atcRoster": "管制員名冊",
     "activities": "活動",
     "rewards": "積分兌換",
-    "feedback": "處理結果公示"
+    "feedback": "處理結果公示",
+    "servers": "服务器目录"
   },
   "notFound": {
     "code": "404",
@@ -693,6 +694,47 @@
       "promote": "升为可编辑",
       "demote": "降为只读",
       "revoke": "撤销"
+    }
+  },
+  "servers": {
+    "eyebrow": "运维",
+    "title": "服务器目录",
+    "description": "客户端问这里要 FSD、语音和数据源的地址，而不是把它们编译进自己。改一行，下一次搬服务器就不用再给四个客户端各发一个版本。",
+    "current": "当前目录",
+    "empty": "目录是空的",
+    "emptyHelp": "在上面加一台。目录为空时客户端会回落到它们自己写死的地址。",
+    "created": "已加入 {name}",
+    "retired": "已停用 {name}",
+    "restored": "已恢复 {name}",
+    "columns": {
+      "name": "名称",
+      "kind": "类型",
+      "address": "地址",
+      "location": "位置",
+      "state": "状态"
+    },
+    "kinds": {
+      "fsd": "FSD",
+      "audio": "语音",
+      "datafeed": "数据源"
+    },
+    "states": {
+      "active": "在用",
+      "retired": "已停用"
+    },
+    "actions": {
+      "retire": "停用",
+      "restore": "恢复"
+    },
+    "add": {
+      "title": "添加服务器",
+      "help": "类型决定要填什么：FSD 和语音要主机名加端口，数据源要一个完整 URL。排序值小的在前，客户端把第一条当默认。",
+      "namePlaceholder": "CAN 主服务器",
+      "locationPlaceholder": "中国大陆",
+      "host": "主机名",
+      "port": "端口",
+      "sortKey": "排序",
+      "action": "添加"
     }
   }
 }

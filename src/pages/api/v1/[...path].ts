@@ -91,6 +91,12 @@ const ALLOW_LIST: Record<string, Allowed> = {
     who: "ManageFeedback.vue 成员搜索 / AipAccess.vue 挑人授权",
   },
 
+  // 服务器目录 —— 客户端问 can-api 要地址的那份表，这一页是它的管理端。
+  "super/servers": {
+    methods: ["GET", "POST"],
+    who: "ManageServers.vue 列表与新建",
+  },
+
   // 航行资料库（can-db）的访问授权名单。can-api 那边是 `WithAdmin` —— 全服务仅
   // 有的两条 ADM 路由。这一层照旧不判等级，只判「这个路径允许被转发吗」。
   "super/aip-access": { methods: ["GET"], who: "AipAccess.vue 读持有人名单" },
@@ -142,6 +148,13 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     test: /^super\/feedback\/[0-9]{1,20}$/,
     methods: ["PATCH", "DELETE"],
     who: "ManageFeedback.vue 改一条公示 / 撤下",
+  },
+  {
+    test: /^super\/servers\/[0-9]{1,20}$/,
+    methods: ["PATCH", "DELETE"],
+    // DELETE 在上游是**停用**而不是删除：一条停用的记录是「我设置里这个地址是
+    // 哪来的」唯一的答案。见 can-api 的 store.ServerStore.SetActive。
+    who: "ManageServers.vue 改一台 / 停用",
   },
   {
     // 授予或撤销一个人的资料库权限。动态段是 **CAN ID**（用户名），不是数字主
