@@ -27,8 +27,8 @@ import {
  * 会让人看见一组点下去必然 403 的页面 —— 也就是退回 can-web 当初的样子。
  *
  * 重定向去的是 **can-web**：这个站自己没有登录页，也不该有。会话由 can-api 在
- * 父域上签发，主站上登录过的成员到这里本来就带着 cookie。`signInUrl()` 上写着
- * 为什么不带 callbackUrl。
+ * 父域上签发，主站上登录过的成员到这里本来就带着 cookie。`signInUrl()` 把当前地
+ * 址当 callbackUrl 带过去，登录完直接回到他本来要去的那一页。
  */
 
 /**
@@ -94,7 +94,7 @@ export const onRequest = defineMiddleware(async (context, next) => {
   context.locals.user = user;
 
   if (!user) {
-    return withSecurityHeaders(context.redirect(signInUrl()));
+    return withSecurityHeaders(context.redirect(signInUrl(context.url)));
   }
 
   // 够格登录但不够格进这个站的成员，送回主站的飞行员面板 —— 那是他们本来就有

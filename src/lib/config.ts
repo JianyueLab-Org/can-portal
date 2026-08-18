@@ -77,15 +77,23 @@ export function origin(): string {
 /**
  * 登录去哪儿。
  *
- * **不带 callbackUrl。** can-web 的 `/signin` 只接受站内绝对路径
- * （`/^\/(?!\/)/`），那是一道防开放重定向的检查，把
- * `https://portal.ceruleanavi.net/...` 传过去只会被丢掉、回落到 `/pilots`。
- * 要让成员登录完回到这里，得先在 can-web 那边显式放行这个域 —— 那是一处对钓鱼
- * 很敏感的改动，属于 can-web 的评审范围，不该在这里偷偷绕过去。
- * can-controller 的同名函数上写着同一段话。
+ * **现在带 callbackUrl 了。** 从前这里写着「不带」，理由是 can-web 的 `/signin`
+ * 只接受站内绝对路径 —— 那是一道防开放重定向的检查，把跨站地址传过去只会被丢
+ * 掉、回落到 `/pilots`，于是成员登录完停在主站还得自己走回来。
+ *
+ * can-web 现在有一份显式白名单（`src/lib/callbackUrl.ts`，配一套只测「必须被拒
+ * 的输入」的测试），这个域在名单上。
  */
-export function signInUrl(): string {
-  return `${CAN_WEB_ORIGIN}/signin`;
+export function signInUrl(returnTo?: URL): string {
+  const base = `${CAN_WEB_ORIGIN}/signin`;
+  if (!returnTo) return base;
+  // 用 origin() 而不是 returnTo.origin：这个站跑在 TLS 终止的反代后面，请求 URL
+  // 的 origin 推出来是 http://，那既配不上 can-web 白名单里的 https://（于是被
+  // 拒、回落 /pilots，白做一场），也会把成员从 https 降到 http。
+  //
+  // 片段（#...）不带：它本来就不会发到服务端。
+  const target = `${origin()}${returnTo.pathname}${returnTo.search}`;
+  return `${base}?callbackUrl=${encodeURIComponent(target)}`;
 }
 
 /** 主站上某个页面的绝对地址。侧栏的跨站链接都由它拼。 */
