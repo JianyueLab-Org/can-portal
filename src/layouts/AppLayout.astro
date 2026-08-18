@@ -27,7 +27,11 @@ const t = useTranslations(locale, "frame");
  */
 const user = Astro.locals.user;
 const navigation = buildNavigation(t, user?.rating);
-const secondary = buildSecondary(t);
+const secondary = buildSecondary(t, {
+  locale,
+  rating: user?.rating,
+  signedIn: !!user,
+});
 const workspaces = buildWorkspaces(t);
 const pathname = Astro.url.pathname;
 ---
