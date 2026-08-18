@@ -1,0 +1,18 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManageServers from "@/components/ManageServers.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+/**
+ * 服务器目录 —— SUP/ADM（`/super/*` 前缀，中间件按 11 级判）。
+ *
+ * 搬一台 FSD 或语音服务器是运维决定，而跑活动的那一层就是做运维的那一层，所以门
+ * 槛和活动、奖品一样是 11，不是 ADM 的 12。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "servers");
+---
+
+<AppLayout title="服务器目录 · Cerulean Aviation Network">
+  <ManageServers messages={messages} client:load />
+</AppLayout>
