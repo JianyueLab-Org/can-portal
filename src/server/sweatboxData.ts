@@ -205,14 +205,15 @@ export async function readAirport(
     // stand; a golden diff against the pre-migration files caught this on 75
     // airports, where every unrecorded stand had become a zero-span one.
     //
-    // `hdg` is not optional in that type and the packages always publish it, so
-    // the fallback there is unreachable rather than lossy — it exists only
-    // because can-db's column is nullable.
+    // **`hdg` is dropped on purpose.** can-db has the column because the
+    // importer read `GRpluginStands.txt`'s fifth field as a heading, and it is
+    // not one — it is a wingspan, and on the mainland packages a blanket one.
+    // `SweatboxStand` no longer carries it (that type says why), so this is
+    // where the wrong number stops rather than something to plumb through.
     stands: a.stands.map((st) => ({
       name: st.name,
       lat: st.lat,
       lon: st.lon,
-      hdg: st.hdg ?? 0,
       ...(st.span === null || st.span === undefined ? {} : { span: st.span }),
     })),
     sids: a.procedures

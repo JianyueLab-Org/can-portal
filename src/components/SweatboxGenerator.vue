@@ -48,6 +48,8 @@ import {
   TRAFFIC_LEVELS,
   bearingTo,
   buildScenario,
+  defaultControllers,
+  defaultPseudopilotFor,
   destination,
   distanceNm,
   emptyAircraft,
@@ -60,6 +62,7 @@ import {
   scenarioFilename,
   type AirwayGraph,
   type ScenarioAircraft,
+  type ScenarioController,
   type ScenarioModel,
   type ScenarioProfile,
   type SweatboxAirport,
@@ -344,9 +347,11 @@ function replace(row: Row) {
     if (!stand) return;
     row.lat = stand.lat;
     row.lon = stand.lon;
-    // The plugin publishes stand headings magnetic; the position packet is true.
-    row.heading = magneticToTrue(stand.hdg, airport.value?.variation ?? null);
-    row.altitude = airport.value?.elev ?? 0;
+    // Moving an aircraft to another stand changes where it is, not which way it
+    // faces or how high it is: no stand heading is published anywhere (see
+    // `SweatboxStand`), and an aircraft on the ground is written at 0 and let
+    // `AIRPORT_ALT` place it. Both stay whatever the row already says, so a
+    // heading typed by hand survives a stand change.
     row.speed = 0;
     return;
   }
@@ -473,10 +478,71 @@ const clearRows = () => {
 // Header editing
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Seats
+// ---------------------------------------------------------------------------
+
+/**
+ * The seat list follows the airport and the ticked profiles **until it is
+ * edited by hand, and then it stops following anything.**
+ *
+ * A scenario with no `CONTROLLER:` line is one EuroScope opens with nothing
+ * staffed, and every aircraft belongs to `PSEUDOPILOT:ALL` — the trainee has to
+ * take each one before it will answer. Ticking GND+TWR and getting
+ * `ZBSJ_GND`/`ZBSJ_TWR` already filled in is what that tick meant.
+ *
+ * Following silently *after* an edit is the failure to avoid: an instructor who
+ * has corrected 118.100 to their field's real 118.350 must not have it thrown
+ * away by unticking DEP. So the auto-fill only replaces a list it recognises as
+ * its own last output, which is what the two fingerprints below record.
+ */
+const seatFingerprint = (list: readonly ScenarioController[]) =>
+  list.map((seat) => `${seat.callsign}\u0000${seat.frequency}`).join("\u0001");
+
+let autoSeats = "";
+let autoPseudopilot = "";
+
+watch(
+  [() => model.value.airport, () => model.value.profiles.join(",")],
+  () => {
+    const seats = defaultControllers(model.value.airport, model.value.profiles);
+    if (seatFingerprint(model.value.controllers) === autoSeats) {
+      model.value.controllers = seats;
+      autoSeats = seatFingerprint(seats);
+    }
+
+    const seat = defaultPseudopilotFor(
+      model.value.airport,
+      model.value.profiles,
+    );
+    if (model.value.defaultPseudopilot === autoPseudopilot) {
+      model.value.defaultPseudopilot = seat;
+      autoPseudopilot = seat;
+    }
+  },
+  { immediate: true },
+);
+
 const addController = () =>
   model.value.controllers.push({ callsign: "", frequency: "" });
 const removeController = (index: number) =>
   model.value.controllers.splice(index, 1);
+
+/**
+ * What the default-seat picker offers.
+ *
+ * The scenario's own seats, plus whatever `defaultPseudopilot` already holds if
+ * that is not one of them — renaming a seat after picking it as the default
+ * must not silently drop the default to blank.
+ */
+const pseudopilotOptions = computed(() => {
+  const seats = model.value.controllers
+    .map((seat) => seat.callsign.trim())
+    .filter(Boolean);
+  const current = model.value.defaultPseudopilot.trim();
+  if (current && !seats.includes(current)) seats.push(current);
+  return [...new Set(seats)];
+});
 const addHolding = () =>
   model.value.holdings.push({ fix: "", inbound: 0, turn: 1 });
 const removeHolding = (index: number) => model.value.holdings.splice(index, 1);
@@ -965,6 +1031,9 @@ async function copy() {
                 {{ t("add") }}
               </Button>
             </div>
+            <p class="mt-1 text-xs text-faint">
+              {{ t("setup.controllersHint") }}
+            </p>
             <div
               v-for="(controller, index) in model.controllers"
               :key="`ctl-${index}`"
@@ -973,11 +1042,13 @@ async function copy() {
               <input
                 v-model="controller.callsign"
                 class="input flex-1"
+                :aria-label="t('setup.controllerCallsign')"
                 placeholder="ZGGG_TWR"
               />
               <input
                 v-model="controller.frequency"
                 class="input w-28"
+                :aria-label="t('setup.controllerFrequency')"
                 placeholder="118.100"
               />
               <Button
@@ -990,6 +1061,30 @@ async function copy() {
                 <template #icon><Icon name="xMark" class="size-4" /></template>
               </Button>
             </div>
+
+            <label
+              for="sweatbox-initial-seat"
+              class="mt-4 block text-sm font-medium text-ink"
+            >
+              {{ t("setup.initialSeat") }}
+            </label>
+            <p class="mt-1 text-xs text-faint">
+              {{ t("setup.initialSeatHint") }}
+            </p>
+            <select
+              id="sweatbox-initial-seat"
+              v-model="model.defaultPseudopilot"
+              class="input mt-2"
+            >
+              <option value="">{{ t("setup.initialSeatNone") }}</option>
+              <option
+                v-for="seat in pseudopilotOptions"
+                :key="seat"
+                :value="seat"
+              >
+                {{ seat }}
+              </option>
+            </select>
           </div>
 
           <div v-if="isPicked('APP')" class="mt-6">
@@ -1168,6 +1263,9 @@ async function copy() {
                     {{ t("aircraft.altitude") }}
                   </th>
                   <th class="px-3 py-2 font-medium">
+                    {{ t("aircraft.heading") }}
+                  </th>
+                  <th class="px-3 py-2 font-medium">
                     {{ t("aircraft.speed") }}
                   </th>
                   <th class="px-3 py-2 font-medium">
@@ -1285,6 +1383,15 @@ async function copy() {
                       v-model.number="row.altitude"
                       type="number"
                       class="input w-24"
+                    />
+                  </td>
+                  <td class="px-3 py-2">
+                    <input
+                      v-model.number="row.heading"
+                      type="number"
+                      min="0"
+                      max="359"
+                      class="input w-20"
                     />
                   </td>
                   <td class="px-3 py-2">
