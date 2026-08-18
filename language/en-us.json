@@ -2,8 +2,7 @@
   "frame": {
     "controllers": {
       "quickAccess": {
-        "title": "Quick Access",
-        "DocsRegulations": "Docs & Regulations"
+        "title": "Quick Access"
       }
     },
     "instructors": {

@@ -31,6 +31,7 @@
  */
 import type { Translator } from "@/lib/i18n";
 import type { NavItem, NavSecondary, Workspace } from "@jianyuelab-org/can-ui";
+import { visibleSites } from "@jianyuelab-org/can-ui";
 import {
   RATING_ADMIN,
   RATING_INSTRUCTOR,
@@ -145,7 +146,10 @@ export function buildNavigation(t: Translator, rating?: number): NavItem[] {
  * 它们是钉住的而不是一个「快速访问」折叠菜单 —— can-web 上正是后者，那让最常用
  * 的几条多了两次点击。
  */
-export function buildSecondary(t: Translator): NavSecondary {
+export function buildSecondary(
+  t: Translator,
+  opts: { locale: string; rating?: number; signedIn: boolean },
+): NavSecondary {
   return {
     label: t("controllers.quickAccess.title"),
     items: [
@@ -157,13 +161,20 @@ export function buildSecondary(t: Translator): NavSecondary {
       },
       { name: t("rewards"), href: webUrl("/rewards"), icon: "gift" },
       { name: t("feedback"), href: webUrl("/feedback"), icon: "megaphone" },
-      {
-        // 会员文档不在主站了，它是 can-docs（docs.ceruleanavi.net）。所以这一条
-        // 写死绝对地址，不走 `webUrl()`。
-        name: t("controllers.quickAccess.DocsRegulations"),
-        href: "https://docs.ceruleanavi.net",
-        icon: "bookOpen",
-      },
+      // 网络上的其它站。从前这里只硬编码着「会员文档」一条 —— 于是一个教员从门
+      // 户去不了雷达、EFB、考试中心，而全网另外三个仓库各自维护着一份不一样的
+      // 清单。现在这份来自 can-ui，九个站一份，门户和资料库按评级决定露不露。
+      ...visibleSites({
+        locale: opts.locale,
+        current: "portal",
+        rating: opts.rating,
+        signedIn: opts.signedIn,
+        excludeCurrent: true,
+      }).map((site) => ({
+        name: site.name,
+        href: site.href,
+        icon: site.icon,
+      })),
     ],
   };
 }

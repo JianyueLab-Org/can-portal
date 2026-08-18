@@ -2,8 +2,7 @@
   "frame": {
     "controllers": {
       "quickAccess": {
-        "title": "クイックアクセス",
-        "DocsRegulations": "ドキュメントと規程"
+        "title": "クイックアクセス"
       }
     },
     "instructors": {

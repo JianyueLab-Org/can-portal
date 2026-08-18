@@ -2,8 +2,7 @@
   "frame": {
     "controllers": {
       "quickAccess": {
-        "title": "快速访问",
-        "DocsRegulations": "文档 & 规章制度"
+        "title": "快速访问"
       }
     },
     "instructors": {

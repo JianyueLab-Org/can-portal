@@ -2,8 +2,7 @@
   "frame": {
     "controllers": {
       "quickAccess": {
-        "title": "快速存取",
-        "DocsRegulations": "文件與規章制度"
+        "title": "快速存取"
       }
     },
     "instructors": {
