@@ -58,6 +58,17 @@ const t = createTranslator(props.messages);
 const ACCESS_NONE = 0;
 const ACCESS_READ = 1;
 const ACCESS_WRITE = 2;
+/**
+ * 受限资料的两级。
+ *
+ * 3 / 4 是给**官方 AIP 汇编**（民航局 NAIP）那一类数据用的 —— 它和面向模拟的派生数据不
+ * 是一回事，所以自成一档，而不是复用「可编辑」。
+ *
+ * **门槛跟着数据走，不写死在代码里**：can-db 的 `dataset.min_access` 记着每一批数据要多
+ * 少级才看得到，这里只负责发级别。所以以后再来一批受限数据，不用改这个文件。
+ */
+const ACCESS_RESTRICTED_READ = 3;
+const ACCESS_RESTRICTED_WRITE = 4;
 
 interface Grantee {
   username: string;
@@ -94,9 +105,18 @@ const columns = [
 const levelOptions = [
   { value: String(ACCESS_READ), label: t("levels.read") },
   { value: String(ACCESS_WRITE), label: t("levels.write") },
+  { value: String(ACCESS_RESTRICTED_READ), label: t("levels.restrictedRead") },
+  {
+    value: String(ACCESS_RESTRICTED_WRITE),
+    label: t("levels.restrictedWrite"),
+  },
 ];
 
+/* 从高往低判，而且**必须从高往低**：这是一条累进的梯子，4 级的人 `>= ACCESS_WRITE`
+ * 也成立，从低往高写会把每个人都标成「只读」。 */
 function accessLabel(level: number): string {
+  if (level >= ACCESS_RESTRICTED_WRITE) return t("levels.restrictedWrite");
+  if (level >= ACCESS_RESTRICTED_READ) return t("levels.restrictedRead");
   if (level >= ACCESS_WRITE) return t("levels.write");
   if (level >= ACCESS_READ) return t("levels.read");
   return t("levels.none");
@@ -293,29 +313,34 @@ onMounted(load);
         </template>
 
         <template #cell-access="{ row }">
-          <Badge :variant="row.access >= ACCESS_WRITE ? 'warning' : 'info'">
+          <Badge
+            :variant="
+              row.access >= ACCESS_RESTRICTED_READ
+                ? 'danger'
+                : row.access >= ACCESS_WRITE
+                  ? 'warning'
+                  : 'info'
+            "
+          >
             {{ accessLabel(row.access) }}
           </Badge>
         </template>
 
+        <!-- 从前这里是「升一级 / 降一级」两个按钮。四级之后那两个按钮没有意义了 ——
+             「升级」只够得到 2，够不到受限的两级；而一个只能走一半的按钮比没有按钮更
+             难懂。改成直接选目标级别，一步到位，也顺带让「降级」不再是个猜谜。 -->
         <template #cell-actions="{ row }">
-          <div class="flex flex-wrap justify-end gap-2">
-            <Button
-              v-if="row.access < ACCESS_WRITE"
-              size="sm"
-              variant="secondary"
+          <div class="flex flex-wrap items-center justify-end gap-2">
+            <Select
+              :model-value="String(row.access)"
+              :options="levelOptions"
               :disabled="busy === row.username"
-              @click="setAccess(row.username, ACCESS_WRITE)"
-              >{{ t("current.promote") }}</Button
-            >
-            <Button
-              v-if="row.access >= ACCESS_WRITE"
-              size="sm"
-              variant="secondary"
-              :disabled="busy === row.username"
-              @click="setAccess(row.username, ACCESS_READ)"
-              >{{ t("current.demote") }}</Button
-            >
+              class="w-36"
+              :aria-label="t('current.setLevel')"
+              @update:model-value="
+                (v: string) => setAccess(row.username, Number(v))
+              "
+            />
             <Button
               size="sm"
               variant="danger"

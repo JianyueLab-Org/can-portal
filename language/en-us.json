@@ -675,7 +675,9 @@
     "levels": {
       "none": "None",
       "read": "Read",
-      "write": "Write"
+      "write": "Write",
+      "restrictedRead": "Restricted read",
+      "restrictedWrite": "Restricted edit"
     },
     "grant": {
       "title": "Grant access",
@@ -690,9 +692,8 @@
       "empty": "Nobody holds database access yet",
       "emptyHelp": "Search for a member above to grant it.",
       "you": "you",
-      "promote": "Make writable",
-      "demote": "Read only",
-      "revoke": "Revoke"
+      "revoke": "Revoke",
+      "setLevel": "Set level"
     }
   },
   "servers": {

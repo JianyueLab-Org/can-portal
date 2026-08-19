@@ -675,7 +675,9 @@
     "levels": {
       "none": "无",
       "read": "只读",
-      "write": "可编辑"
+      "write": "可编辑",
+      "restrictedRead": "受限只读",
+      "restrictedWrite": "受限可编辑"
     },
     "grant": {
       "title": "授予权限",
@@ -690,9 +692,8 @@
       "empty": "还没有人有资料库权限",
       "emptyHelp": "在上面搜一个成员来授予。",
       "you": "你自己",
-      "promote": "升为可编辑",
-      "demote": "降为只读",
-      "revoke": "撤销"
+      "revoke": "撤销",
+      "setLevel": "设置级别"
     }
   },
   "servers": {
