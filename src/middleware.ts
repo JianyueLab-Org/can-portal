@@ -64,6 +64,9 @@ const FLOORS: Array<{ prefix: string; rating: number }> = [
   // 上，于是一个 SUP 能打开一张发放数据库权限的界面 —— 请求会被 can-api 的
   // `WithAdmin` 拒掉，但那时他已经看见了完整的持有人名单。
   { prefix: "/super/aip-access", rating: RATING_ADMIN },
+  // 开发者授权同理，同样必须排在 `/super` 前面。这一页泄漏出去的东西比资料库那
+  // 一页更具体：它列的是谁在这个网络上注册了应用、各注册了几个。
+  { prefix: "/super/developers", rating: RATING_ADMIN },
   { prefix: "/super", rating: RATING_SUP },
   { prefix: "/instr", rating: RATING_INSTRUCTOR },
 ];

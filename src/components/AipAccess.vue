@@ -42,6 +42,7 @@ import {
   Skeleton,
 } from "@jianyuelab-org/can-ui";
 import { api, apiFetch, unwrapList } from "@/lib/canApi";
+import { ratingShort, type RatingRef } from "@/lib/tools";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
@@ -73,14 +74,17 @@ const ACCESS_RESTRICTED_WRITE = 4;
 interface Grantee {
   username: string;
   name: string;
-  rating: string;
+  // can-api 展开成 `{id, short, long, zh}` 再送出来（`renderRating`），不是裸的
+  // 字符串。声明成 string 的那段时间里，这两栏一直渲染出 `[object Object]` ——
+  // 类型骗过了编译器，模板里的 `{{ row.rating }}` 照样跑。见 tools.ts。
+  rating: RatingRef;
   access: number;
 }
 
 interface Member {
   username: string;
   name: string;
-  rating: string;
+  rating: RatingRef;
 }
 
 const grantees = ref<Grantee[]>([]);
@@ -249,7 +253,7 @@ onMounted(load);
             m.username
           }}</span>
           <span class="text-sm text-ink">{{ m.name }}</span>
-          <span class="text-xs text-faint">{{ m.rating }}</span>
+          <span class="text-xs text-faint">{{ ratingShort(m.rating) }}</span>
 
           <div class="ml-auto flex items-center gap-2">
             <Select
@@ -309,7 +313,7 @@ onMounted(load);
         </template>
 
         <template #cell-rating="{ row }">
-          <span class="text-muted">{{ row.rating }}</span>
+          <span class="text-muted">{{ ratingShort(row.rating) }}</span>
         </template>
 
         <template #cell-access="{ row }">

@@ -1,0 +1,21 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import Developers from "@/components/Developers.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+/**
+ * 开发者授权 —— **ADM only**。
+ *
+ * 门槛在 `src/middleware.ts` 的 FLOORS 里，和 `/super/promotions`、
+ * `/super/aip-access` 并列在 12 级那一档，而且**必须排在 `/super` 前面**，否则会
+ * 被那条 11 级的规则先匹配上。页面本身不判等级，判的是中间件和 can-api 的
+ * `WithAdmin`。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "developers");
+const sessionUserId = Astro.locals.user?.username ?? "";
+---
+
+<AppLayout title="开发者授权 · Cerulean Aviation Network">
+  <Developers messages={messages} sessionUserId={sessionUserId} client:load />
+</AppLayout>

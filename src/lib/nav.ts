@@ -77,6 +77,9 @@ const ADMIN: Array<{ key: string; href: string }> = [
   // 航行资料库（can-db）的访问授权。和晋升审批同一组，因为它们是 ADM 仅有的两件
   // 事 —— 都是「决定别人能做什么」，而不是网络的日常运营。
   { key: "admin.items.aipAccess", href: "/super/aip-access" },
+  // 开发者授权（can-dev）。和上面两条同一组，同一条理由：都是「决定别人能做什
+  // 么」。这一条决定的是谁能做出一张挂着本网络名字、向其他成员要授权的同意页。
+  { key: "admin.items.developers", href: "/super/developers" },
 ];
 
 /**

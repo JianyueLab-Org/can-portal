@@ -152,6 +152,27 @@ export function ratingId(value: RatingRef | null | undefined): number {
   return NaN;
 }
 
+/**
+ * 等级简称（"OBS"、"I1"…），无论 can-api 送来的是哪一种形状。
+ *
+ * 这三行在 `SuperPromote.vue` 和 `SuperPromotions.vue` 里各有一份本地副本，各自
+ * 还配了一个本地的 `RatingInfo` 类型。它提到这里来，是因为**第四份出现的时候它已
+ * 经错过一次**：`AipAccess.vue` 干脆把 rating 当成字符串直接渲染，于是权限持有人
+ * 名单那一栏一直显示 `[object Object]`。一段每个人都要重写一遍的转换，迟早有人
+ * 写成直接用。
+ *
+ * 那两个旧副本没有一起改 —— 它们工作正常，而顺手重构一个没在动的组件是把一次
+ * 改动的影响面变大。新的调用点用这一个。
+ *
+ * 认不出来的等级返回 "Unknown" 而不是留空：表外的等级是数据问题，空字符串会把它
+ * 藏起来。
+ */
+export function ratingShort(value: RatingRef | null | undefined): string {
+  const data = ratingTrans(ratingId(value), "zh", "full");
+  if (data && typeof data === "object" && data.short) return data.short;
+  return "Unknown";
+}
+
 const divisionRegionMap: Record<string, string> = {
   "1": "PRC",
   "2": "USA",

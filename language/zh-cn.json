@@ -17,7 +17,8 @@
       "title": "管理员 (ADM)",
       "items": {
         "promote": "晋升审批",
-        "aipAccess": "资料库权限"
+        "aipAccess": "资料库权限",
+        "developers": "开发者授权"
       }
     },
     "activitiesManage": "活动管理",
@@ -735,6 +736,40 @@
       "port": "端口",
       "sortKey": "排序",
       "action": "添加"
+    }
+  },
+  "developers": {
+    "eyebrow": "管理员",
+    "title": "开发者授权",
+    "description": "谁能打开 platform.ceruleanavi.net，也就是谁能注册 OAuth 应用。这一列只有 ADM 能改，而且和管制评级无关 —— 写客户端的人不一定有评级，有评级也不等于写代码。",
+    "loading": "载入中…",
+    "granted": "已把 {id} 设为开发者",
+    "revoked": "已撤销 {id} 的开发者权限",
+    "columns": {
+      "member": "成员",
+      "rating": "评级",
+      "apps": "应用"
+    },
+    "grant": {
+      "title": "授予权限",
+      "help": "搜 CAN ID 或姓名。授予之后，这个人就能登录开发者中心并注册应用；撤销只是不能再注册，已有的应用不会停用。",
+      "search": "搜索成员",
+      "searchPlaceholder": "CAN ID 或姓名…",
+      "action": "设为开发者",
+      "noMatches": "没有匹配的成员。"
+    },
+    "current": {
+      "title": "当前的开发者",
+      "empty": "还没有人是开发者",
+      "emptyHelp": "在上面搜一个成员来授予。",
+      "you": "你自己",
+      "apps": "{count} 个应用",
+      "revoke": "撤销"
+    },
+    "orphaned": {
+      "title": "有应用、没权限",
+      "help": "这些人名下有 OAuth 应用，但已经不持有开发者权限。这不一定是错的 —— 撤销一个仍然拥有应用的人是正当操作。但如果这一列是刚加上去的，那么这里列出的就是回填漏掉的人。",
+      "restore": "补授权"
     }
   }
 }

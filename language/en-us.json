@@ -17,7 +17,8 @@
       "title": "Admin (ADM)",
       "items": {
         "promote": "Promotion Approval",
-        "aipAccess": "Database access"
+        "aipAccess": "Database access",
+        "developers": "Developer access"
       }
     },
     "activitiesManage": "Manage Activities",
@@ -735,6 +736,40 @@
       "port": "Port",
       "sortKey": "Sort",
       "action": "Add"
+    }
+  },
+  "developers": {
+    "eyebrow": "Administrator",
+    "title": "Developer access",
+    "description": "Who may open platform.ceruleanavi.net, and with it register OAuth applications. Only an ADM can change it, and it has nothing to do with controlling rating — the person writing a client may hold none, and holding one does not mean writing code.",
+    "loading": "Loading…",
+    "granted": "{id} is now a developer",
+    "revoked": "Revoked {id}'s developer access",
+    "columns": {
+      "member": "Member",
+      "rating": "Rating",
+      "apps": "Apps"
+    },
+    "grant": {
+      "title": "Grant access",
+      "help": "Search by CAN ID or name. Once granted, they can sign in to the developer centre and register applications. Revoking only stops new registrations — existing applications keep working.",
+      "search": "Search members",
+      "searchPlaceholder": "CAN ID or name…",
+      "action": "Make developer",
+      "noMatches": "No matching members."
+    },
+    "current": {
+      "title": "Current developers",
+      "empty": "Nobody is a developer yet",
+      "emptyHelp": "Search for a member above to grant it.",
+      "you": "you",
+      "apps": "{count} apps",
+      "revoke": "Revoke"
+    },
+    "orphaned": {
+      "title": "Owns applications, holds no access",
+      "help": "These members own OAuth applications but no longer hold developer access. That is not necessarily wrong — revoking someone who still owns applications is a legitimate thing to do. But if this column has just been added, these are the people the backfill missed.",
+      "restore": "Grant back"
     }
   }
 }
