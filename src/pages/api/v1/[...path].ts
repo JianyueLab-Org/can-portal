@@ -100,6 +100,14 @@ const ALLOW_LIST: Record<string, Allowed> = {
   // 航行资料库（can-db）的访问授权名单。can-api 那边是 `WithAdmin` —— 全服务仅
   // 有的两条 ADM 路由。这一层照旧不判等级，只判「这个路径允许被转发吗」。
   "super/aip-access": { methods: ["GET"], who: "AipAccess.vue 读持有人名单" },
+
+  // 开发者名单（can-dev 的门）。can-api 那边同样是 `WithAdmin`。响应里有两份清
+  // 单：持有权限的人，以及有应用却没有权限的人 —— 后者是上线回填有没有做对的检
+  // 查方式。这一层照旧不判等级，只判「这个路径允许被转发吗」。
+  "super/developers": {
+    methods: ["GET"],
+    who: "Developers.vue 读开发者名单与「有应用无权限」清单",
+  },
 };
 
 /**
@@ -163,6 +171,12 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     test: /^super\/aip-access\/[A-Za-z0-9_-]{1,32}$/,
     methods: ["PATCH"],
     who: "AipAccess.vue 授予 / 升降级 / 撤销",
+  },
+  {
+    // 授予或撤销开发者权限。动态段和上面一条一样是 **CAN ID**，不是数字主键。
+    test: /^super\/developers\/[A-Za-z0-9_-]{1,32}$/,
+    methods: ["PATCH"],
+    who: "Developers.vue 授予 / 撤销",
   },
 ];
 
