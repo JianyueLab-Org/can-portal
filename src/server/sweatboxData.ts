@@ -32,8 +32,8 @@
 import type { APIContext } from "astro";
 import { CAN_DB_ORIGIN } from "@/lib/config";
 import type {
-  AirwayGraph,
   SweatboxAirport,
+  SweatboxRoutePlan,
   SweatboxFix,
   SweatboxIndexEntry,
 } from "@/lib/sweatbox";
@@ -307,79 +307,67 @@ export async function readFirFixes(
 }
 
 /**
- * can-db 的一条航段。
+ * can-db 回包里，生成器用得上的那几个字段。
  *
- * **它从前是个三元组，现在是对象** —— can-db 为「按高低空过滤」加了方向和高度带
- * （`0005` 那一批），`segments` 就从 `[airway, from, to]` 变成了
- * `{airway, from, to, dir, minAlt, maxAlt}`。
+ * 其余的（`legs`、限制区、最低超障高度、发布航线的原文）**刻意不取**：多带一个字
+ * 段就多一处将来会漂移、而这边没有任何人读的形状 —— 这个文件刚刚因为一处没人核对
+ * 的形状把生成器打成白屏。
  */
-interface DbAirwaySegment {
-  airway: string;
+interface DbRoutePlan {
   from: string;
   to: string;
-  /** "both" | "forward"（只能 from→to）| "backward"。**这里没有用它**，见下。 */
-  dir: string;
-  minAlt: number | null;
-  maxAlt: number | null;
-}
-
-interface DbAirwayGraph {
-  fixes: Record<string, [number, number]>;
-  /** 代号 → 整条航路的属性。生成器不读，原样忽略。 */
-  airways?: Record<string, unknown>;
-  segments: DbAirwaySegment[];
+  route: string;
+  sid: string;
+  star: string;
+  source: string;
+  notes: string[] | null;
 }
 
 /**
- * 全国航路网。
+ * 一条城市对航路。
  *
- * ## 这一条曾经是盲转型，而它在浏览器里炸了
+ * ## 为什么是问 can-db 而不是自己算
  *
- * 上一版这里写的是「can-db 的形状和生成器的已经一致，原样过」，然后
- * `callDb<AirwayGraph>` 直接把回包当成生成器的类型。**那句话后来不成立了**：can-db
- * 把 `segments` 从 `[airway, from, to]` 三元组改成了对象。
+ * 这一侧从前把**全国航路网**（134 KB）下载到浏览器，自己跑一趟 A*。那套实现和
+ * can-db 的 `internal/aip/route.go` 是同一件事的两份代码，而两份从来没有一致过：
  *
- * 一个转型不检查任何东西，所以两边都编译得过、两边的 CI 都是绿的，坏在运行时 ——
- * `buildAirwayIndex` 的 `for (const [airway, a, b] of graph.segments)` 拿对象去解
- * 构，抛 `{} is not iterable`，**教员一点「生成」整个岛屿就白屏**。
+ *  - **方向**。全库 32% 的航段是单向的。这边的图是无向的，算出来的航路结构对、绕
+ *    行也合理，但含逆向段，一条都放行不了。
+ *  - **发布航线**。汇编自己发布了 13904 条城市对航线，覆盖 10367 个机场对，那是
+ *    「该怎么飞」的权威答案。最短路不是。这边根本不知道它们存在。
+ *  - **哪些航路不能当巡航航路飞**。`J` 打头的国内进离场连接线、L888 走廊的
+ *    `FANS-*` 脱离航线，can-db 把它们排除在图外；这边会把它们当普通航段接进去。
  *
- * 教训和这个文件里另外几处是同一条：**跨仓库的形状要翻译，不要断言。** 断言在
- * TypeScript 里是免费的，代价全部推到了运行时。所以这里逐字段取，取不出来的丢掉并
- * 记一笔 —— 下一次 can-db 再改形状，是日志里一行计数和一张退化的图，不是一个白屏。
+ * 一份「看起来完全正常」的错航路比没有航路更糟，而这三条都不会报错。所以规划整个
+ * 交给 can-db，这一侧只负责把它翻成场景的写法。
  *
- * ## `dir` 和高度带**故意没用**
+ * ## 404 不是错误
  *
- * `SweatboxProcedure` 那一侧的注释说过同一件事：生成器的图是**无向**的
- * （`AirwayGraph` 的类型上写着「an airway is flown both ways」），`buildAirwayIndex`
- * 两个方向都连。can-db 现在给了方向，用上它是一处**行为**改动 —— 会改变规划出来的
- * 航路 —— 而那份代码的正确性是靠生成出来的场景验证的，不是靠类型。它值得做（对着单
- * 向航路规划出来的航路是报不掉的），但要单独做、单独验，不该混在一次修白屏里。
+ * 这个机场对没有已发布航线、图上也连不通时，can-db 给 404 —— 那是一个**答案**，
+ * 不是故障：这一对确实没有可飞的航路。所以这里和其它几条一样返回 null，由调用方
+ * 退化（生成器会只填目的地代号），而不是把它当成上游挂了。
  */
-export async function readAirways(
+export async function readRoute(
   context: Pick<APIContext, "request">,
-): Promise<AirwayGraph> {
-  const graph = await callDb<DbAirwayGraph>(context, "/api/v1/aip/airways");
-  if (!graph) return { fixes: {}, segments: [] };
+  from: string,
+  to: string,
+  level = 0,
+): Promise<SweatboxRoutePlan | null> {
+  const query = new URLSearchParams({ from, to });
+  if (level > 0) query.set("level", String(level));
+  const plan = await callDb<DbRoutePlan>(
+    context,
+    `/api/v1/aip/route?${query.toString()}`,
+  );
+  if (!plan || !plan.route) return null;
 
-  const segments: AirwayGraph["segments"] = [];
-  let dropped = 0;
-  for (const s of graph.segments ?? []) {
-    // 三元组的老形状也认：can-db 若回滚，这一侧不该跟着坏第二次。
-    if (Array.isArray(s)) {
-      const [airway, from, to] = s as unknown as [string, string, string];
-      if (airway && from && to) segments.push([airway, from, to]);
-      else dropped++;
-      continue;
-    }
-    if (s && s.airway && s.from && s.to)
-      segments.push([s.airway, s.from, s.to]);
-    else dropped++;
-  }
-  if (dropped) {
-    console.error(
-      `can-db /aip/airways: dropped ${dropped} segment(s) of unexpected shape`,
-    );
-  }
-
-  return { fixes: graph.fixes ?? {}, segments };
+  return {
+    from: plan.from,
+    to: plan.to,
+    route: plan.route,
+    sid: plan.sid ?? "",
+    star: plan.star ?? "",
+    source: plan.source ?? "",
+    notes: plan.notes ?? [],
+  };
 }

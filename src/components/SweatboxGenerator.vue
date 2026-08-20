@@ -60,7 +60,7 @@ import {
   SCENARIO_ERROR_KINDS,
   type ScenarioErrorKind,
   scenarioFilename,
-  type AirwayGraph,
+  type SweatboxRoutePlan,
   type ScenarioAircraft,
   type ScenarioController,
   type ScenarioModel,
@@ -168,24 +168,22 @@ const plantedErrors = computed(() =>
 );
 
 /**
- * The airway network and the world airport table, both fetched once.
+ * The world airport table, fetched once in the background.
  *
- * Routes need them and nothing else on the page does, so they load in the
- * background rather than blocking the form: an instructor who only wants a
- * ground exercise never waits for 134 KB of airways they will not use. If
- * either is still missing when the button is pressed, the traffic is still
- * generated — it just files the bare destination instead of an airway route.
+ * Only the routes need it, so it does not block the form: an instructor who
+ * only wants a ground exercise never waits for it. Still missing when the
+ * button is pressed, the traffic is still generated — it just files the bare
+ * destination and picks a cruise level without knowing the leg length.
+ *
+ * **The airway network used to be fetched here too, and is not any more.**
+ * 134 KB of graph went to the browser so this page could run its own A*;
+ * can-db plans the route now, one city pair at a time, and `planRoutes` below
+ * asks for the handful a scenario actually needs. `SweatboxRoutePlan` in
+ * `src/lib/sweatbox.ts` says why that had to stop being two implementations.
  */
-const airways = ref<AirwayGraph | null>(null);
 const airportCoords = ref<Record<string, [number, number]>>({});
 
 onMounted(() => {
-  fetch("/instr/sweatbox/airways.json")
-    .then((response) => (response.ok ? response.json() : null))
-    .then((data) => {
-      if (data) airways.value = data as AirwayGraph;
-    })
-    .catch(() => {});
   fetch("/airports.json")
     .then((response) => (response.ok ? response.json() : null))
     .then((data) => {
@@ -414,9 +412,53 @@ const split = (value: string) =>
     .map((part) => part.trim().toUpperCase())
     .filter(Boolean);
 
+/**
+ * can-db's plans, one per direction per partner, kept across regenerations.
+ *
+ * Cached because rerolling the seed is the common action on this page and the
+ * plans do not depend on it — only on the pair. A miss is stored as `null` so
+ * an unroutable pair is asked about once, not once per press.
+ */
+const routeCache = new Map<string, SweatboxRoutePlan | null>();
+
+async function planRoutes(
+  icao: string,
+  partners: string[],
+): Promise<Record<string, SweatboxRoutePlan | null>> {
+  const wanted: string[] = [];
+  for (const partner of partners) {
+    if (!partner || partner === icao) continue;
+    // Both directions: a third of the network is one-way, so the reverse of a
+    // plan is not a plan.
+    wanted.push(`${icao}-${partner}`, `${partner}-${icao}`);
+  }
+
+  await Promise.all(
+    wanted
+      .filter((key) => !routeCache.has(key))
+      .map(async (key) => {
+        const [from, to] = key.split("-");
+        try {
+          const response = await fetch(
+            `/instr/sweatbox/route.json?from=${from}&to=${to}`,
+          );
+          routeCache.set(key, response.ok ? await response.json() : null);
+        } catch {
+          routeCache.set(key, null);
+        }
+      }),
+  );
+
+  const out: Record<string, SweatboxRoutePlan | null> = {};
+  for (const key of wanted) out[key] = routeCache.get(key) ?? null;
+  return out;
+}
+
 /** Compose the whole scenario's traffic, replacing whatever is in the table. */
-function generate() {
+async function generate() {
   if (!airport.value || !arrivalRunway.value || !departureRunway.value) return;
+  const partners = split(sources.value.partners);
+  const routes = await planRoutes(airport.value.icao, partners);
   const produced = generateTraffic({
     airport: airport.value,
     profiles: model.value.profiles,
@@ -425,14 +467,14 @@ function generate() {
     departureRunway: departureRunway.value,
     airlines: split(sources.value.airlines),
     types: split(sources.value.types),
-    partners: split(sources.value.partners),
+    partners,
     cruise: sources.value.cruise,
     taxiRoute: sources.value.taxiRoute,
     arrivalRadials: split(sources.value.radials)
       .map(Number)
       .filter((n) => Number.isFinite(n)),
     seed: sources.value.seed,
-    airways: airways.value,
+    routes,
     airportCoords: airportCoords.value,
     equipment: sources.value.equipment.trim().toUpperCase(),
     spacing: spacing.value,
