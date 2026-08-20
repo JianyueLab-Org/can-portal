@@ -83,9 +83,57 @@ interface DbAirportDetail extends DbAirportBase {
   procedures: Array<{
     kind: "sid" | "star";
     name: string;
+    /** 服务跑道清单里的**第一条**，仅此而已 —— 见 `servedRunways`。 */
     runway: string | null;
+    /** 完整的服务跑道清单，逗号分隔。老数据源不给，就是 null。 */
+    runways: string | null;
     points: string[];
   }>;
+}
+
+/**
+ * 这条程序服务哪几条跑道。
+ *
+ * **can-db 的 `runway` 是清单里的第一条，不是唯一一条。** 它那边的导入器写的就是
+ * `(p.runways || [])[0]`，而 `runways` 是后来专门补上的一列，迁移注释里说得很白：
+ * 「`runway` 那一列原本只放一条跑道，而一条 SID 常常服务多条 —— 保留原列不动（老
+ * 数据还在用），把完整清单放这里。」
+ *
+ * 这一侧一直只读 `runway`，而生成器是**精确匹配**（`entry.runway === runwayId`），
+ * 于是一条服务 01L/01R/02L/02R 的 SID 只在 01L 上出现。按这一期的数据数：**975 条
+ * SID/STAR 服务不止一条跑道，1699 条「程序—跑道」对应关系看不见，涉及 49 个机场**，
+ * 而且塌的正好是最需要它的那些场 ——
+ *
+ * | 机场 | 看得见的跑道 | 一条程序都没有的跑道 |
+ * | --- | --- | --- |
+ * | ZUCK | 02L、20L | 02R、03L、03R、20R、21R |
+ * | ZGGG | 01L | 01R、02L、02R、03、19R、20R |
+ * | ZSPD | 16L、34L | 16R、17R、34R、35R |
+ *
+ * 挑到空跑道的教员拿到的场景里，离场没有 SID、进场没有 STAR 流，而**没有任何东西
+ * 报错** —— 生成器对「这条跑道没有已发布程序」的处理本来就是安静地退化。
+ *
+ * 展开成一条跑道一个条目，而不是改 `SweatboxProcedure`：那个类型的文档第一句就是
+ * 「A published SID or STAR, **per runway**」—— 一跑道一条正是它声明的形状，动它要
+ * 连着 `sweatbox.ts` 里三处匹配一起改，而那份代码的正确性是靠它生成出来的场景验证
+ * 的，不是靠类型验证的。
+ *
+ * 两种老数据源（navigraph / 扇区包）本来就是一跑道一行，`runways` 是 null，退回读
+ * `runway`，行为和从前一模一样。
+ */
+function servedRunways(p: {
+  runway: string | null;
+  runways: string | null;
+}): string[] {
+  const list = (p.runways ?? "")
+    .split(",")
+    .map((x) => x.trim())
+    .filter(Boolean);
+  const unique = [...new Set(list)];
+  if (unique.length) return unique;
+  // 清单为空：老数据源，或者这条程序不按跑道发布。后者给 "" —— 生成器拿它和跑道号
+  // 比对，匹配不上，和从前一样。
+  return [p.runway ?? ""];
 }
 
 interface DbFix {
@@ -162,7 +210,9 @@ export async function readIndex(
  *
  * 三处翻译：
  *
- *  - `procedures[]` 按 `kind` 拆成 `sids` / `stars`。
+ *  - `procedures[]` 按 `kind` 拆成 `sids` / `stars`，并且**按服务跑道展开**：can-db
+ *    一条程序带一份跑道清单，生成器一条程序对一条跑道。为什么必须展开（以及不展开
+ *    时丢掉的是什么）写在 `servedRunways` 上。
  *  - `runway` 在 can-db 里可以是 null（程序不按跑道发布时），生成器的类型要
  *    string —— 空串。它读这个字段是拿来和跑道号比对的，null 和 "" 都匹配不上，所
  *    以这一步不丢信息。
@@ -218,10 +268,22 @@ export async function readAirport(
     })),
     sids: a.procedures
       .filter((p) => p.kind === "sid")
-      .map((p) => ({ name: p.name, runway: p.runway ?? "", points: p.points })),
+      .flatMap((p) =>
+        servedRunways(p).map((runway) => ({
+          name: p.name,
+          runway,
+          points: p.points,
+        })),
+      ),
     stars: a.procedures
       .filter((p) => p.kind === "star")
-      .map((p) => ({ name: p.name, runway: p.runway ?? "", points: p.points })),
+      .flatMap((p) =>
+        servedRunways(p).map((runway) => ({
+          name: p.name,
+          runway,
+          points: p.points,
+        })),
+      ),
   };
 }
 
