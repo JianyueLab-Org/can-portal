@@ -1342,10 +1342,38 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     const kind = errorKinds[Math.floor(random() * errorKinds.length)];
     switch (kind) {
       case "route": {
-        // Truncate to the first point. It reads like a route and connects to
-        // nothing, which is the commonest real filing mistake.
-        const parts = row.route.trim().split(/\s+/);
-        row.route = parts[0] ?? "";
+        // Cut the middle out: drop one airway designator so the two fixes it
+        // joined end up side by side with nothing connecting them.
+        //
+        //   YIN A461 ZHO B208 OBMEP   →   YIN A461 ZHO OBMEP
+        //                                             └─ ZHO and OBMEP are
+        //                                                not connected
+        //
+        // **This replaces truncating to the first point**, which is what it
+        // used to do. A route reduced to one identifier is spotted without
+        // reading it — the strip is visibly a stub, so the exercise tested
+        // nothing but attention. With the middle cut out both halves read
+        // perfectly on their own; what is wrong is that no airway joins the
+        // pair in the seam, and finding that means walking the route against
+        // the airway network, which is the skill the exercise is for.
+        //
+        // Airway designators sit between the fixes — `F0 A0 F1 A1 F2` — so
+        // they are the odd indices, never the first or last token. Prefer one
+        // that is not itself at either end, so a leg survives on both sides;
+        // with fewer than three airways there is no such choice and any of
+        // them will do.
+        const parts = row.route.trim().split(/\s+/).filter(Boolean);
+        const airwayAt: number[] = [];
+        for (let i = 1; i < parts.length - 1; i += 2) airwayAt.push(i);
+        // Nothing to cut — a route that is a bare destination, or a single
+        // leg with no airway at all. **Plant nothing and record nothing**:
+        // `errors` is the answer key the instructor is handed, so an entry
+        // there for a plan that was never corrupted sends them hunting for a
+        // mistake that is not in the file.
+        if (!airwayAt.length) return;
+        const choices = airwayAt.length > 2 ? airwayAt.slice(1, -1) : airwayAt;
+        parts.splice(choices[Math.floor(random() * choices.length)], 1);
+        row.route = parts.join(" ");
         break;
       }
       case "altitude": {
