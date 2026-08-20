@@ -155,16 +155,39 @@ export interface SweatboxAirport {
 }
 
 /**
- * The national airway network, as a graph.
+ * One city pair's route, as can-db planned it.
  *
- * `segments` are `[airway, fixA, fixB]` and undirected — an airway is flown
- * both ways. `fixes` carries only the points that sit on one, which is 2308 of
- * the country's 18896 and the reason this ships as its own 134 KB file rather
- * than riding along with every airport.
+ * **This replaces the airway graph this file used to plan over.** The generator
+ * downloaded the national network (134 KB) and ran its own A* — a second
+ * implementation of `can-db/internal/aip/route.go` that never agreed with it,
+ * and never said so:
+ *
+ *   - **Direction.** 32% of the country's segments are one-way. The local graph
+ *     was undirected, so it produced routes that read perfectly and contain a
+ *     dozen legs flown backwards. Not one of them is filable.
+ *   - **Published routings.** The compilation publishes 13,904 city-pair
+ *     routings covering 10,367 airport pairs. That is the authoritative answer
+ *     to "how should this be flown"; a shortest path is not. The local planner
+ *     did not know they existed.
+ *   - **Airways that are not cruise airways.** `J`-prefixed terminal connectors
+ *     and the L888 corridor's `FANS-*` escape routes are excluded from can-db's
+ *     graph. The local one spliced them in as ordinary legs.
+ *
+ * So the whole of it is can-db's now, and this file only rewrites the answer
+ * into the scenario's house style.
  */
-export interface AirwayGraph {
-  fixes: Record<string, [number, number]>;
-  segments: Array<[string, string, string]>;
+export interface SweatboxRoutePlan {
+  from: string;
+  to: string;
+  /** Filable route string: SID, then airways and fixes, then STAR. */
+  route: string;
+  /** The procedures the search chose; empty when the field publishes none. */
+  sid: string;
+  star: string;
+  /** `published` when the compilation publishes this pair, else `computed`. */
+  source: string;
+  /** Every place the planner had to fall back, in order. */
+  notes: string[];
 }
 
 export interface SweatboxFix {
@@ -820,169 +843,6 @@ export function cruiseLevelFor(
 }
 
 // ---------------------------------------------------------------------------
-// Route planning
-// ---------------------------------------------------------------------------
-
-interface AirwayNode {
-  /** Neighbour fix name → the airway that reaches it. */
-  links: Map<string, string>;
-  lat: number;
-  lon: number;
-}
-
-/** Adjacency built once per graph; planning many routes over it is then cheap. */
-export function buildAirwayIndex(graph: AirwayGraph): Map<string, AirwayNode> {
-  const nodes = new Map<string, AirwayNode>();
-  const node = (name: string): AirwayNode | null => {
-    const existing = nodes.get(name);
-    if (existing) return existing;
-    const position = graph.fixes[name];
-    if (!position) return null;
-    const created: AirwayNode = {
-      links: new Map(),
-      lat: position[0],
-      lon: position[1],
-    };
-    nodes.set(name, created);
-    return created;
-  };
-
-  for (const [airway, from, to] of graph.segments) {
-    const a = node(from);
-    const b = node(to);
-    if (!a || !b) continue;
-    // A fix pair can carry more than one airway; the first named wins, because
-    // a route only needs *an* airway that connects them.
-    if (!a.links.has(to)) a.links.set(to, airway);
-    if (!b.links.has(from)) b.links.set(from, airway);
-  }
-  return nodes;
-}
-
-/** The graph fix closest to a position, or null when nothing is within reach. */
-export function nearestAirwayFix(
-  nodes: Map<string, AirwayNode>,
-  lat: number,
-  lon: number,
-  withinNm = 400,
-): string | null {
-  let best: string | null = null;
-  let bestNm = Infinity;
-  for (const [name, node] of nodes) {
-    const nm = distanceNm(lat, lon, node.lat, node.lon);
-    if (nm < bestNm) {
-      bestNm = nm;
-      best = name;
-    }
-  }
-  return bestNm <= withinNm ? best : null;
-}
-
-/**
- * Shortest path across the airway network, by distance flown.
- *
- * A* with great-circle distance to the target as the heuristic — admissible,
- * because no airway leg is shorter than the straight line it spans, so the
- * first time the target is settled it is settled optimally.
- *
- * Returns the fix sequence, or null when the two are not connected. Being
- * honest about "not connected" matters: a route invented across a gap reads
- * perfectly and routes the aircraft through airspace with no airway in it.
- */
-export function planRoute(
-  nodes: Map<string, AirwayNode>,
-  from: string,
-  to: string,
-  maxFixes = 60,
-): string[] | null {
-  const start = nodes.get(from);
-  const goal = nodes.get(to);
-  if (!start || !goal) return null;
-  if (from === to) return [from];
-
-  const heuristic = (node: AirwayNode) =>
-    distanceNm(node.lat, node.lon, goal.lat, goal.lon);
-
-  const cameFrom = new Map<string, string>();
-  const cost = new Map<string, number>([[from, 0]]);
-  const open: Array<{ name: string; score: number }> = [
-    { name: from, score: heuristic(start) },
-  ];
-  const settled = new Set<string>();
-
-  while (open.length) {
-    // The frontier stays small enough that a linear scan beats a heap here,
-    // and a heap is a hundred lines nobody would otherwise read.
-    let bestAt = 0;
-    for (let at = 1; at < open.length; at++) {
-      if (open[at].score < open[bestAt].score) bestAt = at;
-    }
-    const current = open.splice(bestAt, 1)[0];
-    if (settled.has(current.name)) continue;
-    settled.add(current.name);
-
-    if (current.name === to) {
-      const path = [to];
-      let step = to;
-      while (cameFrom.has(step)) {
-        step = cameFrom.get(step)!;
-        path.unshift(step);
-        if (path.length > maxFixes) return null;
-      }
-      return path;
-    }
-
-    const node = nodes.get(current.name);
-    if (!node) continue;
-    const soFar = cost.get(current.name) ?? Infinity;
-
-    for (const neighbour of node.links.keys()) {
-      if (settled.has(neighbour)) continue;
-      const next = nodes.get(neighbour);
-      if (!next) continue;
-      const step = soFar + distanceNm(node.lat, node.lon, next.lat, next.lon);
-      if (step >= (cost.get(neighbour) ?? Infinity)) continue;
-      cost.set(neighbour, step);
-      cameFrom.set(neighbour, current.name);
-      open.push({ name: neighbour, score: step + heuristic(next) });
-    }
-  }
-  return null;
-}
-
-/**
- * Turn a fix sequence into the string that goes on a strip.
- *
- * `FIX AWY FIX AWY FIX`, and an airway is named **once** per contiguous run
- * along it — `YIN A461 ZHO B208 OBMEP`, not `YIN A461 ZHO A461 WXI`. That is
- * how a filed route is written and how the hand-written scenarios read; naming
- * it per leg turns a five-element route into thirty and makes the strip
- * unreadable.
- */
-export function formatRoute(
-  nodes: Map<string, AirwayNode>,
-  path: string[],
-): string {
-  if (path.length < 2) return path.join(" ");
-
-  const airwayBetween = (at: number) =>
-    nodes.get(path[at])?.links.get(path[at + 1]) ?? "DCT";
-
-  const out: string[] = [path[0]];
-  let at = 0;
-  while (at < path.length - 1) {
-    const airway = airwayBetween(at);
-    // Run on while the same airway keeps connecting: the intermediate fixes
-    // are reporting points, and a filed route names the entry and the exit.
-    let end = at + 1;
-    while (end < path.length - 1 && airwayBetween(end) === airway) end++;
-    out.push(airway, path[end]);
-    at = end;
-  }
-  return out.join(" ");
-}
-
-// ---------------------------------------------------------------------------
 // Traffic composition
 // ---------------------------------------------------------------------------
 
@@ -1013,10 +873,15 @@ export interface TrafficOptions {
   /** Same seed, same scenario — an instructor can rerun a session verbatim. */
   seed: number;
   /**
-   * The airway network. Absent, aircraft file the bare destination — still a
-   * loadable scenario, just one with nothing on the route field.
+   * can-db's plans, keyed `FROM-TO`. Absent or missing a pair, that aircraft
+   * files the bare destination — still a loadable scenario, just one with
+   * nothing on the route field.
+   *
+   * Both directions are separate keys and both are needed: a departure asks
+   * for `airport → partner`, an arrival for `partner → airport`, and with a
+   * third of the network one-way they are not each other's reverse.
    */
-  airways?: AirwayGraph | null;
+  routes?: Record<string, SweatboxRoutePlan | null>;
   /** ICAO → [lat, lon], for the legs that leave the sector packages' area. */
   airportCoords?: Record<string, [number, number]>;
   /**
@@ -1192,8 +1057,38 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
 
   // ---- flight planning -----------------------------------------------------
 
-  const nodes = options.airways ? buildAirwayIndex(options.airways) : null;
   const coords = options.airportCoords ?? {};
+
+  /** can-db's plan for one direction of one city pair. */
+  const routeFor = (from: string, to: string): SweatboxRoutePlan | null =>
+    options.routes?.[`${from}-${to}`] ?? null;
+
+  /** A published procedure by name, out of what this field publishes. */
+  const byName = (
+    list: SweatboxProcedure[],
+    name: string,
+  ): SweatboxProcedure | null =>
+    name ? (list.find((entry) => entry.name === name) ?? null) : null;
+
+  /**
+   * The enroute part of a plan — what goes on the strip.
+   *
+   * can-db writes a filable route: `SID … airways and fixes … STAR`. The
+   * scenario house style names neither. The SID is derived by EuroScope from
+   * the departure runway, and the arrival's STAR is written at the end with
+   * the landing runway attached (`IGNAK9J/02R`), so both ends are stripped
+   * here and the arrival's is put back in the form the scenarios use.
+   *
+   * Matched by name rather than by position: a plan whose field publishes no
+   * usable procedure has an empty `sid`/`star`, and blindly dropping the first
+   * and last token would then eat two enroute fixes.
+   */
+  const enrouteOf = (plan: SweatboxRoutePlan): string => {
+    const parts = plan.route.trim().split(/\s+/).filter(Boolean);
+    if (plan.sid && parts[0] === plan.sid) parts.shift();
+    if (plan.star && parts.at(-1) === plan.star) parts.pop();
+    return parts.join(" ");
+  };
   const equipment = options.equipment ?? "";
 
   const locate = (icao: string): [number, number] | null =>
@@ -1208,15 +1103,15 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   ): SweatboxProcedure | null => {
     const forRunway = list.filter((entry) => entry.runway === runwayId);
     if (!forRunway.length) return null;
-    if (!nodes) return forRunway[0];
+    if (!fixIndex.size) return forRunway[0];
 
     let best: SweatboxProcedure | null = null;
     let bestOff = Infinity;
     for (const entry of forRunway) {
       const name = end === "last" ? entry.points.at(-1) : entry.points[0];
-      const node = name ? nodes.get(name) : undefined;
+      const node = name ? fixIndex.get(name) : undefined;
       if (!node) continue;
-      const to = bearingTo(airport.lat, airport.lon, node.lat, node.lon);
+      const to = bearingTo(airport.lat, airport.lon, node[0], node[1]);
       const off = Math.abs(((to - bearing + 540) % 360) - 180);
       if (off < bestOff) {
         bestOff = off;
@@ -1256,20 +1151,20 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
         : String(cruiseLevelFor(track, legNm, spread));
 
       if (outbound) {
-        const sid = pickProcedure(
-          airport.sids,
-          departureRunway.id,
-          track,
-          "last",
-        );
-        if (nodes) {
-          const start = sid?.points.at(-1);
-          const finish = nearestAirwayFix(nodes, other[0], other[1]);
-          if (start && finish) {
-            const path = planRoute(nodes, start, finish);
-            if (path) row.route = formatRoute(nodes, path);
-          }
-        }
+        const plan = routeFor(airport.icao, otherEnd);
+        // **can-db chose the SID, not this file.** It picks by search — every
+        // SID whose last point reaches the airway network is a candidate edge,
+        // so the one that wins is the one that actually shortens the journey.
+        // Picking locally by bearing sent ZGGG departures out on AGVIL1 (south
+        // west) towards Beijing; see `SweatboxRoutePlan`.
+        //
+        // `pickProcedure` survives as the fallback for a pair can-db could not
+        // plan, and only then — it is the runway-correct choice, which is the
+        // property worth keeping when there is no plan to defer to.
+        const sid =
+          (plan && byName(airport.sids, plan.sid)) ??
+          pickProcedure(airport.sids, departureRunway.id, track, "last");
+        if (plan) row.route = enrouteOf(plan) || row.route;
         // What the pseudopilot flies is the SID, picked up from wherever the
         // aircraft already is — not the filed route, which starts where the
         // SID ends.
@@ -1280,24 +1175,21 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
             .join(" ");
         }
       } else {
+        const plan = routeFor(otherEnd, airport.icao);
         // Placement may already have committed to an arrival; reusing it is
         // what keeps the strip, the position and the $ROUTE telling one story.
+        // Placement itself now takes the STAR out of this same plan, so the
+        // two agree by construction rather than by coincidence.
         const star =
           chosenStar ??
+          (plan && byName(airport.stars, plan.star)) ??
           pickProcedure(
             airport.stars,
             arrivalRunway.id,
             (track + 180) % 360,
             "first",
           );
-        if (nodes) {
-          const finish = star?.points[0];
-          const start = nearestAirwayFix(nodes, other[0], other[1]);
-          if (start && finish) {
-            const path = planRoute(nodes, start, finish);
-            if (path) row.route = formatRoute(nodes, path);
-          }
-        }
+        if (plan) row.route = enrouteOf(plan) || row.route;
         // `IGNAK9J/02R` — the STAR carries the runway it was drawn for.
         if (star) {
           row.route = `${row.route} ${star.name}/${arrivalRunway.id}`;
@@ -1700,7 +1592,22 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       // create and cannot have caused.
       row.altitude = APP_ENTRY_ALTITUDE;
 
-      const star = streams.length ? streams[index % streams.length] : null;
+      // **The arrival flies the STAR can-db planned for its own city pair.**
+      //
+      // Which is also what makes several streams: each aircraft carries a
+      // different partner, and a route in from Kunming does not arrive on the
+      // same procedure as one from Seoul. The fan comes out of where the
+      // traffic is actually from rather than out of a list sliced four deep.
+      //
+      // The consequence to know: `arrivalRadials` — the instructor's stated
+      // preference for which directions arrivals come from — only steers the
+      // fallback below. When can-db has a plan, the direction is decided by
+      // the partner airport, and changing the radials will not move it. Pick
+      // the partners instead.
+      const plan = routeFor(row.departure, airport.icao);
+      const star =
+        (plan && byName(airport.stars, plan.star)) ??
+        (streams.length ? streams[index % streams.length] : null);
       const placed = star ? procedureEntry(star.points) : null;
 
       if (placed) {
