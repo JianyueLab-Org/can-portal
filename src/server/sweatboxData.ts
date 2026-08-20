@@ -306,10 +306,80 @@ export async function readFirFixes(
   return rows.map((f) => ({ name: f.ident, lat: f.lat, lon: f.lon }));
 }
 
-/** 全国航路网。can-db 的形状和生成器的已经一致，原样过。 */
+/**
+ * can-db 的一条航段。
+ *
+ * **它从前是个三元组，现在是对象** —— can-db 为「按高低空过滤」加了方向和高度带
+ * （`0005` 那一批），`segments` 就从 `[airway, from, to]` 变成了
+ * `{airway, from, to, dir, minAlt, maxAlt}`。
+ */
+interface DbAirwaySegment {
+  airway: string;
+  from: string;
+  to: string;
+  /** "both" | "forward"（只能 from→to）| "backward"。**这里没有用它**，见下。 */
+  dir: string;
+  minAlt: number | null;
+  maxAlt: number | null;
+}
+
+interface DbAirwayGraph {
+  fixes: Record<string, [number, number]>;
+  /** 代号 → 整条航路的属性。生成器不读，原样忽略。 */
+  airways?: Record<string, unknown>;
+  segments: DbAirwaySegment[];
+}
+
+/**
+ * 全国航路网。
+ *
+ * ## 这一条曾经是盲转型，而它在浏览器里炸了
+ *
+ * 上一版这里写的是「can-db 的形状和生成器的已经一致，原样过」，然后
+ * `callDb<AirwayGraph>` 直接把回包当成生成器的类型。**那句话后来不成立了**：can-db
+ * 把 `segments` 从 `[airway, from, to]` 三元组改成了对象。
+ *
+ * 一个转型不检查任何东西，所以两边都编译得过、两边的 CI 都是绿的，坏在运行时 ——
+ * `buildAirwayIndex` 的 `for (const [airway, a, b] of graph.segments)` 拿对象去解
+ * 构，抛 `{} is not iterable`，**教员一点「生成」整个岛屿就白屏**。
+ *
+ * 教训和这个文件里另外几处是同一条：**跨仓库的形状要翻译，不要断言。** 断言在
+ * TypeScript 里是免费的，代价全部推到了运行时。所以这里逐字段取，取不出来的丢掉并
+ * 记一笔 —— 下一次 can-db 再改形状，是日志里一行计数和一张退化的图，不是一个白屏。
+ *
+ * ## `dir` 和高度带**故意没用**
+ *
+ * `SweatboxProcedure` 那一侧的注释说过同一件事：生成器的图是**无向**的
+ * （`AirwayGraph` 的类型上写着「an airway is flown both ways」），`buildAirwayIndex`
+ * 两个方向都连。can-db 现在给了方向，用上它是一处**行为**改动 —— 会改变规划出来的
+ * 航路 —— 而那份代码的正确性是靠生成出来的场景验证的，不是靠类型。它值得做（对着单
+ * 向航路规划出来的航路是报不掉的），但要单独做、单独验，不该混在一次修白屏里。
+ */
 export async function readAirways(
   context: Pick<APIContext, "request">,
 ): Promise<AirwayGraph> {
-  const graph = await callDb<AirwayGraph>(context, "/api/v1/aip/airways");
-  return graph ?? { fixes: {}, segments: [] };
+  const graph = await callDb<DbAirwayGraph>(context, "/api/v1/aip/airways");
+  if (!graph) return { fixes: {}, segments: [] };
+
+  const segments: AirwayGraph["segments"] = [];
+  let dropped = 0;
+  for (const s of graph.segments ?? []) {
+    // 三元组的老形状也认：can-db 若回滚，这一侧不该跟着坏第二次。
+    if (Array.isArray(s)) {
+      const [airway, from, to] = s as unknown as [string, string, string];
+      if (airway && from && to) segments.push([airway, from, to]);
+      else dropped++;
+      continue;
+    }
+    if (s && s.airway && s.from && s.to)
+      segments.push([s.airway, s.from, s.to]);
+    else dropped++;
+  }
+  if (dropped) {
+    console.error(
+      `can-db /aip/airways: dropped ${dropped} segment(s) of unexpected shape`,
+    );
+  }
+
+  return { fixes: graph.fixes ?? {}, segments };
 }
