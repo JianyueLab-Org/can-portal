@@ -21,6 +21,11 @@ export const LIMITS = {
   result: 2000,
   /** More than this on one case and it is a list, not a decision. */
   handlers: 10,
+  /**
+   * 被反馈人员. Unlike the handlers this may legitimately be empty — a case
+   * about a process is about nobody — so the cap is the only rule here.
+   */
+  subjects: 10,
 } as const;
 
 /**
@@ -40,8 +45,13 @@ export interface CaseInput {
   title: string;
   summary: string;
   result: string;
-  subject: string;
   handlers: string[];
+  /**
+   * 被反馈人员 —— the members the outcome is about, plural since one incident
+   * routinely involves more than one. `feedbackSubject` in can-api; it used to
+   * be a single column there and a single field here.
+   */
+  subjects: string[];
 }
 
 export type CaseErrors = Partial<Record<keyof CaseInput, string>>;
@@ -70,6 +80,9 @@ export function validateCase(input: CaseInput): CaseErrors {
   if (!input.handlers.length) errors.handlers = "handlerRequired";
   else if (input.handlers.length > LIMITS.handlers)
     errors.handlers = "handlerCount";
+
+  // No required check on purpose: naming nobody is a real answer here.
+  if (input.subjects.length > LIMITS.subjects) errors.subjects = "subjectCount";
 
   return errors;
 }

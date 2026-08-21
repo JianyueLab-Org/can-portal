@@ -2,10 +2,15 @@
 /**
  * The feedback disclosure board, staff side.
  *
- * A case names two different people on purpose: the member the result concerns
- * and the staff who decided it. Both are picked from the member list rather
- * than typed, so the board cannot end up quoting an CAN ID that belongs to
- * nobody.
+ * A case names two different sets of people on purpose: the members the result
+ * concerns (被反馈人员) and the staff who decided it. Both are picked from the
+ * member list rather than typed, so the board cannot end up quoting an CAN ID
+ * that belongs to nobody, and both are plural — one incident routinely
+ * involves more than one member on either side.
+ *
+ * Which is why there is one picker component's worth of state and markup for
+ * both, keyed by side: they were two near-identical blocks while the subject
+ * was singular, and the copy that would have followed is what drifts.
  *
  * Publishing is a separate step from saving. A case is drafted, read back, and
  * only then put on a page the whole network can see.
@@ -49,13 +54,15 @@ interface FeedbackCase {
   title: string;
   summary: string;
   result: string;
-  subject: string | null;
-  subjectName: string | null;
   status: number;
   publishedAt: string | null;
   createdAt: string;
   handlers: Person[];
+  subjects: Person[];
 }
+
+/** The two sides of a case: who decided it, and who it is about. */
+type Side = "handler" | "subject";
 
 const cases = ref<FeedbackCase[]>([]);
 const loading = ref(true);
@@ -65,22 +72,46 @@ const feedback = ref<{ type: "success" | "error"; text: string } | null>(null);
 
 const editingId = ref<number | null>(null);
 const form = ref({ title: "", summary: "", result: "" });
-const handlers = ref<Person[]>([]);
-const subject = ref<Person | null>(null);
+const chosen = ref<Record<Side, Person[]>>({ handler: [], subject: [] });
 const fieldErrors = ref<CaseErrors>({});
 
-/** One picker's worth of search state, reused for handlers and the subject. */
-const search = ref({ handler: "", subject: "" });
-const results = ref<{ handler: Member[]; subject: Member[] }>({
-  handler: [],
-  subject: [],
-});
-const searching = ref<"handler" | "subject" | null>(null);
+/** One picker's worth of search state per side. */
+const search = ref<Record<Side, string>>({ handler: "", subject: "" });
+const results = ref<Record<Side, Member[]>>({ handler: [], subject: [] });
+const searching = ref<Side | null>(null);
+
+/**
+ * What differs between the two pickers, and nothing else does.
+ *
+ * `required` is the real difference rather than a styling one: a decision
+ * nobody is named against is what this board exists to stop, while a case
+ * about a process is legitimately about nobody.
+ */
+const pickers = computed(() => [
+  {
+    side: "handler" as const,
+    label: t("fields.handlers"),
+    hint: t("hints.handlers"),
+    removeLabel: t("removeHandler"),
+    error: errorText("handlers"),
+    limit: LIMITS.handlers,
+    required: true,
+  },
+  {
+    side: "subject" as const,
+    label: t("fields.subjects"),
+    hint: t("hints.subjects"),
+    removeLabel: t("removeSubject"),
+    error: errorText("subjects"),
+    limit: LIMITS.subjects,
+    required: false,
+  },
+]);
 
 const columns = computed(() => [
   { key: "code", label: t("columns.code") },
   { key: "title", label: t("columns.title") },
-  { key: "subject", label: t("columns.subject") },
+  { key: "subjects", label: t("columns.subjects") },
   { key: "handlers", label: t("columns.handlers") },
   { key: "status", label: t("columns.status") },
   { key: "actions", label: t("columns.actions"), align: "right" as const },
@@ -98,8 +129,7 @@ function errorText(field: keyof CaseErrors): string | undefined {
 function resetForm() {
   editingId.value = null;
   form.value = { title: "", summary: "", result: "" };
-  handlers.value = [];
-  subject.value = null;
+  chosen.value = { handler: [], subject: [] };
   fieldErrors.value = {};
   search.value = { handler: "", subject: "" };
   results.value = { handler: [], subject: [] };
@@ -112,15 +142,17 @@ function edit(item: FeedbackCase) {
     summary: item.summary,
     result: item.result,
   };
-  handlers.value = [...item.handlers];
-  subject.value = item.subject
-    ? { username: item.subject, name: item.subjectName }
-    : null;
+  // Copies, not the row's own arrays: editing the form must not rewrite the
+  // table underneath it before anything has been saved.
+  chosen.value = {
+    handler: [...item.handlers],
+    subject: [...item.subjects],
+  };
   fieldErrors.value = {};
   window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-async function lookup(which: "handler" | "subject") {
+async function lookup(which: Side) {
   const query = search.value[which].trim();
   if (!query) {
     results.value[which] = [];
@@ -143,22 +175,19 @@ async function lookup(which: "handler" | "subject") {
   }
 }
 
-function addHandler(member: Member) {
-  if (handlers.value.some((h) => h.username === member.username)) return;
-  if (handlers.value.length >= LIMITS.handlers) return;
-  handlers.value.push({ username: member.username, name: member.name });
-  search.value.handler = "";
-  results.value.handler = [];
+function addPerson(side: Side, member: Member, limit: number) {
+  const list = chosen.value[side];
+  if (list.some((p) => p.username === member.username)) return;
+  if (list.length >= limit) return;
+  list.push({ username: member.username, name: member.name });
+  search.value[side] = "";
+  results.value[side] = [];
 }
 
-function removeHandler(username: string) {
-  handlers.value = handlers.value.filter((h) => h.username !== username);
-}
-
-function chooseSubject(member: Member) {
-  subject.value = { username: member.username, name: member.name };
-  search.value.subject = "";
-  results.value.subject = [];
+function removePerson(side: Side, username: string) {
+  chosen.value[side] = chosen.value[side].filter(
+    (p) => p.username !== username,
+  );
 }
 
 async function load() {
@@ -183,8 +212,8 @@ async function load() {
 async function save(publish: boolean) {
   const input = {
     ...form.value,
-    subject: subject.value?.username ?? "",
-    handlers: handlers.value.map((h) => h.username),
+    handlers: chosen.value.handler.map((p) => p.username),
+    subjects: chosen.value.subject.map((p) => p.username),
   };
 
   const errors = validateCase(input);
@@ -251,8 +280,8 @@ async function setStatus(item: FeedbackCase, status: number) {
         title: item.title,
         summary: item.summary,
         result: item.result,
-        subject: item.subject ?? "",
         handlers: item.handlers.map((h) => h.username),
+        subjects: item.subjects.map((s) => s.username),
         publish: status === CASE_PUBLISHED,
       }),
     });
@@ -358,16 +387,20 @@ onMounted(load);
         </div>
 
         <div class="grid gap-4 lg:grid-cols-2">
-          <!-- Handlers -->
-          <div>
+          <!-- Handled by, and who the case is about. Same picker, twice. -->
+          <div v-for="picker in pickers" :key="picker.side">
             <label class="block text-sm font-medium text-ink">
-              {{ t("fields.handlers") }} <span class="text-danger">*</span>
+              {{ picker.label }}
+              <span v-if="picker.required" class="text-danger">*</span>
             </label>
-            <p class="mt-0.5 text-xs text-muted">{{ t("hints.handlers") }}</p>
+            <p class="mt-0.5 text-xs text-muted">{{ picker.hint }}</p>
 
-            <div v-if="handlers.length" class="mt-2 flex flex-wrap gap-1.5">
+            <div
+              v-if="chosen[picker.side].length"
+              class="mt-2 flex flex-wrap gap-1.5"
+            >
               <span
-                v-for="person in handlers"
+                v-for="person in chosen[picker.side]"
                 :key="person.username"
                 class="inline-flex items-center gap-1 rounded-control bg-surface-sunken px-2 py-1 text-xs text-ink"
               >
@@ -375,8 +408,8 @@ onMounted(load);
                 <button
                   type="button"
                   class="text-faint hover:text-danger"
-                  :aria-label="t('removeHandler')"
-                  @click="removeHandler(person.username)"
+                  :aria-label="picker.removeLabel"
+                  @click="removePerson(picker.side, person.username)"
                 >
                   <Icon name="xMark" class="size-3.5" />
                 </button>
@@ -385,90 +418,36 @@ onMounted(load);
 
             <div class="mt-2 flex gap-2">
               <input
-                v-model="search.handler"
+                v-model="search[picker.side]"
                 type="search"
                 class="input text-sm"
                 :placeholder="t('searchMember')"
-                @keyup.enter="lookup('handler')"
+                @keyup.enter="lookup(picker.side)"
               />
               <Button
                 size="sm"
                 variant="secondary"
-                :loading="searching === 'handler'"
-                @click="lookup('handler')"
+                :loading="searching === picker.side"
+                @click="lookup(picker.side)"
               >
                 {{ t("search") }}
               </Button>
             </div>
 
-            <ul v-if="results.handler.length" class="mt-2 space-y-1">
-              <li v-for="member in results.handler" :key="member.username">
+            <ul v-if="results[picker.side].length" class="mt-2 space-y-1">
+              <li v-for="member in results[picker.side]" :key="member.username">
                 <button
                   type="button"
                   class="w-full rounded-control px-2 py-1.5 text-left text-sm hover:bg-surface-sunken"
-                  @click="addHandler(member)"
+                  @click="addPerson(picker.side, member, picker.limit)"
                 >
                   {{ personLabel(member) }}
                 </button>
               </li>
             </ul>
-            <p v-if="errorText('handlers')" class="mt-1 text-xs text-danger">
-              {{ errorText("handlers") }}
+            <p v-if="picker.error" class="mt-1 text-xs text-danger">
+              {{ picker.error }}
             </p>
-          </div>
-
-          <!-- Subject -->
-          <div>
-            <label class="block text-sm font-medium text-ink">{{
-              t("fields.subject")
-            }}</label>
-            <p class="mt-0.5 text-xs text-muted">{{ t("hints.subject") }}</p>
-
-            <div v-if="subject" class="mt-2 flex flex-wrap gap-1.5">
-              <span
-                class="inline-flex items-center gap-1 rounded-control bg-surface-sunken px-2 py-1 text-xs text-ink"
-              >
-                {{ personLabel(subject) }}
-                <button
-                  type="button"
-                  class="text-faint hover:text-danger"
-                  :aria-label="t('clearSubject')"
-                  @click="subject = null"
-                >
-                  <Icon name="xMark" class="size-3.5" />
-                </button>
-              </span>
-            </div>
-
-            <div class="mt-2 flex gap-2">
-              <input
-                v-model="search.subject"
-                type="search"
-                class="input text-sm"
-                :placeholder="t('searchMember')"
-                @keyup.enter="lookup('subject')"
-              />
-              <Button
-                size="sm"
-                variant="secondary"
-                :loading="searching === 'subject'"
-                @click="lookup('subject')"
-              >
-                {{ t("search") }}
-              </Button>
-            </div>
-
-            <ul v-if="results.subject.length" class="mt-2 space-y-1">
-              <li v-for="member in results.subject" :key="member.username">
-                <button
-                  type="button"
-                  class="w-full rounded-control px-2 py-1.5 text-left text-sm hover:bg-surface-sunken"
-                  @click="chooseSubject(member)"
-                >
-                  {{ personLabel(member) }}
-                </button>
-              </li>
-            </ul>
           </div>
         </div>
       </div>
@@ -508,9 +487,9 @@ onMounted(load);
             row.summary
           }}</span>
         </template>
-        <template #cell-subject="{ row }">
-          <span v-if="row.subject" class="text-sm text-ink">
-            {{ row.subjectName ?? row.subject }}
+        <template #cell-subjects="{ row }">
+          <span v-if="row.subjects.length" class="text-sm text-ink">
+            {{ row.subjects.map((s) => s.name ?? s.username).join("、") }}
           </span>
           <span v-else class="text-xs text-faint">—</span>
         </template>
