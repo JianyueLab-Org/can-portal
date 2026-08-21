@@ -431,16 +431,16 @@
         "summary": "経緯",
         "result": "対応結果",
         "handlers": "対応者",
-        "subject": "対象"
+        "subjects": "対象会員"
       },
       "hints": {
         "handlers": "判断を行ったスタッフ。ここに挙げた全員が公示板に表示されます。",
-        "subject": "対応結果の対象となるメンバー。特定の相手がいない場合は空欄にしてください。"
+        "subjects": "対応結果の対象となる会員。複数指定できます。特定の相手がいない場合は空欄にしてください。"
       },
       "searchMember": "CAN IDまたは氏名",
       "search": "検索",
       "removeHandler": "この対応者を削除",
-      "clearSubject": "クリア",
+      "removeSubject": "この会員を削除",
       "saveDraft": "下書きを保存",
       "publish": "公示する",
       "unpublish": "公示を取り下げる",
@@ -457,7 +457,7 @@
       "columns": {
         "code": "整理番号",
         "title": "件名",
-        "subject": "対象",
+        "subjects": "対象会員",
         "handlers": "対応者",
         "status": "状態",
         "actions": "操作"
@@ -477,7 +477,8 @@
         "resultRequired": "対応結果を記入してください。",
         "resultLength": "文字数が多すぎます。",
         "handlerRequired": "対応者を1名以上指定してください。",
-        "handlerCount": "対応者が多すぎます。"
+        "handlerCount": "対応者が多すぎます。",
+        "subjectCount": "対象会員が多すぎます。"
       }
     }
   },

@@ -431,16 +431,16 @@
         "summary": "What happened",
         "result": "Outcome",
         "handlers": "Handled by",
-        "subject": "Concerns"
+        "subjects": "Reported members"
       },
       "hints": {
         "handlers": "The staff who decided it. Everyone named here appears on the board.",
-        "subject": "The member the outcome is about. Leave empty if it is not about one."
+        "subjects": "The members the outcome is about. Name as many as the case concerns, or leave it empty."
       },
       "searchMember": "CAN ID or name",
       "search": "Search",
       "removeHandler": "Remove this handler",
-      "clearSubject": "Clear",
+      "removeSubject": "Remove this member",
       "saveDraft": "Save draft",
       "publish": "Publish",
       "unpublish": "Unpublish",
@@ -457,7 +457,7 @@
       "columns": {
         "code": "Reference",
         "title": "Title",
-        "subject": "Concerns",
+        "subjects": "Reported members",
         "handlers": "Handled by",
         "status": "Status",
         "actions": "Actions"
@@ -477,7 +477,8 @@
         "resultRequired": "Describe the outcome.",
         "resultLength": "That is too long.",
         "handlerRequired": "Name at least one handler.",
-        "handlerCount": "Too many handlers."
+        "handlerCount": "Too many handlers.",
+        "subjectCount": "Too many members."
       }
     }
   },

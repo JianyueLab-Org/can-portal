@@ -431,16 +431,16 @@
         "summary": "簡述",
         "result": "處理結果",
         "handlers": "處理人",
-        "subject": "涉及成員"
+        "subjects": "被反饋人員"
       },
       "hints": {
         "handlers": "作出處理的管理人員，全部會在公示頁面署名。",
-        "subject": "處理結果所針對的成員；不涉及具體成員時留空。"
+        "subjects": "被反饋的成員，可以寫多位；不涉及具體成員時留空。"
       },
       "searchMember": "CAN ID 或姓名",
       "search": "搜尋",
       "removeHandler": "移除該處理人",
-      "clearSubject": "清除",
+      "removeSubject": "移除該被反饋人員",
       "saveDraft": "儲存草稿",
       "publish": "公示",
       "unpublish": "撤下公示",
@@ -457,7 +457,7 @@
       "columns": {
         "code": "編號",
         "title": "名稱",
-        "subject": "涉及成員",
+        "subjects": "被反饋人員",
         "handlers": "處理人",
         "status": "狀態",
         "actions": "操作"
@@ -477,7 +477,8 @@
         "resultRequired": "請填寫處理結果。",
         "resultLength": "內容過長。",
         "handlerRequired": "至少填寫一位處理人。",
-        "handlerCount": "處理人過多。"
+        "handlerCount": "處理人過多。",
+        "subjectCount": "被反饋人員過多。"
       }
     }
   },

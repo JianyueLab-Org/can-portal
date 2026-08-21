@@ -431,16 +431,16 @@
         "summary": "简述",
         "result": "处理结果",
         "handlers": "处理人",
-        "subject": "涉及成员"
+        "subjects": "被反馈人员"
       },
       "hints": {
         "handlers": "作出处理的管理人员，全部会在公示页面署名。",
-        "subject": "处理结果所针对的成员；不涉及具体成员时留空。"
+        "subjects": "被反馈的成员，可以写多位；不涉及具体成员时留空。"
       },
       "searchMember": "CAN ID 或姓名",
       "search": "搜索",
       "removeHandler": "移除该处理人",
-      "clearSubject": "清除",
+      "removeSubject": "移除该被反馈人员",
       "saveDraft": "保存草稿",
       "publish": "公示",
       "unpublish": "撤下公示",
@@ -457,7 +457,7 @@
       "columns": {
         "code": "编号",
         "title": "名称",
-        "subject": "涉及成员",
+        "subjects": "被反馈人员",
         "handlers": "处理人",
         "status": "状态",
         "actions": "操作"
@@ -477,7 +477,8 @@
         "resultRequired": "请填写处理结果。",
         "resultLength": "内容过长。",
         "handlerRequired": "至少填写一位处理人。",
-        "handlerCount": "处理人过多。"
+        "handlerCount": "处理人过多。",
+        "subjectCount": "被反馈人员过多。"
       }
     }
   },
