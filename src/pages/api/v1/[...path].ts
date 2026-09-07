@@ -188,11 +188,22 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
  * 到任何 `pilot/xxx`，而将来若有人加一条精确的 `pilot/data`，它必须先拿到自己
  * 的方法集，否则会被那条只允许 GET 的模式判成 405。can-controller 的同名文件正
  * 是被这一条咬过。
+ *
+ * **精确表必须走 `Object.hasOwn`，不能直接 `ALLOW_LIST[path]`。** 对象字面量
+ * 继承 `Object.prototype`，所以表里从来没写过的一批键**查得到东西**：
+ * `constructor` / `toString` / `valueOf` / `hasOwnProperty` 都返回真值函数，
+ * `__proto__` 返回 `Object.prototype`。于是下面调用方那道 `if (!entry) return
+ * 404` 放行，紧接着的 `entry.methods.includes(method)` 抛 TypeError ——
+ * `GET https://portal.ceruleanavi.net/api/v1/toString` 拿到的不是
+ * `{"error":"not_allowed"}` 而是一个 500，谁都不用登录就能打出来。
+ *
+ * 这**不是**鉴权绕过：异常发生在向上游 `fetch` 之前，一个字节都没转出去。但这
+ * 个站的页眉自己写着「专门用来做高权限操作的域」，一个匿名可触发、响应体长得
+ * 像堆栈的未捕获异常摆在那样一个域上，是最不该留的一种噪音。
  */
 function lookup(path: string): Allowed | undefined {
-  return (
-    ALLOW_LIST[path] ?? ALLOW_PATTERNS.find((entry) => entry.test.test(path))
-  );
+  const exact = Object.hasOwn(ALLOW_LIST, path) ? ALLOW_LIST[path] : undefined;
+  return exact ?? ALLOW_PATTERNS.find((entry) => entry.test.test(path));
 }
 
 const UNSAFE = new Set(["POST", "PATCH", "PUT", "DELETE"]);
