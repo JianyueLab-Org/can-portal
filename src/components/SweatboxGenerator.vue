@@ -447,10 +447,16 @@ function useUnrestricted(): boolean {
 /**
  * 按 1–2 级的数据规划，也就是不用 CAAC 的 NAIP 汇编。
  *
- * 教员有时要看「学员那一档拿到的是什么航路」—— 场景里填的航路串就该是学员会填的那一
- * 条。档下的人不显示这个开关：对他们它恒为空转。
+ * **默认开着**，这是刻意的：场景里那一串航路是给学员飞的，而学员多半没有受限那一档。
+ * 用汇编的发布航线生成，练出来的是一条他自己填不出来、也查不到依据的航路 —— 训练场景
+ * 的价值恰恰在于它和学员真实会遇到的一致。
+ *
+ * 要用汇编那一份就把它取消掉；这个选择留给教员，只是不再是默认。
+ *
+ * 档下的人不显示这个开关，而 `useUnrestricted()` 对他们恒为 false —— 那不影响结果：
+ * 他们本来就在受限档以下，can-db 给的就是公开数据那一份。
  */
-const unrestricted = ref(false);
+const unrestricted = ref(true);
 const canChooseTier = computed(() => props.aipAccess >= 3);
 
 async function planRoutes(
