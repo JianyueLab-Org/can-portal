@@ -77,6 +77,14 @@ import { EQUIPMENT_SUFFIXES } from "@/lib/flightplan";
 const props = defineProps<{
   messages: Record<string, unknown>;
   airports: SweatboxIndexEntry[];
+  /**
+   * 成员的 `aipAccess`，**只用来决定「不使用受限汇编」那个开关出不出**，不是权限
+   * 判断 —— SweatBox 的门是教员评级（见 route.json.ts）。
+   *
+   * can-db 那边 `?unrestricted=1` 是把级别往下压（cap 不是赋值），所以这里判错、或者
+   * 有人自己拼一个带参数的请求，都只可能少看到而不会多看到。
+   */
+  aipAccess: number;
 }>();
 const t = createTranslator(props.messages);
 
@@ -421,6 +429,30 @@ const split = (value: string) =>
  */
 const routeCache = new Map<string, SweatboxRoutePlan | null>();
 
+/**
+ * 缓存键带上档位。
+ *
+ * `routeCache` 从前只按城市对存。加了开关之后，勾一下再重新生成会拿到**上一次那一档**
+ * 的航路 —— 而它是一串合法的代号，图上也正常，没人看得出来。所以档位必须进键。
+ */
+function cacheKey(pair: string): string {
+  return useUnrestricted() ? `${pair}!u` : pair;
+}
+
+/** 只有档上的人勾了才算数 —— 档下的人这个 ref 恒为 false，但判一次更明确。 */
+function useUnrestricted(): boolean {
+  return canChooseTier.value && unrestricted.value;
+}
+
+/**
+ * 按 1–2 级的数据规划，也就是不用 CAAC 的 NAIP 汇编。
+ *
+ * 教员有时要看「学员那一档拿到的是什么航路」—— 场景里填的航路串就该是学员会填的那一
+ * 条。档下的人不显示这个开关：对他们它恒为空转。
+ */
+const unrestricted = ref(false);
+const canChooseTier = computed(() => props.aipAccess >= 3);
+
 async function planRoutes(
   icao: string,
   partners: string[],
@@ -435,22 +467,27 @@ async function planRoutes(
 
   await Promise.all(
     wanted
-      .filter((key) => !routeCache.has(key))
+      .filter((key) => !routeCache.has(cacheKey(key)))
       .map(async (key) => {
         const [from, to] = key.split("-");
         try {
           const response = await fetch(
-            `/instr/sweatbox/route.json?from=${from}&to=${to}`,
+            `/instr/sweatbox/route.json?from=${from}&to=${to}` +
+              (useUnrestricted() ? "&unrestricted=1" : ""),
           );
-          routeCache.set(key, response.ok ? await response.json() : null);
+          routeCache.set(
+            cacheKey(key),
+            response.ok ? await response.json() : null,
+          );
         } catch {
-          routeCache.set(key, null);
+          routeCache.set(cacheKey(key), null);
         }
       }),
   );
 
   const out: Record<string, SweatboxRoutePlan | null> = {};
-  for (const key of wanted) out[key] = routeCache.get(key) ?? null;
+  // 返回的键仍然是 `from-to`（下游按城市对查），缓存的键带着档位。
+  for (const key of wanted) out[key] = routeCache.get(cacheKey(key)) ?? null;
   return out;
 }
 
@@ -1627,6 +1664,27 @@ async function copy() {
           :hint="t('sources.cruiseHint')"
           name="src-cruise"
         />
+        <!--
+          3–4 级才有的开关：按 1–2 级的数据规划航路，也就是不用 CAAC 的 NAIP 汇编。
+
+          教员有时要看「学员那一档拿到的是什么航路」—— 场景里填的航路串就该是学员会填
+          的那一条。档下的人不显示：对他们它恒为空转（can-db 那边是把级别往下压，cap
+          不是赋值），摆出来只会让人以为自己错过了什么。
+        -->
+        <label
+          v-if="canChooseTier"
+          class="flex cursor-pointer items-start gap-2 self-end pb-1"
+        >
+          <input v-model="unrestricted" type="checkbox" class="mt-0.5" />
+          <span>
+            <span class="block text-sm font-medium text-ink">{{
+              t("sources.unrestricted")
+            }}</span>
+            <span class="mt-1.5 block text-xs text-faint">{{
+              t("sources.unrestrictedHint")
+            }}</span>
+          </span>
+        </label>
         <Input
           v-model="sources.taxiRoute"
           :label="t('sources.taxi')"

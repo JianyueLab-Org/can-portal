@@ -628,7 +628,9 @@
       "equipment": "Equipment suffix",
       "equipmentHint": "Rides after the type as B738/L — the same shape a member files",
       "cruiseHint": "Blank picks the Chinese semicircular level from each leg s track and length; fill it to pin every strip to one level",
-      "routeNote": "Routes are planned over the airway network: departures pick up airways at the SID exit, arrivals end on the STAR and landing runway"
+      "routeNote": "Routes are planned over the airway network: departures pick up airways at the SID exit, arrivals end on the STAR and landing runway",
+      "unrestricted": "Without the restricted compilation",
+      "unrestrictedHint": "Plan routes from tier 1–2 data only, leaving out NAIP — this is what a student gets."
     },
     "errors": {
       "title": "Planted mistakes",

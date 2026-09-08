@@ -403,9 +403,13 @@ export async function readRoute(
   from: string,
   to: string,
   level = 0,
+  unrestricted = false,
 ): Promise<SweatboxRoutePlan | null> {
   const query = new URLSearchParams({ from, to });
   if (level > 0) query.set("level", String(level));
+  // 不勾就不带参数，而不是带 `unrestricted=0` —— 两者等价，少一个参数少一份歧义。
+  // can-db 那边是把级别**往下压**（cap 不是赋值），所以带上它只可能少看到。
+  if (unrestricted) query.set("unrestricted", "1");
   const plan = await callDb<DbRoutePlan>(
     context,
     `/api/v1/aip/route?${query.toString()}`,
