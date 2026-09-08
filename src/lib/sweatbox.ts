@@ -131,6 +131,17 @@ export interface SweatboxProcedure {
   name: string;
   runway: string;
   points: string[];
+  /**
+   * 这条程序在哪儿接上航路网 —— 离场的出口、进场的入口。
+   *
+   * **不能用 `points.at(-1)` / `points[0]` 代替。** NAIP 把一条程序的几个转换首尾相接
+   * 塞进同一串点里（346 条 SID、47 条 STAR，一行最多 11 组），所以那两个下标取到的是
+   * 「最后/最先存进去的那一组的端点」，可能是面向跑道的一端。规则见 sweatboxData 的
+   * `procedureGate`，和 can-db 的 `procedureGateIdents` 是同一条。
+   *
+   * 老数据源不给就是 null，那时退回下标。
+   */
+  gate?: string | null;
 }
 
 export interface SweatboxAirport {
@@ -1108,7 +1119,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     let best: SweatboxProcedure | null = null;
     let bestOff = Infinity;
     for (const entry of forRunway) {
-      const name = end === "last" ? entry.points.at(-1) : entry.points[0];
+      const name =
+        entry.gate ?? (end === "last" ? entry.points.at(-1) : entry.points[0]);
       const node = name ? fixIndex.get(name) : undefined;
       if (!node) continue;
       const to = bearingTo(airport.lat, airport.lon, node[0], node[1]);
@@ -1558,7 +1570,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
 
     if (options.arrivalRadials.length && streams.length > 1) {
       const wantBearing = (star: SweatboxProcedure) => {
-        const entry = fixIndex.get(star.points[0]);
+        const entry = fixIndex.get(star.gate ?? star.points[0]);
         return entry
           ? bearingTo(airport.lat, airport.lon, entry[0], entry[1])
           : null;
