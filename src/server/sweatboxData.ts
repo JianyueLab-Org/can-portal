@@ -88,7 +88,56 @@ interface DbAirportDetail extends DbAirportBase {
     /** 完整的服务跑道清单，逗号分隔。老数据源不给，就是 null。 */
     runways: string | null;
     points: string[];
+    /**
+     * 同一串点，带上每条腿的属性 —— 这里只用 `transition`。
+     *
+     * **一条程序的点列不是一条航迹。** NAIP 把一条 SID 的跑道转换和公共段全塞进同一
+     * 行的 seq 序列里，346 条 SID 和 47 条 STAR 是这样，一行最多 11 组。所以
+     * `points.at(-1)` 取到的是「最后存进去的那一组的末端」，而不是它接上航路网的地方。
+     */
+    path?: Array<{ ident: string | null; transition: string | null }>;
   }>;
+}
+
+/** `RW19L` 这类跑道转换的名字。它面向跑道，永远不是接航路网的那一端。 */
+const RUNWAY_TRANSITION = /^RW[0-9]{2}[LRCG]?$/;
+
+/**
+ * 这条程序在哪儿接上航路网。
+ *
+ * 按 `transition` 分组，跑道转换那几组不算；SID 取每组的**末**点、STAR 取**首**点。
+ * 和 can-db 的 `procedureGateIdents` 是同一条规则 —— 那边修的是入网口选错（28 条 SID
+ * 的末点落在 `RWxx` 组上），这边修的是同一个假设：场景里离场航路从 SID 的末点起算。
+ *
+ * 一组都不剩时退回跑道组，再退回整串的首末 —— 宁可给一个偏的点，也不能让这条程序在
+ * 生成器里彻底消失。
+ */
+function procedureGate(
+  kind: "sid" | "star",
+  points: string[],
+  path?: Array<{ ident: string | null; transition: string | null }>,
+): string | null {
+  const fallback =
+    kind === "star" ? (points[0] ?? null) : (points.at(-1) ?? null);
+  if (!path?.length) return fallback;
+
+  const groups = new Map<string, string[]>();
+  for (const leg of path) {
+    if (!leg.ident) continue;
+    const key = leg.transition ?? "";
+    const list = groups.get(key);
+    if (list) list.push(leg.ident);
+    else groups.set(key, [leg.ident]);
+  }
+  const pick = (includeRunway: boolean): string | null => {
+    for (const [name, idents] of groups) {
+      if (!includeRunway && RUNWAY_TRANSITION.test(name)) continue;
+      const ident = kind === "star" ? idents[0] : idents.at(-1);
+      if (ident) return ident;
+    }
+    return null;
+  };
+  return pick(false) ?? pick(true) ?? fallback;
 }
 
 /**
@@ -273,6 +322,7 @@ export async function readAirport(
           name: p.name,
           runway,
           points: p.points,
+          gate: procedureGate("sid", p.points, p.path),
         })),
       ),
     stars: a.procedures
@@ -282,6 +332,7 @@ export async function readAirport(
           name: p.name,
           runway,
           points: p.points,
+          gate: procedureGate("star", p.points, p.path),
         })),
       ),
   };
