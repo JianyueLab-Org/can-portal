@@ -39,6 +39,7 @@ import {
   Select,
   Skeleton,
 } from "@jianyuelab-org/can-ui";
+import type { AirportStack, StackSeat } from "@/lib/positionStack";
 import { apiFetch } from "@/lib/canApi";
 
 const props = defineProps<{
@@ -275,59 +276,195 @@ async function addPosition() {
   }
 }
 
+/* ------------------------------------------------------------------ *
+ * 从扇区包取整摞席位
+ * ------------------------------------------------------------------ */
+
 /**
- * Opens every unclaimed seat type at one airport in one press — the ordinary
- * case for an event field. Already-open seats come back as `duplicateCallsign`,
- * which is not an error worth showing here, so they are simply skipped.
+ * 这里从前是「一键开全席」：拿机场代号拼出 `ZBAA_DEL`…`ZBAA_CTR` 五个呼号、不带频
+ * 率，一次开五个。
+ *
+ * **它对大场是错的，而且错得没有任何提示。** 浦东的进近是 `ZSSS_APP`（虹桥进近管浦
+ * 东），`ZSPD_APP` 这个呼号根本不存在；石家庄没有自己的区调，管它的是 `ZBAA_W_CTR`
+ * → `ZBAA_CTR` → `ZBPE_CTR`；桃园的区调全姓 `TPE_`。拼出来的一列呼号**看起来完全正
+ * 常**，于是活动当天没人连得上那个席位。对着真数据量过：269 个机场里 21 个会拼错。
+ *
+ * 现在改成问 can-db 要 —— 它照扇区包的 owner 链解出来，呼号和频率都是真的，每一层还
+ * 标好了默认开哪一个。这一侧只负责摆出来让人勾。
  */
-async function addAllPositions() {
+const stack = ref<AirportStack | null>(null);
+const stackBusy = ref(false);
+/** 勾上的席位，键是 `seatKey`。 */
+const picked = ref(new Set<string>());
+/** 一个呼号有多个频率时选了哪一个。 */
+const freqChoice = ref<Record<string, string>>({});
+
+/** 一个席位在这一摞里的身份。**带上 facility** —— `DEP` 并进了进近那一格。 */
+function seatKey(seat: StackSeat): string {
+  return `${seat.facility}:${seat.callsign}`;
+}
+
+/** 按 facility 分组，组内保持 can-db 给的顺序（primary 在前）。 */
+const stackGroups = computed(() => {
+  const seats = stack.value?.seats ?? [];
+  return BOOKABLE_FACILITIES.map((facility) => ({
+    facility,
+    seats: seats.filter((s) => s.facility === facility),
+  })).filter((g) => g.seats.length);
+});
+
+const pickedCount = computed(() => picked.value.size);
+
+async function loadStack() {
   const airport = normalizeIcao(seatForm.value.airport);
   if (!isValidIcao(airport)) {
     feedback.value = { type: "error", text: t("errors.invalidIcao") };
     return;
   }
-  if (busy.value) return;
+  if (stackBusy.value) return;
+  stackBusy.value = true;
+  feedback.value = null;
+  stack.value = null;
+  try {
+    // 本站的端点，不是 can-api 的反代 —— 这批数据在 can-db，而 can-db 只在集群内
+    // 监听。`credentials` 写明而不是靠默认值：同源默认就是带的，但这一行是这个请
+    // 求能认人的唯一原因，值得写出来。
+    const res = await fetch(`/super/activities/${airport}.json`, {
+      credentials: "same-origin",
+      headers: { accept: "application/json" },
+    });
+    if (!res.ok) {
+      throw new Error(
+        res.status === 502 ? t("stackUnreachable") : t("actionFailed"),
+      );
+    }
+    const data = (await res.json()) as AirportStack;
+    stack.value = data;
+    // 默认勾的是 can-db 标出来的那一行 —— 每层一个，正好是「从放行到区调一摞」。
+    picked.value = new Set(
+      data.seats.filter((seat) => seat.primary).map(seatKey),
+    );
+    freqChoice.value = Object.fromEntries(
+      data.seats.map((seat) => [seatKey(seat), seat.frequencies[0] ?? ""]),
+    );
+  } catch (e) {
+    feedback.value = {
+      type: "error",
+      text: e instanceof Error ? e.message : t("actionFailed"),
+    };
+  } finally {
+    stackBusy.value = false;
+  }
+}
+
+function togglePick(seat: StackSeat) {
+  const key = seatKey(seat);
+  const next = new Set(picked.value);
+  if (next.has(key)) next.delete(key);
+  else next.add(key);
+  picked.value = next;
+}
+
+/**
+ * 把勾上的一次开出来。
+ *
+ * **重复呼号单独数，不当失败。** `activityPosition` 上是
+ * `@@unique([activityId, callsign])` —— 一场活动里一个呼号只能开一次，而这是常事：
+ * 先开 ZBAA 再开 ZBSJ，两摞里都有 `ZBAA_CTR`。把它算进「失败」会让一次完全正常的操
+ * 作报错；一声不吭地跳过又会让人以为漏开了。所以数出来，在结果里说。
+ */
+async function addPickedSeats() {
+  const current = stack.value;
+  if (!current || busy.value) return;
+  const chosen = current.seats.filter((seat) =>
+    picked.value.has(seatKey(seat)),
+  );
+  if (!chosen.length) return;
+
   busy.value = true;
   feedback.value = null;
-  let added = 0;
-  // Kept so "nothing was added" can say *why* — all five already open reads
-  // very differently from the seat cap being reached.
+  const done: string[] = [];
+  let duplicate = 0;
   let lastError: unknown = null;
   try {
-    for (const facility of BOOKABLE_FACILITIES) {
+    for (const seat of chosen) {
+      const key = seatKey(seat);
       const res = await apiFetch(`/api/v1/super/activity/${props.activityId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "addPosition",
-          airport,
-          facility,
-          minRating: DEFAULT_FACILITY_MIN_RATING[facility],
+          // **机场是查询的那个，不是呼号的头一段。** `ZSSS_APP` 是浦东这一摞里的进
+          // 近，它要挂在 ZSPD 名下，否则详情页会把它分到一个没人报名的机场组里。
+          airport: current.icao,
+          facility: seat.facility,
+          callsign: seat.callsign,
+          frequency: freqChoice.value[key] ?? "",
+          minRating: seat.minRating,
         }),
       });
       if (res.ok) {
-        added++;
-      } else {
-        lastError = (await res.json().catch(() => ({}))).error;
+        done.push(key);
+        continue;
       }
+      const code = (await res.json().catch(() => ({}))).error;
+      if (code === "duplicateCallsign") duplicate++;
+      else lastError = code;
     }
-    feedback.value = added
-      ? {
-          type: "success",
-          text: t("positionsAdded", { count: String(added), airport }),
-        }
-      : {
-          type: "error",
-          text:
-            typeof lastError === "string" && KNOWN_ERRORS.includes(lastError)
-              ? t(`errors.${lastError}`)
-              : t("actionFailed"),
-        };
+
+    // 开成了的取消勾选，剩下的留着 —— 人要能看见是哪几个没开出去。
+    if (done.length) {
+      const next = new Set(picked.value);
+      for (const key of done) next.delete(key);
+      picked.value = next;
+    }
+
+    feedback.value = describeAdd(
+      done.length,
+      duplicate,
+      lastError,
+      current.icao,
+    );
     await load(true);
     emit("changed");
   } finally {
     busy.value = false;
   }
+}
+
+/** 「开了几个、跳过几个、剩下的为什么没开」说成一句话。 */
+function describeAdd(
+  added: number,
+  duplicate: number,
+  lastError: unknown,
+  airport: string,
+): { type: "success" | "error"; text: string } {
+  if (added && duplicate) {
+    return {
+      type: "success",
+      text: t("stackAddedSome", {
+        count: String(added),
+        airport,
+        skipped: String(duplicate),
+      }),
+    };
+  }
+  if (added) {
+    return {
+      type: "success",
+      text: t("positionsAdded", { count: String(added), airport }),
+    };
+  }
+  if (duplicate) {
+    return { type: "error", text: t("stackAllDuplicate") };
+  }
+  return {
+    type: "error",
+    text:
+      typeof lastError === "string" && KNOWN_ERRORS.includes(lastError)
+        ? t(`errors.${lastError}`)
+        : t("actionFailed"),
+  };
 }
 
 /** Frequency / rating-gate edits, applied per row on blur-and-save. */
@@ -624,6 +761,101 @@ onMounted(load);
       </ul>
       <p v-else class="mb-5 text-sm text-muted">{{ t("noPositions") }}</p>
 
+      <!-- 扇区包给的整摞席位。呼号和频率都是真的，每层默认勾一个。 -->
+      <section
+        v-if="stack"
+        class="mb-5 rounded-control border border-subtle bg-surface-sunken p-4"
+      >
+        <div class="flex flex-wrap items-baseline justify-between gap-2">
+          <p class="text-sm font-semibold text-ink">
+            {{ t("stackTitle", { airport: stack.icao }) }}
+          </p>
+          <button
+            type="button"
+            class="text-xs text-muted underline-offset-2 hover:underline"
+            @click="stack = null"
+          >
+            {{ t("stackDismiss") }}
+          </button>
+        </div>
+        <p class="mt-1 text-xs text-muted">{{ t("stackHint") }}</p>
+
+        <!-- 两句刻意说出来的话：这一摞是猜的、这一摞没有区调。它们和「读不到」
+             长得一样，不说就只能靠人自己发现。 -->
+        <AlertBox v-if="!stack.hasChain" class="mt-3" variant="warning">
+          {{ t("stackNoChain") }}
+        </AlertBox>
+        <AlertBox v-else-if="!stack.hasEnroute" class="mt-3" variant="info">{{
+          t("stackNoEnroute")
+        }}</AlertBox>
+
+        <p v-if="!stack.seats.length" class="mt-3 text-sm text-muted">
+          {{ t("stackEmpty", { airport: stack.icao }) }}
+        </p>
+
+        <div v-else class="mt-3 space-y-3">
+          <div v-for="group in stackGroups" :key="group.facility">
+            <p
+              class="text-[0.7rem] font-semibold tracking-wide text-muted uppercase"
+            >
+              {{ facilityCode(group.facility) }} ·
+              {{ t(`facilities.${FACILITY_KEYS[group.facility]}`) }}
+            </p>
+            <ul class="mt-1 space-y-1">
+              <li
+                v-for="seat in group.seats"
+                :key="seatKey(seat)"
+                class="flex flex-wrap items-center gap-2 rounded-control bg-surface px-2.5 py-2"
+              >
+                <input
+                  :id="`stack-${seatKey(seat)}`"
+                  type="checkbox"
+                  class="size-4 shrink-0 accent-[var(--color-can)]"
+                  :checked="picked.has(seatKey(seat))"
+                  @change="togglePick(seat)"
+                />
+                <label
+                  :for="`stack-${seatKey(seat)}`"
+                  class="font-mono text-sm text-ink"
+                >
+                  {{ seat.callsign }}
+                </label>
+                <Badge v-if="!seat.own" variant="neutral" size="sm">
+                  {{ t("stackForeign") }}
+                </Badge>
+                <!-- 一个呼号好几个频率是真数据（RJTT_TWR 三个）。摆成选项让人挑，
+                     因为一场活动里一个呼号只能开一次。 -->
+                <div v-if="seat.frequencies.length > 1" class="w-32">
+                  <Select
+                    v-model="freqChoice[seatKey(seat)]"
+                    :name="`stack-freq-${seatKey(seat)}`"
+                    :options="
+                      seat.frequencies.map((f) => ({ value: f, label: f }))
+                    "
+                  />
+                </div>
+                <span v-else class="font-mono text-sm text-muted">
+                  {{ seat.frequencies[0] ?? "—" }}
+                </span>
+                <span class="ml-auto text-xs text-muted">
+                  {{ ratingCode(seat.minRating) }}
+                </span>
+              </li>
+            </ul>
+          </div>
+
+          <Button
+            type="button"
+            :loading="busy"
+            :disabled="!pickedCount"
+            @click="addPickedSeats"
+          >
+            <template #icon><Icon name="plus" class="size-4" /></template>
+            {{ t("stackAdd", { count: String(pickedCount) }) }}
+          </Button>
+        </div>
+      </section>
+
       <form
         v-if="!locked"
         class="space-y-3 border-t border-subtle pt-5"
@@ -677,10 +909,11 @@ onMounted(load);
           <Button
             type="button"
             variant="secondary"
+            :loading="stackBusy"
             :disabled="busy"
-            @click="addAllPositions"
+            @click="loadStack"
           >
-            {{ t("addAllPositions") }}
+            {{ t("fetchStack") }}
           </Button>
         </div>
       </form>

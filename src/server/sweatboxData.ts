@@ -30,15 +30,13 @@
  * **服务端专用**，绝不能被岛屿 import。
  */
 import type { APIContext } from "astro";
-import { CAN_DB_ORIGIN } from "@/lib/config";
+import { callDb } from "@/server/canDb";
 import type {
   SweatboxAirport,
   SweatboxRoutePlan,
   SweatboxFix,
   SweatboxIndexEntry,
 } from "@/lib/sweatbox";
-
-const TIMEOUT_MS = 8_000;
 
 /**
  * can-db 的返回形状，逐字对应它的 json 标签。
@@ -190,41 +188,6 @@ interface DbFix {
   lat: number;
   lon: number;
   fir: string | null;
-}
-
-async function callDb<T>(
-  context: Pick<APIContext, "request">,
-  path: string,
-): Promise<T | null> {
-  const headers: Record<string, string> = {};
-  const cookie = context.request.headers.get("cookie");
-  // cookie 一定要带：can-db 拿它去 can-api 认人。教员（8 级及以上）读得到这批数
-  // 据，不需要 ADM 另外授予资料库权限 —— can-db 的 `session.Member.CanRead` 上写
-  // 着为什么。
-  if (cookie) headers.cookie = cookie;
-
-  let response: Response;
-  try {
-    response = await fetch(CAN_DB_ORIGIN + path, {
-      headers,
-      signal: AbortSignal.timeout(TIMEOUT_MS),
-    });
-  } catch (error) {
-    console.error(`can-db ${path} unreachable:`, error);
-    return null;
-  }
-
-  if (!response.ok) {
-    console.error(`can-db ${path} answered ${response.status}`);
-    return null;
-  }
-
-  const body = (await response.json().catch(() => ({}))) as Record<
-    string,
-    unknown
-  >;
-  const data = "data" in body ? body.data : body;
-  return (data ?? null) as T | null;
 }
 
 /**

@@ -158,6 +158,54 @@ A*。那套实现和 can-db 的 `internal/aip/route.go` 是同一件事的两份
 2.8444…）。那十四张 `PERFAC` 表是**逐字**从那批文件抄的，所以校准某一行时优先挑一
 份指令拼对了的源文件。
 
+## 开活动的席位也从 can-db 来：整摞，不是拼出来的
+
+活动的席位面板上从前有一个「一键开全席」：拿机场代号拼出 `ZBAA_DEL`…`ZBAA_CTR` 五个
+呼号、**不带频率**，一次开五个。
+
+**它对大场是错的，而且错得没有任何提示。**
+
+- 浦东的进近是 `ZSSS_APP`（虹桥进近管浦东），`ZSPD_APP` 这个呼号根本不存在。
+- 石家庄没有自己的区调，管它的是 `ZBAA_W_CTR` → `ZBAA_CTR` → `ZBPE_CTR`。
+- 桃园的区调全姓 `TPE_`，一个不姓 `RCTP`。
+
+拼出来的一列呼号看起来完全正常，于是活动当天没人连得上那个席位。对着线上量过：**269
+个有席位的机场里 21 个会拼错**。
+
+现在问 can-db 要 —— `GET /api/v1/aip/airports/{icao}/positions`，它照扇区包的 owner 链
+解出来，每层还标好了默认开哪一个（`primary`）。链路和 SweatBox 那条一样：岛屿打本站的
+`/super/activities/{icao}.json` → `src/server/positionStack.ts` 调 can-db 并翻形状。
+
+**放在 `/super/activities/` 底下是为了让中间件那道 `/super` → SUP 的门自动盖住它。**
+换个路径就得自己记得配，而这批数据是排班用的。`activities.astro` 和同名目录能并存，
+Astro 两种都认。
+
+**翻译里有三处判断，都是这一侧的事实决定的，`src/server/positionStack.test.ts` 各钉一
+条：**
+
+- **`DEP` 并进 `APP`。** can-db 有六层，`ActivityFacility` 只有五个 —— 它是全站通用的
+  席位编号，不是为扇区包定义的。呼号原样保留（`RJTT_DEP` 还是 `RJTT_DEP`），只是归在
+  进近那一格。改 `ActivityFacility` 要连着 can-api 的 schema、报名控件、详情页分组一起
+  改，而这里只是一个显示分组。
+- **同一呼号的多个频率合成一行。** can-db 刻意不合并（`RJTT_TWR` 三行三个频率是真数
+  据），而 `activityPosition` 上是 `@@unique([activityId, callsign])` —— **一场活动里一
+  个呼号只能开一次**，三行全开会是一个成功两个 409。合并在这边做，因为那条唯一约束是
+  can-api 的事，不是航行资料的性质。
+- **不认识的 facility 整行丢掉**，不兜底成某一层：多出来一种意味着上游加了新席位类型，
+  那时该有人来决定它归哪一格，而不是让它悄悄变成进近。
+
+**重复呼号不算失败。** 先开 ZBAA 再开 ZBSJ，两摞里都有 `ZBAA_CTR`；第二次是 409。算进
+「失败」会让一次完全正常的操作报错，一声不吭地跳过又会让人以为漏开了 —— 所以单独数，在
+结果里说。
+
+**界面上有两句刻意说出来的话**，因为它们和「读不到」长得一样：`hasChain` 为假时说「塔
+台及以上是按呼号前缀取的，可能不全」，`hasEnroute` 为假时说「这一摞里没有区调」。同理
+上游读不到给 502、读到了但是空的给 200 —— 一个是「再试一次」，一个是「自己填吧」。
+
+`src/server/canDb.ts` 是向 can-db 要数据的**唯一**出口，SweatBox 和这里共用它。拆出来
+之前它在 `sweatboxData.ts` 里，名字绑着 SweatBox；第二个消费者出现时照抄一份是最省事的
+写法，也正是 monorepo 里 `radarTypes.ts` 那类「两份从来没一致过」的来源。
+
 ## 词典是切出来的，不是抄整本
 
 `language/*.json` 是从 can-web 的四本词典里**按用到的命名空间切**下来的（65 KB →
@@ -193,13 +241,20 @@ can-web 上已经删掉了，那边没有别的东西在用它们。
 ```bash
 bun install
 bun run dev        # :4328
-bun run lint       # format:check + astro check + vue-tsc —— CI 跑的就是这个
+bun run lint       # format:check + astro check + vue-tsc + bun test —— CI 跑的就是这个
+bun run test       # 单独跑测试
 bun run build && bun run start
 ```
 
-没有测试套件，和另外五个卫星站一样。门禁是 `bun run lint` 加一次 `bun run build`。
-`astro check` 看不见 `.vue`，而这个站的七个页面除了一层 `.astro` 外壳之外全是 Vue
-岛屿 —— 所以 `typecheck` 同时跑 `vue-tsc`，**两个都要留着**。
+门禁是 `bun run lint` 加一次 `bun run build`。`astro check` 看不见 `.vue`，而这个站的
+七个页面除了一层 `.astro` 外壳之外全是 Vue 岛屿 —— 所以 `typecheck` 同时跑 `vue-tsc`，
+**两个都要留着**。
+
+**有一个测试文件了**（`src/server/positionStack.test.ts`，`bun test`，和 can-database
+一样零配置）。这个站从前和另外五个卫星站一样没有测试，加它是因为席位那一层的翻译会
+**静默**出错：一场活动开在一个不存在的呼号上，界面上什么都不说，要到当天才发现。CI 不
+用改 —— `lint` 里加了一句，而 `check.yml` 跑的就是 `lint`。`@types/bun` 和 tsconfig 的
+`types: ["node", "bun"]` 是让 `astro check` 认识 `bun:test` 的那两处。
 
 ## 还没做的事
 
