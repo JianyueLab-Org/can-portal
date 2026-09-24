@@ -688,15 +688,16 @@
       "access": "权限"
     },
     "levels": {
-      "none": "无",
-      "read": "只读",
-      "write": "可编辑",
-      "restrictedRead": "受限只读",
-      "restrictedWrite": "受限可编辑"
+      "none": "无权访问",
+      "call": "可调用",
+      "browse": "可阅读",
+      "restrictedCall": "受限可调用",
+      "restrictedBrowse": "受限可阅读",
+      "manage": "管理/编辑"
     },
     "grant": {
       "title": "授予权限",
-      "help": "搜 CAN ID 或姓名。只读能浏览全部资料；可编辑还能改 —— 编辑功能还没上线，但级别现在就可以先发。",
+      "help": "搜 CAN ID 或姓名。可调用：其他服务可经 API 替该成员取公开数据，不能进控制台；可阅读：另加控制台。受限两级同理，数据范围含受限资料（NAIP）。管理/编辑：以上全部，并可增删改资料库里的任何数据。",
       "search": "搜索成员",
       "searchPlaceholder": "CAN ID 或姓名…",
       "action": "授予",

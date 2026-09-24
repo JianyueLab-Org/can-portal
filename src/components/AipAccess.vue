@@ -3,7 +3,7 @@
  * 航行资料库的访问授权。**只有 ADM。**
  *
  * 这一页管的是 can-api `user.aipAccess` 那一列 —— 谁能打开
- * database.ceruleanavi.net（can-db），以及只读还是可编辑。
+ * database.ceruleanavi.net（can-db）、能取哪一档数据，以及能不能改。
  *
  * ## 为什么它是独立的一页，而不是花名册上的一栏
  *
@@ -52,24 +52,24 @@ const props = defineProps<{
 const t = createTranslator(props.messages);
 
 /**
- * 三个级别，和 can-api 的 `store.AIPNone/AIPRead/AIPWrite` 对齐。
+ * 六个级别，和 can-api `store` 里的 aipAccess 常量对齐。一条累进的梯子：
  *
- * can-api 的 `aipaccess_test.go` 把这三个数字钉死，就是为了让这类副本敢依赖它们。
+ * - 0 无权访问
+ * - 1 可调用：其他服务可以替这个成员经 API 取公开数据，不能进控制台
+ * - 2 可阅读：再加上控制台
+ * - 3 受限可调用：受限数据（CAAC 的 NAIP 汇编）也能经 API 取，不能进控制台
+ * - 4 受限可阅读：再加上控制台
+ * - 5 管理/编辑：以上全部，外加写、增、删 can-db 的任何数据
+ *
+ * **受限门槛跟着数据走，不写死在代码里**：can-db 的 `dataset.min_access` 记着每一批数据要
+ * 多少级才看得到，这里只负责发级别。所以以后再来一批受限数据，不用改这个文件。
  */
 const ACCESS_NONE = 0;
-const ACCESS_READ = 1;
-const ACCESS_WRITE = 2;
-/**
- * 受限资料的两级。
- *
- * 3 / 4 是给**官方 AIP 汇编**（民航局 NAIP）那一类数据用的 —— 它和面向模拟的派生数据不
- * 是一回事，所以自成一档，而不是复用「可编辑」。
- *
- * **门槛跟着数据走，不写死在代码里**：can-db 的 `dataset.min_access` 记着每一批数据要多
- * 少级才看得到，这里只负责发级别。所以以后再来一批受限数据，不用改这个文件。
- */
-const ACCESS_RESTRICTED_READ = 3;
-const ACCESS_RESTRICTED_WRITE = 4;
+const ACCESS_CALL = 1;
+const ACCESS_BROWSE = 2;
+const ACCESS_RESTRICTED_CALL = 3;
+const ACCESS_RESTRICTED_BROWSE = 4;
+const ACCESS_MANAGE = 5;
 
 interface Grantee {
   username: string;
@@ -107,22 +107,24 @@ const columns = [
 ];
 
 const levelOptions = [
-  { value: String(ACCESS_READ), label: t("levels.read") },
-  { value: String(ACCESS_WRITE), label: t("levels.write") },
-  { value: String(ACCESS_RESTRICTED_READ), label: t("levels.restrictedRead") },
+  { value: String(ACCESS_CALL), label: t("levels.call") },
+  { value: String(ACCESS_BROWSE), label: t("levels.browse") },
+  { value: String(ACCESS_RESTRICTED_CALL), label: t("levels.restrictedCall") },
   {
-    value: String(ACCESS_RESTRICTED_WRITE),
-    label: t("levels.restrictedWrite"),
+    value: String(ACCESS_RESTRICTED_BROWSE),
+    label: t("levels.restrictedBrowse"),
   },
+  { value: String(ACCESS_MANAGE), label: t("levels.manage") },
 ];
 
-/* 从高往低判，而且**必须从高往低**：这是一条累进的梯子，4 级的人 `>= ACCESS_WRITE`
- * 也成立，从低往高写会把每个人都标成「只读」。 */
+/* 从高往低判，而且**必须从高往低**：这是一条累进的梯子，5 级的人 `>= ACCESS_BROWSE`
+ * 也成立，从低往高写会把每个人都标成「可调用」。 */
 function accessLabel(level: number): string {
-  if (level >= ACCESS_RESTRICTED_WRITE) return t("levels.restrictedWrite");
-  if (level >= ACCESS_RESTRICTED_READ) return t("levels.restrictedRead");
-  if (level >= ACCESS_WRITE) return t("levels.write");
-  if (level >= ACCESS_READ) return t("levels.read");
+  if (level >= ACCESS_MANAGE) return t("levels.manage");
+  if (level >= ACCESS_RESTRICTED_BROWSE) return t("levels.restrictedBrowse");
+  if (level >= ACCESS_RESTRICTED_CALL) return t("levels.restrictedCall");
+  if (level >= ACCESS_BROWSE) return t("levels.browse");
+  if (level >= ACCESS_CALL) return t("levels.call");
   return t("levels.none");
 }
 
@@ -205,7 +207,7 @@ async function setAccess(username: string, level: number) {
 const pending = ref<Record<string, string>>({});
 
 function grant(member: Member) {
-  const level = Number(pending.value[member.username] ?? ACCESS_READ);
+  const level = Number(pending.value[member.username] ?? ACCESS_CALL);
   setAccess(member.username, level);
 }
 
@@ -259,7 +261,7 @@ onMounted(load);
             <Select
               v-model="pending[m.username]"
               :options="levelOptions"
-              :placeholder="t('levels.read')"
+              :placeholder="t('levels.call')"
               class="w-32"
             />
             <Button
@@ -319,19 +321,21 @@ onMounted(load);
         <template #cell-access="{ row }">
           <Badge
             :variant="
-              row.access >= ACCESS_RESTRICTED_READ
+              row.access >= ACCESS_MANAGE
                 ? 'danger'
-                : row.access >= ACCESS_WRITE
+                : row.access >= ACCESS_RESTRICTED_CALL
                   ? 'warning'
-                  : 'info'
+                  : row.access >= ACCESS_BROWSE
+                    ? 'success'
+                    : 'info'
             "
           >
             {{ accessLabel(row.access) }}
           </Badge>
         </template>
 
-        <!-- 从前这里是「升一级 / 降一级」两个按钮。四级之后那两个按钮没有意义了 ——
-             「升级」只够得到 2，够不到受限的两级；而一个只能走一半的按钮比没有按钮更
+        <!-- 从前这里是「升一级 / 降一级」两个按钮。级别多了之后那两个按钮没有意义了 ——
+             一级一级点才够得到受限那几档；而一个只能走一半的按钮比没有按钮更
              难懂。改成直接选目标级别，一步到位，也顺带让「降级」不再是个猜谜。 -->
         <template #cell-actions="{ row }">
           <div class="flex flex-wrap items-center justify-end gap-2">

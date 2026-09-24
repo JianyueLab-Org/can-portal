@@ -688,15 +688,16 @@
       "access": "Access"
     },
     "levels": {
-      "none": "None",
-      "read": "Read",
-      "write": "Write",
-      "restrictedRead": "Restricted read",
-      "restrictedWrite": "Restricted edit"
+      "none": "No access",
+      "call": "API access",
+      "browse": "Browse",
+      "restrictedCall": "Restricted API access",
+      "restrictedBrowse": "Restricted browse",
+      "manage": "Manage / edit"
     },
     "grant": {
       "title": "Grant access",
-      "help": "Search by CAN ID or name. Read browses everything; write also edits — editing is not built yet, but the level can be issued now.",
+      "help": "Search by CAN ID or name. API access: other services may fetch open data through the API on the member's behalf; no console. Browse: adds the console. The restricted levels are the same with restricted (NAIP) data included. Manage / edit: everything above, plus adding, changing and deleting any data in the database.",
       "search": "Search members",
       "searchPlaceholder": "CAN ID or name…",
       "action": "Grant",

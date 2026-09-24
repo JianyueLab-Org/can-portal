@@ -445,7 +445,7 @@ function useUnrestricted(): boolean {
 }
 
 /**
- * 按 1–2 级的数据规划，也就是不用 CAAC 的 NAIP 汇编。
+ * 按 1–2 级（非受限）的数据规划，也就是不用 CAAC 的 NAIP 汇编。
  *
  * **默认开着**，这是刻意的：场景里那一串航路是给学员飞的，而学员多半没有受限那一档。
  * 用汇编的发布航线生成，练出来的是一条他自己填不出来、也查不到依据的航路 —— 训练场景
@@ -457,7 +457,9 @@ function useUnrestricted(): boolean {
  * 他们本来就在受限档以下，can-db 给的就是公开数据那一份。
  */
 const unrestricted = ref(true);
-const canChooseTier = computed(() => props.aipAccess >= 3);
+/** 3 级（受限可调用）起能取到 NAIP 汇编，才有得选。 */
+const AIP_RESTRICTED_CALL = 3;
+const canChooseTier = computed(() => props.aipAccess >= AIP_RESTRICTED_CALL);
 
 async function planRoutes(
   icao: string,
@@ -1671,7 +1673,7 @@ async function copy() {
           name="src-cruise"
         />
         <!--
-          3–4 级才有的开关：按 1–2 级的数据规划航路，也就是不用 CAAC 的 NAIP 汇编。
+          3 级及以上才有的开关：按 1–2 级（非受限）的数据规划航路，也就是不用 CAAC 的 NAIP 汇编。
 
           教员有时要看「学员那一档拿到的是什么航路」—— 场景里填的航路串就该是学员会填
           的那一条。档下的人不显示：对他们它恒为空转（can-db 那边是把级别往下压，cap

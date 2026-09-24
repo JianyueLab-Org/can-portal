@@ -17,7 +17,7 @@
       "title": "管理者（ADM）",
       "items": {
         "promote": "昇格承認",
-        "aipAccess": "资料库权限",
+        "aipAccess": "データベース権限",
         "developers": "開発者権限"
       }
     },
@@ -676,38 +676,39 @@
     }
   },
   "aipAccess": {
-    "eyebrow": "管理员",
-    "title": "航行资料库权限",
-    "description": "谁能打开 database.ceruleanavi.net。这一列只有 ADM 能改，而且和管制评级是两回事 —— 校对航图的人不一定有评级，有评级也不等于该编辑程序编码。",
-    "loading": "载入中…",
-    "granted": "已给 {id} 开通：{level}",
-    "revoked": "已撤销 {id} 的资料库权限",
+    "eyebrow": "管理者",
+    "title": "航空情報データベースの権限",
+    "description": "database.ceruleanavi.net を開けるのは誰か。この項目は ADM のみが変更でき、管制レーティングとは別物です —— チャートを校正する人がレーティングを持つとは限らず、レーティングを持っていても手順コーディングを編集してよいとは限りません。",
+    "loading": "読み込み中…",
+    "granted": "{id} に付与しました：{level}",
+    "revoked": "{id} のデータベース権限を取り消しました",
     "columns": {
-      "member": "成员",
-      "rating": "评级",
-      "access": "权限"
+      "member": "メンバー",
+      "rating": "レーティング",
+      "access": "権限"
     },
     "levels": {
-      "none": "无",
-      "read": "只读",
-      "write": "可编辑",
-      "restrictedRead": "制限付き閲覧",
-      "restrictedWrite": "制限付き編集"
+      "none": "アクセス不可",
+      "call": "API 利用",
+      "browse": "閲覧",
+      "restrictedCall": "制限付き API 利用",
+      "restrictedBrowse": "制限付き閲覧",
+      "manage": "管理・編集"
     },
     "grant": {
-      "title": "授予权限",
-      "help": "搜 CAN ID 或姓名。只读能浏览全部资料；可编辑还能改 —— 编辑功能还没上线，但级别现在就可以先发。",
-      "search": "搜索成员",
-      "searchPlaceholder": "CAN ID 或姓名…",
-      "action": "授予",
-      "noMatches": "没有匹配的成员。"
+      "title": "権限を付与",
+      "help": "CAN ID または氏名で検索。API 利用：他のサービスがこのメンバーに代わって API で公開データを取得できます（コンソール不可）。閲覧：加えてコンソールも利用可。制限付きの 2 段階も同様で、制限データ（NAIP）を含みます。管理・編集：上記すべてに加え、データベースのあらゆるデータを追加・変更・削除できます。",
+      "search": "メンバーを検索",
+      "searchPlaceholder": "CAN ID または氏名…",
+      "action": "付与",
+      "noMatches": "該当するメンバーはいません。"
     },
     "current": {
-      "title": "当前有权限的人",
-      "empty": "还没有人有资料库权限",
-      "emptyHelp": "在上面搜一个成员来授予。",
-      "you": "你自己",
-      "revoke": "撤销",
+      "title": "現在の権限保持者",
+      "empty": "まだ誰もデータベース権限を持っていません",
+      "emptyHelp": "上でメンバーを検索して付与してください。",
+      "you": "あなた",
+      "revoke": "取り消し",
       "setLevel": "レベル設定"
     }
   },

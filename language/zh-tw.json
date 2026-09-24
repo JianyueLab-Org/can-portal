@@ -17,7 +17,7 @@
       "title": "管理員",
       "items": {
         "promote": "晉升審核",
-        "aipAccess": "资料库权限",
+        "aipAccess": "資料庫權限",
         "developers": "開發者授權"
       }
     },
@@ -676,38 +676,39 @@
     }
   },
   "aipAccess": {
-    "eyebrow": "管理员",
-    "title": "航行资料库权限",
-    "description": "谁能打开 database.ceruleanavi.net。这一列只有 ADM 能改，而且和管制评级是两回事 —— 校对航图的人不一定有评级，有评级也不等于该编辑程序编码。",
-    "loading": "载入中…",
-    "granted": "已给 {id} 开通：{level}",
-    "revoked": "已撤销 {id} 的资料库权限",
+    "eyebrow": "管理員",
+    "title": "航行資料庫權限",
+    "description": "誰能開啟 database.ceruleanavi.net。這一欄只有 ADM 能改，而且和管制評級是兩回事 —— 校對航圖的人不一定有評級，有評級也不等於該編輯程序編碼。",
+    "loading": "載入中…",
+    "granted": "已為 {id} 開通：{level}",
+    "revoked": "已撤銷 {id} 的資料庫權限",
     "columns": {
-      "member": "成员",
-      "rating": "评级",
-      "access": "权限"
+      "member": "成員",
+      "rating": "評級",
+      "access": "權限"
     },
     "levels": {
-      "none": "无",
-      "read": "只读",
-      "write": "可编辑",
-      "restrictedRead": "受限唯讀",
-      "restrictedWrite": "受限可編輯"
+      "none": "無權存取",
+      "call": "可調用",
+      "browse": "可閱讀",
+      "restrictedCall": "受限可調用",
+      "restrictedBrowse": "受限可閱讀",
+      "manage": "管理/編輯"
     },
     "grant": {
-      "title": "授予权限",
-      "help": "搜 CAN ID 或姓名。只读能浏览全部资料；可编辑还能改 —— 编辑功能还没上线，但级别现在就可以先发。",
-      "search": "搜索成员",
+      "title": "授予權限",
+      "help": "搜尋 CAN ID 或姓名。可調用：其他服務可經 API 代該成員取得公開資料，不能進入控制台；可閱讀：另加控制台。受限兩級同理，資料範圍含受限資料（NAIP）。管理/編輯：以上全部，並可新增、修改、刪除資料庫中的任何資料。",
+      "search": "搜尋成員",
       "searchPlaceholder": "CAN ID 或姓名…",
       "action": "授予",
-      "noMatches": "没有匹配的成员。"
+      "noMatches": "沒有符合的成員。"
     },
     "current": {
-      "title": "当前有权限的人",
-      "empty": "还没有人有资料库权限",
-      "emptyHelp": "在上面搜一个成员来授予。",
+      "title": "目前擁有權限的人",
+      "empty": "還沒有人擁有資料庫權限",
+      "emptyHelp": "在上方搜尋一位成員來授予。",
       "you": "你自己",
-      "revoke": "撤销",
+      "revoke": "撤銷",
       "setLevel": "設定級別"
     }
   },
