@@ -1,15 +1,11 @@
-/**
- * Airport-specific traffic rules for the SweatBox generator.
- *
- * Keep operational facts here rather than burying them in the composer. The
- * rules are intentionally opt-in per airport: fields without an entry retain
- * the generator's old free-form airline and destination behaviour.
- */
+/** Airport-specific airline, destination and terminal rules. */
 
 export interface TrafficChoice {
   airline: string;
   partner: string;
   terminal: string | null;
+  /** Fixed scheduled callsign; absent for ordinary generated traffic. */
+  callsign?: string;
 }
 
 interface StandLike {
@@ -20,15 +16,13 @@ interface StandLike {
 
 interface TerminalRule {
   id: string;
-  /** Explicit names take precedence when a verified stand list is available. */
   stands?: string[];
-  /** Geographic fallback for data sources that only publish stand coordinates. */
   bounds?: { north: number; south: number; east: number; west: number };
 }
 
 interface OperationRule {
   airline: string;
-  terminal: string;
+  terminal?: string;
   destinations?: string[];
   market?: "mainland" | "regional";
 }
@@ -36,12 +30,21 @@ interface OperationRule {
 interface AirportTrafficRule {
   terminals: TerminalRule[];
   operations: OperationRule[];
+  requiredDepartures?: Array<Required<TrafficChoice>>;
+}
+
+function routes(
+  entries: Record<string, string[]>,
+  terminal?: string,
+): OperationRule[] {
+  return Object.entries(entries).map(([airline, destinations]) => ({
+    airline,
+    destinations,
+    ...(terminal ? { terminal } : {}),
+  }));
 }
 
 const ZSSS_T1_DOMESTIC: Record<string, string[]> = {
-  // Route lists are deliberately conservative: only airports publicly listed
-  // for the operating carrier are included. They are a dated seed, not a claim
-  // that every seasonal flight operates every day.
   CQH: [
     "ZGGG",
     "ZGSZ",
@@ -77,52 +80,33 @@ const ZSSS_T1_DOMESTIC: Record<string, string[]> = {
 
 const AIRPORT_RULES: Record<string, AirportTrafficRule> = {
   ZSSS: {
-    // Terminal allocation and airline lists:
-    // https://www.shairport.com/ensh/airlines/index.html
-    // Route allowlists are a conservative 2026-09 snapshot of the destinations
-    // published for each operator. Keep the explicit lists narrow when unsure:
-    // omitting a seasonal route is safer than generating an impossible one.
+    // Shanghai Airport airline directory and ANA/JAL airport guides, 2026-09.
     terminals: [
-      // Hongqiao T1 is east of the runways and T2 is west. can-db supplies the
-      // actual stand coordinates, so this remains valid when stand names in a
-      // sector package change. Add `stands` here if an authoritative stand list
-      // becomes available; no guessed stand-number ranges belong in this file.
       {
         id: "T1",
-        bounds: {
-          north: 31.215,
-          south: 31.185,
-          east: 121.36,
-          west: 121.337,
-        },
+        bounds: { north: 31.215, south: 31.185, east: 121.36, west: 121.337 },
       },
       {
         id: "T2",
-        bounds: {
-          north: 31.215,
-          south: 31.185,
-          east: 121.337,
-          west: 121.31,
-        },
+        bounds: { north: 31.215, south: 31.185, east: 121.337, west: 121.31 },
       },
     ],
     operations: [
-      ...Object.entries(ZSSS_T1_DOMESTIC).map(([airline, destinations]) => ({
-        airline,
-        terminal: "T1",
-        destinations,
-      })),
-      { airline: "ANA", terminal: "T1", destinations: ["RJTT"] },
-      { airline: "JAL", terminal: "T1", destinations: ["RJTT"] },
-      { airline: "KAL", terminal: "T1", destinations: ["RKSS"] },
-      { airline: "AAR", terminal: "T1", destinations: ["RKSS"] },
-      { airline: "CPA", terminal: "T1", destinations: ["VHHH"] },
-      { airline: "CRK", terminal: "T1", destinations: ["VHHH"] },
-      { airline: "CAL", terminal: "T1", destinations: ["RCSS"] },
-      { airline: "EVA", terminal: "T1", destinations: ["RCSS"] },
-      { airline: "AMU", terminal: "T1", destinations: ["VMMC"] },
-      // These carriers use T1 for regional/international services and T2 for
-      // mainland services. Separate rows make that distinction data, not code.
+      ...routes(ZSSS_T1_DOMESTIC, "T1"),
+      ...routes(
+        {
+          ANA: ["RJTT"],
+          JAL: ["RJTT"],
+          KAL: ["RKSS"],
+          AAR: ["RKSS"],
+          CPA: ["VHHH"],
+          CRK: ["VHHH"],
+          CAL: ["RCSS"],
+          EVA: ["RCSS"],
+          AMU: ["VMMC"],
+        },
+        "T1",
+      ),
       ...["CES", "CSH", "CCA"].flatMap((airline) => [
         { airline, terminal: "T1", market: "regional" as const },
         { airline, terminal: "T2", market: "mainland" as const },
@@ -145,6 +129,219 @@ const AIRPORT_RULES: Record<string, AirportTrafficRule> = {
         market: "mainland" as const,
       })),
     ],
+    requiredDepartures: [
+      { callsign: "ANA970", airline: "ANA", partner: "RJTT", terminal: "T1" },
+      { callsign: "JAL82", airline: "JAL", partner: "RJTT", terminal: "T1" },
+    ],
+  },
+  ZSPD: {
+    // Japanese Wikipedia plus Shanghai Airport, ANA and JAL airport guides.
+    // No stand bounds until a verified stand-to-terminal table is available.
+    terminals: [],
+    operations: routes({
+      CES: [
+        "ZBAA",
+        "ZBAD",
+        "ZGGG",
+        "ZGSZ",
+        "ZUUU",
+        "ZUCK",
+        "ZLXY",
+        "ZPPP",
+        "ZYHB",
+        "ZYTL",
+        "ZSAM",
+        "ZSFZ",
+        "ZSNJ",
+        "VHHH",
+        "RCTP",
+        "RKSI",
+        "RJAA",
+        "RJBB",
+        "RJFF",
+        "RJTT",
+        "VTBS",
+        "WSSS",
+      ],
+      CSH: [
+        "ZBAA",
+        "ZGGG",
+        "ZGSZ",
+        "ZUUU",
+        "ZUCK",
+        "ZSAM",
+        "ZSFZ",
+        "VHHH",
+        "RKSI",
+      ],
+      DKH: [
+        "ZBAA",
+        "ZGGG",
+        "ZGSZ",
+        "ZUUU",
+        "ZUCK",
+        "ZSAM",
+        "VHHH",
+        "RKSI",
+        "RJAA",
+        "RJBB",
+        "RJFF",
+        "RJTT",
+        "VTBS",
+      ],
+      CQH: [
+        "ZGGG",
+        "ZGSZ",
+        "ZUUU",
+        "ZYHB",
+        "ZYTX",
+        "VHHH",
+        "VMMC",
+        "RCTP",
+        "RKSI",
+        "RJAA",
+        "RJBB",
+        "RJFF",
+        "VTBS",
+      ],
+      CCA: ["ZBAA", "ZBAD", "ZUUU", "ZYHB"],
+      CSN: ["ZGGG", "ZGSZ", "ZYHB", "ZYTX"],
+      CSC: ["ZUUU"],
+      CXA: ["ZSAM", "ZSFZ"],
+      CSZ: ["ZGSZ"],
+      CDG: ["ZSQD", "ZSJN"],
+      ANA: ["RJAA", "RJBB", "RJTT"],
+      JAL: ["RJAA", "RJBB", "RJTT"],
+      KAL: ["RKSI"],
+      AAR: ["RKSI"],
+      CPA: ["VHHH"],
+      EVA: ["RCTP"],
+      CAL: ["RCTP"],
+      SIA: ["WSSS"],
+      THA: ["VTBS"],
+    }),
+    requiredDepartures: [
+      { callsign: "ANA974", airline: "ANA", partner: "RJBB", terminal: null },
+      { callsign: "JAL894", airline: "JAL", partner: "RJBB", terminal: null },
+    ],
+  },
+  ZBHH: {
+    // Conservative operating-carrier baseline from the Hohhot route table.
+    terminals: [],
+    operations: routes({
+      CCA: ["ZBAA", "ZBAD", "ZUUU"],
+      CUA: ["ZBAD"],
+      CES: ["ZSPD", "ZLXY", "ZPPP"],
+      CSH: ["ZSPD"],
+      CSN: ["ZGGG", "ZYTX"],
+      CHH: ["ZBAA", "ZJHK"],
+      GCR: ["ZBTJ", "ZLXY", "ZUCK"],
+      CDG: ["ZSJN", "ZSQD"],
+      CSZ: ["ZGSZ"],
+      CSC: ["ZUUU"],
+      CXA: ["ZSAM", "ZSFZ"],
+      CDC: ["ZSHC"],
+    }),
+  },
+  RJFF: {
+    // Fukuoka Airport route and airline directories, 2026-09.
+    terminals: [],
+    operations: routes({
+      ANA: ["RJTT", "RJOO", "RJGG", "RJCC", "ROAH", "RJSS"],
+      JAL: ["RJTT", "RJOO", "RJCC", "ROAH"],
+      SKY: ["RJTT", "RJCC", "ROAH", "RJAH"],
+      SFJ: ["RJTT", "RJGG"],
+      JJP: ["RJAA", "RJCC", "RJGG", "RJBB"],
+      APJ: ["RJAA", "RJCC", "ROAH", "ROIG"],
+      FDA: ["RJSN", "RJNK", "RJNA"],
+      IBX: ["RJSS", "RJNK", "RJSN"],
+      ORC: ["RJFE", "RJDT", "RJFM"],
+      SNJ: ["ROAH"],
+      CES: ["ZSPD"],
+      CSH: ["ZSPD"],
+      CQH: ["ZSPD"],
+      DKH: ["ZSPD"],
+      CCA: ["ZBAA"],
+      KAL: ["RKSI", "RKPK"],
+      AAR: ["RKSI"],
+      CPA: ["VHHH"],
+      EVA: ["RCTP"],
+      CAL: ["RCTP", "RCKH"],
+      THA: ["VTBS"],
+      SIA: ["WSSS"],
+    }),
+  },
+  RJTT: {
+    // Haneda airport airline/destination directories, conservative subset.
+    terminals: [],
+    operations: routes({
+      ANA: [
+        "RJCC",
+        "RJCH",
+        "RJEC",
+        "RJCM",
+        "RJSA",
+        "RJSK",
+        "RJSS",
+        "RJGG",
+        "RJOO",
+        "RJBB",
+        "RJFF",
+        "RJOA",
+        "RJOM",
+        "RJOK",
+        "RJNK",
+        "RJFM",
+        "RJFK",
+        "ROAH",
+        "ROMY",
+        "ROIG",
+        "ZSSS",
+        "ZSPD",
+        "ZBAA",
+        "VHHH",
+        "RKSI",
+        "WSSS",
+        "VTBS",
+      ],
+      JAL: [
+        "RJCC",
+        "RJCH",
+        "RJSA",
+        "RJSK",
+        "RJSS",
+        "RJGG",
+        "RJOO",
+        "RJBB",
+        "RJFF",
+        "RJOA",
+        "RJOM",
+        "RJOK",
+        "RJFK",
+        "ROAH",
+        "ZSSS",
+        "ZSPD",
+        "ZBAA",
+        "VHHH",
+        "RKSI",
+        "WSSS",
+        "VTBS",
+      ],
+      ADO: ["RJCC", "RJEC", "RJCH", "RJCM", "RJCK", "RJSS"],
+      SKY: ["RJCC", "RJFF", "RJBE", "ROAH", "RJFK", "RJFU"],
+      SNJ: ["RJFM", "RJFK", "RJFO", "RJFU", "ROAH"],
+      SFJ: ["RJFR", "RJFF", "RJBB", "RJDC"],
+      CCA: ["ZBAA", "ZSPD"],
+      CES: ["ZSPD", "ZSSS"],
+      CSN: ["ZGGG", "ZBAD"],
+      KAL: ["RKSI", "RKSS"],
+      AAR: ["RKSS"],
+      CPA: ["VHHH"],
+      EVA: ["RCSS"],
+      CAL: ["RCSS"],
+      SIA: ["WSSS"],
+      THA: ["VTBS"],
+    }),
   },
 };
 
@@ -172,12 +369,6 @@ function matchesOperation(operation: OperationRule, partner: string): boolean {
   return true;
 }
 
-/**
- * Build legal airline/city-pair choices. A configured airline is never allowed
- * to fall back outside its rules; this is what prevents ANA from being paired
- * with a mainland domestic leg. Unknown airlines remain free-form so an
- * instructor can still enter a charter or a newly introduced operator.
- */
 export function trafficChoicesFor(
   airport: string,
   airlines: string[],
@@ -203,14 +394,39 @@ export function trafficChoicesFor(
       const operation = operations.find((entry) =>
         matchesOperation(entry, partner),
       );
-      if (operation)
-        choices.push({ airline, partner, terminal: operation.terminal });
+      if (operation) {
+        choices.push({
+          airline,
+          partner,
+          terminal: operation.terminal ?? null,
+        });
+      }
     }
   }
   return choices;
 }
 
-/** Return the configured terminal for a real stand, or null when unclassified. */
+/** Select exactly one required scheduled departure, reproducibly by seed. */
+export function requiredDepartureFor(
+  airport: string,
+  seed: number,
+): TrafficChoice | null {
+  const choices = AIRPORT_RULES[airport]?.requiredDepartures ?? [];
+  if (!choices.length) return null;
+  return choices[Math.abs(Math.trunc(seed)) % choices.length];
+}
+
+/** Partners the UI must ask can-db to route even if not typed in the dialog. */
+export function requiredPartnersFor(airport: string): string[] {
+  return [
+    ...new Set(
+      (AIRPORT_RULES[airport]?.requiredDepartures ?? []).map(
+        (flight) => flight.partner,
+      ),
+    ),
+  ];
+}
+
 export function terminalForStand(
   airport: string,
   stand: StandLike,

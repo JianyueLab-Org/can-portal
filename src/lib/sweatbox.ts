@@ -77,6 +77,7 @@
 import { PERFORMANCE } from "@/lib/sweatboxPerf";
 import { joinAircraft } from "@/lib/flightplan";
 import {
+  requiredDepartureFor,
   terminalForStand,
   trafficChoicesFor,
   type TrafficChoice,
@@ -1036,7 +1037,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   if (!airlines.length || !types.length) return [];
 
   const trafficChoices = trafficChoicesFor(airport.icao, airlines, partners);
-  if (!trafficChoices.length) return [];
+  const requiredDeparture = requiredDepartureFor(airport.icao, seed);
+  if (!trafficChoices.length && !requiredDeparture) return [];
 
   const random = seeded(seed);
   // Only `REQALT` uses this now. Aircraft on the ground are written at 0 and
@@ -1058,6 +1060,15 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     const fallback = `${airline}${9000 + usedCallsigns.size}`;
     usedCallsigns.add(fallback);
     return fallback;
+  };
+
+  const callsignFor = (choice: TrafficChoice): string => {
+    if (!choice.callsign) return nextCallsign(choice.airline);
+    if (!usedCallsigns.has(choice.callsign)) {
+      usedCallsigns.add(choice.callsign);
+      return choice.callsign;
+    }
+    return nextCallsign(choice.airline);
   };
 
   const nextSquawk = (): string => {
@@ -1315,7 +1326,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   };
 
   const aircraft: ScenarioAircraft[] = [];
-  let ordinal = 0;
+  let trafficCursor = 0;
+  let requiredDepartureUsed = false;
 
   const base = (
     profile: ScenarioProfile,
@@ -1323,16 +1335,21 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     choice: TrafficChoice,
   ): ScenarioAircraft => {
     const row = emptyAircraft(profile);
-    row.callsign = nextCallsign(choice.airline);
-    ordinal++;
+    row.callsign = callsignFor(choice);
     row.type = types[index % types.length];
     row.equipment = equipment;
     row.tas = DEFAULT_TAS[profile];
     return row;
   };
 
-  const trafficAt = (index: number): TrafficChoice =>
-    trafficChoices[index % trafficChoices.length];
+  const nextTraffic = (outbound: boolean): TrafficChoice | null => {
+    if (outbound && requiredDeparture && !requiredDepartureUsed) {
+      requiredDepartureUsed = true;
+      return requiredDeparture;
+    }
+    if (!trafficChoices.length) return null;
+    return trafficChoices[trafficCursor++ % trafficChoices.length];
+  };
 
   /** Procedure points that can be located, for trimming a SID or STAR. */
   const fixIndex = new Map<string, [number, number]>();
@@ -1465,9 +1482,9 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   // packed onto one pier. See `pickDispersedStands` for why that matters.
   if (profiles.includes("GND")) {
     const wanted = clamp(counts.GND, 0, MAX_PER_PROFILE);
-    const choices = Array.from({ length: wanted }, (_, index) =>
-      trafficAt(ordinal + index),
-    );
+    const choices = Array.from({ length: wanted }, () =>
+      nextTraffic(true),
+    ).filter((choice): choice is TrafficChoice => choice !== null);
     const assignments = new Map<number, SweatboxStand>();
     const usedStands = new Set<string>();
     const groups = new Map<string, number[]>();
@@ -1526,7 +1543,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     const wanted = clamp(counts.TWR, 0, MAX_PER_PROFILE);
     const reciprocal = (arrivalRunway.hdg + 180) % 360;
     for (let index = 0; index < wanted; index++) {
-      const choice = trafficAt(ordinal);
+      const choice = nextTraffic(false);
+      if (!choice) break;
       const distance = 3 + index * 2.2;
       const placed = destination(
         arrivalRunway.lat,
@@ -1568,7 +1586,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   if (profiles.includes("DEP")) {
     const wanted = clamp(counts.DEP, 0, MAX_PER_PROFILE);
     for (let index = 0; index < wanted; index++) {
-      const choice = trafficAt(ordinal);
+      const choice = nextTraffic(true);
+      if (!choice) break;
       const row = base("DEP", index, choice);
       row.squawk = nextSquawk();
       row.departure = airport.icao;
@@ -1636,7 +1655,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     streams = streams.slice(0, MAX_STREAMS);
 
     for (let index = 0; index < wanted; index++) {
-      const choice = trafficAt(ordinal);
+      const choice = nextTraffic(false);
+      if (!choice) break;
       const row = base("APP", index, choice);
       row.squawk = nextSquawk();
       row.departure = choice.partner;
