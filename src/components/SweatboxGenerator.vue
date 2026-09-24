@@ -73,6 +73,7 @@ import {
 } from "@/lib/sweatbox";
 import { PERFORMANCE_TYPES } from "@/lib/sweatboxPerf";
 import { EQUIPMENT_SUFFIXES } from "@/lib/flightplan";
+import { requiredPartnersFor } from "@/lib/sweatboxTrafficRules";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
@@ -502,7 +503,12 @@ async function planRoutes(
 /** Compose the whole scenario's traffic, replacing whatever is in the table. */
 async function generate() {
   if (!airport.value || !arrivalRunway.value || !departureRunway.value) return;
-  const partners = split(sources.value.partners);
+  const partners = [
+    ...new Set([
+      ...split(sources.value.partners),
+      ...requiredPartnersFor(airport.value.icao),
+    ]),
+  ];
   const routes = await planRoutes(airport.value.icao, partners);
   const produced = generateTraffic({
     airport: airport.value,
