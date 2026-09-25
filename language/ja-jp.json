@@ -23,6 +23,7 @@
     },
     "activitiesManage": "イベント管理",
     "prizesManage": "景品管理",
+    "lotteryManage": "抽選管理",
     "feedbackManage": "対応結果の公示",
     "signOut": "ログアウト",
     "unrestricted": "NAIP を隠す",
@@ -430,6 +431,113 @@
       }
     }
   },
+  "lottery": {
+    "manage": {
+      "title": "抽選管理",
+      "description": "ストアの景品で抽選を行います。締め切り後、自動で抽選されます。",
+      "create": "抽選を作成",
+      "list": "抽選一覧",
+      "loading": "読み込み中…",
+      "noLotteries": "抽選はまだありません",
+      "noLotteriesHint": "右上の「抽選を作成」から下書きを作成します。",
+      "noShopPrizes": "ストアに景品がありません。先に景品管理で追加してください。",
+      "redemptionNote": "当選者には 0 ポイントの交換が作成されます。景品管理の交換申請から発送してください。",
+      "redemptionLink": "交換申請へ",
+      "timeWithLocal": "{zulu} · 現地 {local}",
+      "prizeItem": "{name} ×{count}",
+      "close": "閉じる",
+      "columns": {
+        "title": "タイトル",
+        "closesAt": "締め切り",
+        "status": "状態",
+        "prizes": "景品",
+        "entries": "応募",
+        "actions": "操作"
+      },
+      "status": {
+        "draft": "下書き",
+        "open": "受付中",
+        "drawn": "抽選済み",
+        "cancelled": "中止"
+      },
+      "actions": {
+        "view": "表示",
+        "edit": "編集",
+        "publish": "公開",
+        "cancel": "中止"
+      },
+      "editor": {
+        "newTitle": "抽選を作成",
+        "editTitle": "下書きを編集",
+        "hint": "下書きは公開するまで何度でも変更できます。公開時に景品が在庫から差し引かれます。",
+        "create": "下書きを作成",
+        "save": "保存"
+      },
+      "fields": {
+        "title": "タイトル",
+        "description": "説明（任意）",
+        "closesAt": "締め切り",
+        "timezone": "タイムゾーン",
+        "prizes": "景品"
+      },
+      "timezones": {
+        "zulu": "ZULU（UTC）",
+        "local": "現地時間"
+      },
+      "hints": {
+        "closesAt": "この時刻に応募を締め切り、直後に抽選します。",
+        "prizes": "この抽選で配る各景品の数を入力します。空欄は対象外です。"
+      },
+      "stock": "在庫 {stock}",
+      "overStock": "現在の在庫 {stock} を超えています。在庫を補充するまで公開できません。",
+      "stockMissing": "ストアから削除済み",
+      "countFor": "{name} の数量",
+      "detail": {
+        "closesAt": "締め切り {time}",
+        "drawnAt": "抽選 {time}",
+        "prizes": "景品",
+        "winners": "当選者",
+        "noWinners": "応募者がいなかったため、景品はすべて在庫に戻りました。",
+        "notDrawnYet": "締め切りから 1 分以内に自動で抽選されます。",
+        "entries": "応募（{count}）",
+        "noEntries": "まだ応募はありません。"
+      },
+      "confirm": {
+        "publishTitle": "抽選を公開",
+        "publishBody": "公開すると景品 {units} 個が在庫から差し引かれ、{time} まで応募を受け付けます。公開後は編集できません。",
+        "publishAction": "公開",
+        "cancelTitle": "抽選を中止",
+        "cancelDraft": "この下書きを中止しますか？公開されません。",
+        "cancelOpen": "この抽選を中止しますか？景品は在庫に戻り、応募記録は残り、抽選は行われません。",
+        "cancelAction": "中止する",
+        "keep": "戻る"
+      },
+      "done": {
+        "created": "下書きを作成しました。",
+        "updated": "下書きを保存しました。",
+        "published": "抽選を公開しました。",
+        "cancelled": "抽選を中止しました。"
+      },
+      "errors": {
+        "load": "抽選一覧を読み込めませんでした。",
+        "titleRequired": "タイトルを入力してください。",
+        "titleLength": "タイトルは 120 文字以内にしてください。",
+        "descriptionLength": "説明が長すぎます。",
+        "closesAtRequired": "締め切りを入力してください。",
+        "closesAtPast": "締め切りは現在より後にしてください。",
+        "prizesRequired": "景品を 1 つ以上選んでください。",
+        "count": "数量は 1 以上の整数にしてください。",
+        "publishExpired": "締め切りを過ぎています。下書きを編集して新しい締め切りを設定してください。",
+        "invalidRequest": "入力内容に誤りがあります。確認してもう一度お試しください。",
+        "notFound": "この抽選は存在しません。",
+        "insufficientStock": "在庫が足りないため公開できません。景品管理で在庫を補充してください。",
+        "notDraft": "この抽選は下書きではないため、編集・公開できません。",
+        "notCancellable": "この抽選は抽選済みか中止済みです。",
+        "network": "ネットワークに接続できません。しばらくしてからお試しください。",
+        "actionFailed": "操作に失敗しました。しばらくしてからお試しください。"
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "対応結果の公示",
@@ -671,6 +779,7 @@
       "sweatbox": "訓練前に EuroScope のシミュレーターシナリオを生成します。",
       "activities": "イベントの作成、ブリーフィング、出欠確認、ポイント精算。",
       "prizes": "景品ストアの管理と交換の処理。",
+      "lottery": "ストアの景品で抽選を作成し、公開・中止、当選者の確認を行います。",
       "feedback": "処理結果を公示します。",
       "promotions": "教官が提出した昇格申請を承認します。"
     }

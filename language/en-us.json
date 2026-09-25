@@ -23,6 +23,7 @@
     },
     "activitiesManage": "Manage Activities",
     "prizesManage": "Prizes",
+    "lotteryManage": "Lottery",
     "feedbackManage": "Feedback outcomes",
     "signOut": "Sign Out",
     "unrestricted": "Hide NAIP",
@@ -430,6 +431,113 @@
       }
     }
   },
+  "lottery": {
+    "manage": {
+      "title": "Lottery",
+      "description": "Run prize draws with the shop's prizes. Winners are drawn automatically when a draw closes.",
+      "create": "New draw",
+      "list": "Draws",
+      "loading": "Loading…",
+      "noLotteries": "No draws yet",
+      "noLotteriesHint": "Use “New draw” to start a draft.",
+      "noShopPrizes": "The shop has no prizes yet. Add some on the Prizes page first.",
+      "redemptionNote": "Each winner receives a zero-point redemption. Hand prizes out from the redemption queue on the Prizes page.",
+      "redemptionLink": "Open redemptions",
+      "timeWithLocal": "{zulu} · local {local}",
+      "prizeItem": "{name} ×{count}",
+      "close": "Close",
+      "columns": {
+        "title": "Title",
+        "closesAt": "Closes",
+        "status": "Status",
+        "prizes": "Prizes",
+        "entries": "Entries",
+        "actions": "Actions"
+      },
+      "status": {
+        "draft": "Draft",
+        "open": "Open",
+        "drawn": "Drawn",
+        "cancelled": "Cancelled"
+      },
+      "actions": {
+        "view": "View",
+        "edit": "Edit",
+        "publish": "Publish",
+        "cancel": "Cancel"
+      },
+      "editor": {
+        "newTitle": "New draw",
+        "editTitle": "Edit draft",
+        "hint": "A draft can be changed until it is published. Publishing takes the prizes out of stock.",
+        "create": "Create draft",
+        "save": "Save"
+      },
+      "fields": {
+        "title": "Title",
+        "description": "Description (optional)",
+        "closesAt": "Closes at",
+        "timezone": "Time zone",
+        "prizes": "Prizes"
+      },
+      "timezones": {
+        "zulu": "ZULU (UTC)",
+        "local": "Local time"
+      },
+      "hints": {
+        "closesAt": "Entries close at this time. The draw runs right after.",
+        "prizes": "Enter how many of each prize this draw gives away. Leave blank to skip."
+      },
+      "stock": "Stock {stock}",
+      "overStock": "More than the current stock of {stock}. Publishing will fail until stock is added.",
+      "stockMissing": "No longer in the shop",
+      "countFor": "Quantity of {name}",
+      "detail": {
+        "closesAt": "Closes {time}",
+        "drawnAt": "Drawn {time}",
+        "prizes": "Prizes",
+        "winners": "Winners",
+        "noWinners": "Nobody entered. All prizes went back to stock.",
+        "notDrawnYet": "Winners are drawn automatically within a minute of closing.",
+        "entries": "Entries ({count})",
+        "noEntries": "No entries yet."
+      },
+      "confirm": {
+        "publishTitle": "Publish draw",
+        "publishBody": "Publishing takes {units} prizes out of stock and opens entries until {time}. The draw cannot be edited afterwards.",
+        "publishAction": "Publish",
+        "cancelTitle": "Cancel draw",
+        "cancelDraft": "Cancel this draft? It will not be published.",
+        "cancelOpen": "Cancel this draw? Prizes go back to stock, entries are kept and no winners are drawn.",
+        "cancelAction": "Cancel draw",
+        "keep": "Back"
+      },
+      "done": {
+        "created": "Draft created.",
+        "updated": "Draft saved.",
+        "published": "Draw published.",
+        "cancelled": "Draw cancelled."
+      },
+      "errors": {
+        "load": "Could not load the draws.",
+        "titleRequired": "Enter a title.",
+        "titleLength": "The title must be at most 120 characters.",
+        "descriptionLength": "The description is too long.",
+        "closesAtRequired": "Enter a closing time.",
+        "closesAtPast": "The closing time must be in the future.",
+        "prizesRequired": "Pick at least one prize.",
+        "count": "Quantities must be whole numbers of at least 1.",
+        "publishExpired": "The closing time has passed. Edit the draft and set a new one first.",
+        "invalidRequest": "Something in the form is invalid. Check it and try again.",
+        "notFound": "This draw does not exist.",
+        "insufficientStock": "Not enough stock to publish. Add stock on the Prizes page first.",
+        "notDraft": "This draw is no longer a draft and cannot be edited or published.",
+        "notCancellable": "This draw has already been drawn or cancelled.",
+        "network": "Network error. Try again later.",
+        "actionFailed": "Something went wrong. Try again later."
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "Feedback outcomes",
@@ -671,6 +779,7 @@
       "sweatbox": "Generate EuroScope simulator scenarios before a training session.",
       "activities": "Create events, write briefings, mark attendance, settle points.",
       "prizes": "Maintain the prize store and process redemptions.",
+      "lottery": "Run prize draws from the shop, publish or cancel them, and see the winners.",
       "feedback": "Publish the outcome of a handled case.",
       "promotions": "Approve promotion requests submitted by instructors."
     }

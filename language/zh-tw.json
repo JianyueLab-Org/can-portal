@@ -23,6 +23,7 @@
     },
     "activitiesManage": "活動管理",
     "prizesManage": "獎品管理",
+    "lotteryManage": "抽獎管理",
     "feedbackManage": "處理結果公示",
     "signOut": "登出",
     "unrestricted": "隱藏 NAIP",
@@ -430,6 +431,113 @@
       }
     }
   },
+  "lottery": {
+    "manage": {
+      "title": "抽獎管理",
+      "description": "用商店裡的獎品開抽獎。截止後由系統自動開獎。",
+      "create": "新建抽獎",
+      "list": "抽獎列表",
+      "loading": "載入中…",
+      "noLotteries": "還沒有抽獎",
+      "noLotteriesHint": "點右上角「新建抽獎」開一期草稿。",
+      "noShopPrizes": "商店裡還沒有獎品，先去獎品管理頁上架。",
+      "redemptionNote": "中獎者會得到一筆 0 積分的兌換，在獎品管理頁的兌換申請裡發放。",
+      "redemptionLink": "去發放",
+      "timeWithLocal": "{zulu} · 本地 {local}",
+      "prizeItem": "{name} ×{count}",
+      "close": "關閉",
+      "columns": {
+        "title": "標題",
+        "closesAt": "截止時間",
+        "status": "狀態",
+        "prizes": "獎品",
+        "entries": "報名",
+        "actions": "操作"
+      },
+      "status": {
+        "draft": "草稿",
+        "open": "進行中",
+        "drawn": "已開獎",
+        "cancelled": "已取消"
+      },
+      "actions": {
+        "view": "檢視",
+        "edit": "編輯",
+        "publish": "發布",
+        "cancel": "取消"
+      },
+      "editor": {
+        "newTitle": "新建抽獎",
+        "editTitle": "編輯草稿",
+        "hint": "草稿發布前可以隨時修改。發布時按數量從庫存中扣除獎品。",
+        "create": "建立草稿",
+        "save": "儲存"
+      },
+      "fields": {
+        "title": "標題",
+        "description": "說明（選填）",
+        "closesAt": "截止時間",
+        "timezone": "時區",
+        "prizes": "獎品"
+      },
+      "timezones": {
+        "zulu": "ZULU（UTC）",
+        "local": "本地時間"
+      },
+      "hints": {
+        "closesAt": "報名在此時截止，隨後自動開獎。",
+        "prizes": "填寫每件獎品在本期送出的數量，留空表示不選。"
+      },
+      "stock": "庫存 {stock}",
+      "overStock": "超過目前庫存 {stock}，補足庫存前無法發布。",
+      "stockMissing": "已不在商店中",
+      "countFor": "{name} 的數量",
+      "detail": {
+        "closesAt": "截止 {time}",
+        "drawnAt": "開獎 {time}",
+        "prizes": "獎品",
+        "winners": "中獎名單",
+        "noWinners": "沒有人報名，獎品已全部退回庫存。",
+        "notDrawnYet": "截止後一分鐘內自動開獎。",
+        "entries": "報名（{count}）",
+        "noEntries": "還沒有人報名。"
+      },
+      "confirm": {
+        "publishTitle": "發布抽獎",
+        "publishBody": "發布後會從庫存中扣除 {units} 件獎品，成員可以報名到 {time}。發布後不能再修改。",
+        "publishAction": "發布",
+        "cancelTitle": "取消抽獎",
+        "cancelDraft": "取消這份草稿？它不會被發布。",
+        "cancelOpen": "取消這期抽獎？獎品退回庫存，報名紀錄保留，不會開獎。",
+        "cancelAction": "確認取消",
+        "keep": "返回"
+      },
+      "done": {
+        "created": "草稿已建立。",
+        "updated": "草稿已儲存。",
+        "published": "抽獎已發布。",
+        "cancelled": "抽獎已取消。"
+      },
+      "errors": {
+        "load": "無法載入抽獎列表。",
+        "titleRequired": "請填寫標題。",
+        "titleLength": "標題不能超過 120 個字元。",
+        "descriptionLength": "說明過長。",
+        "closesAtRequired": "請填寫截止時間。",
+        "closesAtPast": "截止時間必須晚於現在。",
+        "prizesRequired": "至少選擇一件獎品。",
+        "count": "數量必須是不小於 1 的整數。",
+        "publishExpired": "截止時間已過，請先編輯草稿，改一個新的截止時間。",
+        "invalidRequest": "內容有誤，請檢查後重試。",
+        "notFound": "這期抽獎不存在。",
+        "insufficientStock": "庫存不足，無法發布。請先在獎品管理頁補足庫存。",
+        "notDraft": "這期已經不是草稿，不能再修改或發布。",
+        "notCancellable": "這期抽獎已開獎或已取消，不能再取消。",
+        "network": "網路連線失敗，請稍後再試。",
+        "actionFailed": "操作失敗，請稍後重試。"
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "處理結果公示",
@@ -671,6 +779,7 @@
       "sweatbox": "產生 EuroScope 模擬機場景，帶學員上機前用。",
       "activities": "開活動、寫簡報、點名、結算積分。",
       "prizes": "維護積分商城的獎品，處理兌換。",
+      "lottery": "用商店獎品開抽獎，發布、取消、查看中獎名單。",
       "feedback": "發布處理結果公示。",
       "promotions": "審批教員提交的晉升申請。"
     }

@@ -23,6 +23,7 @@
     },
     "activitiesManage": "活动管理",
     "prizesManage": "奖品管理",
+    "lotteryManage": "抽奖管理",
     "feedbackManage": "处理结果公示",
     "signOut": "退出登录",
     "unrestricted": "隐藏 NAIP",
@@ -430,6 +431,113 @@
       }
     }
   },
+  "lottery": {
+    "manage": {
+      "title": "抽奖管理",
+      "description": "用商店里的奖品开抽奖。截止后由系统自动开奖。",
+      "create": "新建抽奖",
+      "list": "抽奖列表",
+      "loading": "加载中…",
+      "noLotteries": "还没有抽奖",
+      "noLotteriesHint": "点右上角「新建抽奖」开一期草稿。",
+      "noShopPrizes": "商店里还没有奖品，先去奖品管理页上架。",
+      "redemptionNote": "中奖者会得到一笔 0 积分的兑换，在奖品管理页的兑换申请里发放。",
+      "redemptionLink": "去发放",
+      "timeWithLocal": "{zulu} · 本地 {local}",
+      "prizeItem": "{name} ×{count}",
+      "close": "关闭",
+      "columns": {
+        "title": "标题",
+        "closesAt": "截止时间",
+        "status": "状态",
+        "prizes": "奖品",
+        "entries": "报名",
+        "actions": "操作"
+      },
+      "status": {
+        "draft": "草稿",
+        "open": "进行中",
+        "drawn": "已开奖",
+        "cancelled": "已取消"
+      },
+      "actions": {
+        "view": "查看",
+        "edit": "编辑",
+        "publish": "发布",
+        "cancel": "取消"
+      },
+      "editor": {
+        "newTitle": "新建抽奖",
+        "editTitle": "编辑草稿",
+        "hint": "草稿发布前可以随时修改。发布时按数量从库存中扣除奖品。",
+        "create": "创建草稿",
+        "save": "保存"
+      },
+      "fields": {
+        "title": "标题",
+        "description": "说明（可选）",
+        "closesAt": "截止时间",
+        "timezone": "时区",
+        "prizes": "奖品"
+      },
+      "timezones": {
+        "zulu": "ZULU（UTC）",
+        "local": "本地时间"
+      },
+      "hints": {
+        "closesAt": "报名在此时截止，随后自动开奖。",
+        "prizes": "填写每件奖品在本期送出的数量，留空表示不选。"
+      },
+      "stock": "库存 {stock}",
+      "overStock": "超过当前库存 {stock}，补足库存前无法发布。",
+      "stockMissing": "已不在商店中",
+      "countFor": "{name} 的数量",
+      "detail": {
+        "closesAt": "截止 {time}",
+        "drawnAt": "开奖 {time}",
+        "prizes": "奖品",
+        "winners": "中奖名单",
+        "noWinners": "没有人报名，奖品已全部退回库存。",
+        "notDrawnYet": "截止后一分钟内自动开奖。",
+        "entries": "报名（{count}）",
+        "noEntries": "还没有人报名。"
+      },
+      "confirm": {
+        "publishTitle": "发布抽奖",
+        "publishBody": "发布后会从库存中扣除 {units} 件奖品，成员可以报名到 {time}。发布后不能再修改。",
+        "publishAction": "发布",
+        "cancelTitle": "取消抽奖",
+        "cancelDraft": "取消这份草稿？它不会被发布。",
+        "cancelOpen": "取消这期抽奖？奖品退回库存，报名记录保留，不会开奖。",
+        "cancelAction": "确认取消",
+        "keep": "返回"
+      },
+      "done": {
+        "created": "草稿已创建。",
+        "updated": "草稿已保存。",
+        "published": "抽奖已发布。",
+        "cancelled": "抽奖已取消。"
+      },
+      "errors": {
+        "load": "无法加载抽奖列表。",
+        "titleRequired": "请填写标题。",
+        "titleLength": "标题不能超过 120 个字符。",
+        "descriptionLength": "说明过长。",
+        "closesAtRequired": "请填写截止时间。",
+        "closesAtPast": "截止时间必须晚于现在。",
+        "prizesRequired": "至少选择一件奖品。",
+        "count": "数量必须是不小于 1 的整数。",
+        "publishExpired": "截止时间已过，请先编辑草稿，改一个新的截止时间。",
+        "invalidRequest": "内容有误，请检查后重试。",
+        "notFound": "这期抽奖不存在。",
+        "insufficientStock": "库存不足，无法发布。请先在奖品管理页补足库存。",
+        "notDraft": "这期已经不是草稿，不能再修改或发布。",
+        "notCancellable": "这期抽奖已开奖或已取消，不能再取消。",
+        "network": "网络连接失败，请稍后再试。",
+        "actionFailed": "操作失败，请稍后重试。"
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "处理结果公示",
@@ -671,6 +779,7 @@
       "sweatbox": "生成 EuroScope 模拟机场景，带学员上机前用。",
       "activities": "开活动、写简报、点名、结算积分。",
       "prizes": "维护积分商城的奖品，处理兑换。",
+      "lottery": "用商店奖品开抽奖，发布、取消、查看中奖名单。",
       "feedback": "发布处理结果公示。",
       "promotions": "审批教员提交的晋升申请。"
     }
