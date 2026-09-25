@@ -81,8 +81,14 @@ export interface LotteryForm {
   closesAt: string;
   /** `"zulu"` 或 `"local"`。是 string 而不是联合类型，因为 `Select` 回传 string。 */
   timezone: string;
-  /** prizeId → 输入框里的数量。空串和 "0" 表示不选。 */
-  counts: Record<number, string>;
+  /**
+   * prizeId → 输入框里的数量。空串和 "0" 表示不选。
+   *
+   * 值也可能是 number：`<input type="number">` 上 Vue 3.5 的 `vModelText`
+   * 把绑定值转成 number，所以这里的读者（`isBlank`、`selectedPrizes`）都要
+   * 先 `String()` 一遍再 `.trim()`。
+   */
+  counts: Record<number, string | number>;
 }
 
 export type LotteryFormErrors = Partial<
@@ -144,20 +150,20 @@ export function formFromLottery(lottery: LotterySummary): LotteryForm {
   };
 }
 
-function isBlank(value: string | undefined): boolean {
-  const text = (value ?? "").trim();
+function isBlank(value: string | number | undefined): boolean {
+  const text = String(value ?? "").trim();
   return text === "" || text === "0";
 }
 
 /** 填了数量的奖品，按 prizeId 升序。不校验数量本身 —— 那是 validateLottery 的事。 */
 export function selectedPrizes(
-  counts: Record<number, string>,
+  counts: Record<number, string | number>,
 ): Array<{ prizeId: number; count: number }> {
   return Object.entries(counts)
     .filter(([, value]) => !isBlank(value))
     .map(([id, value]) => ({
       prizeId: Number(id),
-      count: Number(value.trim()),
+      count: Number(String(value).trim()),
     }))
     .sort((a, b) => a.prizeId - b.prizeId);
 }
@@ -220,7 +226,7 @@ export function lotteryBody(form: LotteryForm): LotteryBody {
 /** 数量超过当前库存的奖品。只是提示：草稿可以先存，发布时 can-api 才扣库存。 */
 export function shortfalls(
   shop: ShopPrize[],
-  counts: Record<number, string>,
+  counts: Record<number, string | number>,
 ): number[] {
   const stock = new Map(shop.map((p) => [p.id, p.stock]));
   return selectedPrizes(counts)

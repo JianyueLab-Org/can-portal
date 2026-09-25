@@ -250,13 +250,21 @@ async function save() {
   await load();
 }
 
+/**
+ * 请求令牌：每次打开详情都发一次号。回来时号对不上，说明这期间用户已经关了
+ * 这一屏、又打开了别一期 —— 那份迟到的回答不该盖掉后来者。
+ */
+let detailRequestId = 0;
+
 async function openDetail(lottery: LotterySummary) {
+  const requestId = ++detailRequestId;
   detail.value = null;
   detailOpen.value = true;
   detailLoading.value = true;
   const result = await api<{ lottery: SuperLotteryDetail }>(
     `/api/v1/super/lottery/${lottery.id}`,
   );
+  if (requestId !== detailRequestId) return;
   detailLoading.value = false;
   if (!result.ok) {
     detailOpen.value = false;

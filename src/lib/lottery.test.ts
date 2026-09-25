@@ -110,6 +110,41 @@ describe("validateLottery", () => {
   });
 });
 
+describe('numeric counts (Vue 3.5 vModelText casts type="number" inputs)', () => {
+  test("validateLottery accepts a form whose counts are numbers", () => {
+    expect(validateLottery(form({ counts: { 3: 2 } }), NOW)).toEqual({});
+  });
+
+  test("validateLottery treats a numeric 0 count as unselected", () => {
+    expect(validateLottery(form({ counts: { 3: 0 } }), NOW).prizes).toBe(
+      "prizesRequired",
+    );
+  });
+
+  test("selectedPrizes reads a numeric count", () => {
+    expect(selectedPrizes({ 3: 2, 5: 1 })).toEqual([
+      { prizeId: 3, count: 2 },
+      { prizeId: 5, count: 1 },
+    ]);
+  });
+
+  test("selectedPrizes drops a numeric zero count", () => {
+    expect(selectedPrizes({ 3: 2, 4: 0 })).toEqual([{ prizeId: 3, count: 2 }]);
+  });
+
+  test("shortfalls reads a numeric count against known stock", () => {
+    const shop = [{ id: 3, name: "徽章", stock: 1 }];
+    expect(shortfalls(shop, { 3: 2 })).toEqual([3]);
+  });
+
+  test("lotteryBody serializes a form whose counts are numbers", () => {
+    expect(lotteryBody(form({ counts: { 3: 2, 5: 1 } })).prizes).toEqual([
+      { prizeId: 3, count: 2 },
+      { prizeId: 5, count: 1 },
+    ]);
+  });
+});
+
 describe("toInstant / toZuluInput", () => {
   test("reads a zone-less value as Zulu", () => {
     expect(toInstant("2026-10-01T12:00", "zulu").toISOString()).toBe(
