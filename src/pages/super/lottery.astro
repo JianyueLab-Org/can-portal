@@ -1,0 +1,17 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManageLottery from "@/components/ManageLottery.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+/**
+ * 抽奖管理 —— SUP/ADM（`/super/*` 前缀，中间件按 11 级判）。
+ *
+ * 门槛和奖品管理相同：奖品是 SUP 配的，拿奖品开抽奖的也是 SUP。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "lottery.manage");
+---
+
+<AppLayout title="抽奖管理 · Cerulean Aviation Network">
+  <ManageLottery messages={messages} client:load />
+</AppLayout>
