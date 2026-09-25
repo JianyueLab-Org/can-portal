@@ -77,6 +77,13 @@ const ALLOW_LIST: Record<string, Allowed> = {
   },
   "super/redemption": { methods: ["GET"], who: "ManagePrizes.vue 兑换记录" },
 
+  // 抽奖（`/super/lottery`）。can-api 那边和奖品一样是 SUP 门槛。没有开奖这条
+  // —— 开奖是 can-api 的定时任务在截止后自己做的，这里一条都不转。
+  "super/lottery": {
+    methods: ["GET", "POST"],
+    who: "ManageLottery.vue 列表与新建草稿",
+  },
+
   // 处理结果公示（`/super/feedback`）。
   "super/feedback": {
     methods: ["GET", "POST"],
@@ -151,6 +158,18 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     test: /^super\/redemption\/[0-9]{1,20}$/,
     methods: ["PATCH"],
     who: "ManagePrizes.vue 标记一笔兑换已发放",
+  },
+  {
+    test: /^super\/lottery\/[0-9]{1,20}$/,
+    methods: ["GET", "PATCH"],
+    who: "ManageLottery.vue 读一期（含报名与中奖）/ 改草稿",
+  },
+  {
+    // 只有这两个动作。一个 `(publish|cancel)` 而不是 `[a-z]+`：将来 can-api 若
+    // 加一条 draw，它不会顺手被转发出去。
+    test: /^super\/lottery\/[0-9]{1,20}\/(publish|cancel)$/,
+    methods: ["POST"],
+    who: "ManageLottery.vue 发布 / 取消",
   },
   {
     test: /^super\/feedback\/[0-9]{1,20}$/,
