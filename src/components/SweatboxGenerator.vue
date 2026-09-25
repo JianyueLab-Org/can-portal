@@ -27,8 +27,9 @@
  * layout, and pretending otherwise would produce a column of 40 stacked forms
  * nobody can scan.
  */
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { createTranslator } from "@/lib/i18n";
+import { onNaipChange, readHideNaip } from "@/lib/naip";
 import {
   AlertBox,
   Badge,
@@ -78,14 +79,6 @@ import { requiredPartnersFor } from "@/lib/sweatboxTrafficRules";
 const props = defineProps<{
   messages: Record<string, unknown>;
   airports: SweatboxIndexEntry[];
-  /**
-   * 成员的 `aipAccess`，**只用来决定「不使用受限汇编」那个开关出不出**，不是权限
-   * 判断 —— SweatBox 的门是教员评级（见 route.json.ts）。
-   *
-   * can-db 那边 `?unrestricted=1` 是把级别往下压（cap 不是赋值），所以这里判错、或者
-   * 有人自己拼一个带参数的请求，都只可能少看到而不会多看到。
-   */
-  aipAccess: number;
 }>();
 const t = createTranslator(props.messages);
 
@@ -296,7 +289,13 @@ const standShortfall = computed(() => {
 // Loading an airport
 // ---------------------------------------------------------------------------
 
-watch(icao, async (value) => {
+/**
+ * `keep` 是「隐藏 NAIP」切换时的重取：同一个机场，换一份数据范围。那时不该把教员
+ * 选好的跑道和已经生成的航班表一起扔掉 —— 跑道还在就留着，航班表由调用方重新生成。
+ */
+async function loadAirport(value: string, keep = false) {
+  const previousArrival = arrivalRunwayId.value;
+  const previousDeparture = departureRunwayId.value;
   airport.value = null;
   fixes.value = [];
   loadError.value = "";
@@ -321,17 +320,23 @@ watch(icao, async (value) => {
     // wind decision the instructor makes; guessing it from a METAR this page
     // may not have been given would be a guess dressed as a default.
     const first = payload.airport.runways[0]?.id ?? "";
-    arrivalRunwayId.value = first;
-    departureRunwayId.value = first;
+    const has = (id: string) =>
+      payload.airport.runways.some((runway) => runway.id === id);
+    arrivalRunwayId.value =
+      keep && has(previousArrival) ? previousArrival : first;
+    departureRunwayId.value =
+      keep && has(previousDeparture) ? previousDeparture : first;
 
     // Stands and runways just changed underneath them.
-    rows.value = [];
+    if (!keep) rows.value = [];
   } catch {
     loadError.value = t("loadFailed");
   } finally {
     loading.value = false;
   }
-});
+}
+
+watch(icao, (value) => loadAirport(value));
 
 // ---------------------------------------------------------------------------
 // Placement
@@ -431,36 +436,32 @@ const split = (value: string) =>
 const routeCache = new Map<string, SweatboxRoutePlan | null>();
 
 /**
- * 缓存键带上档位。
+ * 缓存键带上「隐藏 NAIP」的状态。
  *
- * `routeCache` 从前只按城市对存。加了开关之后，勾一下再重新生成会拿到**上一次那一档**
- * 的航路 —— 而它是一串合法的代号，图上也正常，没人看得出来。所以档位必须进键。
+ * `routeCache` 从前只按城市对存。开关切换之后再重新生成会拿到**上一次那一档**的航路
+ * —— 而它是一串合法的代号，图上也正常，没人看得出来。所以状态必须进键。开关本身在
+ * 账户菜单里（`AppFrame.vue`），真相是 cookie，`callDb` 在服务端按它追加参数；这一
+ * 页只需要知道它变了。
  */
 function cacheKey(pair: string): string {
-  return useUnrestricted() ? `${pair}!u` : pair;
+  return hideNaip.value ? `${pair}!u` : pair;
 }
 
-/** 只有档上的人勾了才算数 —— 档下的人这个 ref 恒为 false，但判一次更明确。 */
-function useUnrestricted(): boolean {
-  return canChooseTier.value && unrestricted.value;
-}
+const hideNaip = ref(true);
 
-/**
- * 按 1–2 级（非受限）的数据规划，也就是不用 CAAC 的 NAIP 汇编。
- *
- * **默认开着**，这是刻意的：场景里那一串航路是给学员飞的，而学员多半没有受限那一档。
- * 用汇编的发布航线生成，练出来的是一条他自己填不出来、也查不到依据的航路 —— 训练场景
- * 的价值恰恰在于它和学员真实会遇到的一致。
- *
- * 要用汇编那一份就把它取消掉；这个选择留给教员，只是不再是默认。
- *
- * 档下的人不显示这个开关，而 `useUnrestricted()` 对他们恒为 false —— 那不影响结果：
- * 他们本来就在受限档以下，can-db 给的就是公开数据那一份。
- */
-const unrestricted = ref(true);
-/** 3 级（受限可调用）起能取到 NAIP 汇编，才有得选。 */
-const AIP_RESTRICTED_CALL = 3;
-const canChooseTier = computed(() => props.aipAccess >= AIP_RESTRICTED_CALL);
+let stopNaip: (() => void) | null = null;
+onMounted(() => {
+  hideNaip.value = readHideNaip();
+  stopNaip = onNaipChange(async (hide) => {
+    hideNaip.value = hide;
+    routeCache.clear();
+    if (!icao.value) return;
+    const hadRows = rows.value.length > 0;
+    await loadAirport(icao.value, true);
+    if (hadRows && airport.value) await generate();
+  });
+});
+onBeforeUnmount(() => stopNaip?.());
 
 async function planRoutes(
   icao: string,
@@ -481,8 +482,7 @@ async function planRoutes(
         const [from, to] = key.split("-");
         try {
           const response = await fetch(
-            `/instr/sweatbox/route.json?from=${from}&to=${to}` +
-              (useUnrestricted() ? "&unrestricted=1" : ""),
+            `/instr/sweatbox/route.json?from=${from}&to=${to}`,
           );
           routeCache.set(
             cacheKey(key),
@@ -1678,27 +1678,6 @@ async function copy() {
           :hint="t('sources.cruiseHint')"
           name="src-cruise"
         />
-        <!--
-          3 级及以上才有的开关：按 1–2 级（非受限）的数据规划航路，也就是不用 CAAC 的 NAIP 汇编。
-
-          教员有时要看「学员那一档拿到的是什么航路」—— 场景里填的航路串就该是学员会填
-          的那一条。档下的人不显示：对他们它恒为空转（can-db 那边是把级别往下压，cap
-          不是赋值），摆出来只会让人以为自己错过了什么。
-        -->
-        <label
-          v-if="canChooseTier"
-          class="flex cursor-pointer items-start gap-2 self-end pb-1"
-        >
-          <input v-model="unrestricted" type="checkbox" class="mt-0.5" />
-          <span>
-            <span class="block text-sm font-medium text-ink">{{
-              t("sources.unrestricted")
-            }}</span>
-            <span class="mt-1.5 block text-xs text-faint">{{
-              t("sources.unrestrictedHint")
-            }}</span>
-          </span>
-        </label>
         <Input
           v-model="sources.taxiRoute"
           :label="t('sources.taxi')"

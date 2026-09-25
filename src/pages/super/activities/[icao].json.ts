@@ -53,6 +53,8 @@ export const GET: APIRoute = async (context) => {
       // 和机场详情、航路同一个时长：席位表只有在有人重导一次扇区包之后才会动，而排
       // 班的人在同一批机场之间反复开合是常态。
       "Cache-Control": "private, max-age=3600",
+      // 回答随「隐藏 NAIP」那枚 cookie 变（`src/lib/naip.ts`）；地址不变，所以缓存必须按它分。
+      Vary: "Cookie",
     },
   });
 };

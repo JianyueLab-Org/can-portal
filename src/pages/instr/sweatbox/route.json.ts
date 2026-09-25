@@ -40,16 +40,12 @@ export const GET: APIRoute = async (context) => {
   }
 
   const level = Number(url.searchParams.get("level") ?? "0");
-  // 只认 `1`。**不做别的解析** —— 这个参数的意思是「别用受限汇编」，把读不懂的值
-  // 当成「勾了」会往安全那侧倒，当成「没勾」会照常用上受限数据；两边都不猜，只认
-  // 岛屿实际会发的那一个值。
-  const unrestricted = url.searchParams.get("unrestricted") === "1";
+  // 「隐藏 NAIP」由 `callDb` 按成员的 cookie 追加，这里不接查询参数。
   const plan = await readRoute(
     context,
     from,
     to,
     Number.isFinite(level) && level > 0 ? level : 0,
-    unrestricted,
   );
 
   // **没有航路是一个答案，不是一次失败。** 这一对确实飞不通时 can-db 给 404，这里
@@ -62,6 +58,8 @@ export const GET: APIRoute = async (context) => {
       // 和机场详情同一个时长：数据只有在有人导入新一期并激活之后才会动，而一个教
       // 员在同一批伙伴机场之间反复重生成是常态。
       "Cache-Control": "private, max-age=3600",
+      // 回答随「隐藏 NAIP」那枚 cookie 变（`src/lib/naip.ts`）；地址不变，所以缓存必须按它分。
+      Vary: "Cookie",
     },
   });
 };

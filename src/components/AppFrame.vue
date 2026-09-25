@@ -16,7 +16,10 @@ import {
   type NavSecondary,
   type Workspace,
 } from "@jianyuelab-org/can-ui";
+import { computed, onMounted, ref } from "vue";
 import { api } from "@/lib/canApi";
+import { createTranslator } from "@/lib/i18n";
+import { AIP_RESTRICTED_CALL, readHideNaip, writeHideNaip } from "@/lib/naip";
 
 const props = defineProps<{
   navigation: NavItem[];
@@ -28,7 +31,35 @@ const props = defineProps<{
   activeWorkspace?: string;
   userName?: string;
   userId?: string;
+  /** 成员的 aipAccess。只决定「隐藏 NAIP」那一项出不出，不是权限判断。 */
+  aipAccess?: number;
 }>();
+
+const t = createTranslator(props.messages ?? {});
+
+/** AppShell 不认识 `aipAccess`，别让它落成 DOM 上的一个属性。 */
+const shellProps = computed(() => {
+  const { aipAccess: _aipAccess, ...rest } = props;
+  return rest;
+});
+
+/**
+ * 「隐藏 NAIP」放在账户菜单里：它是这个成员在整个站上的偏好，不属于某一页。
+ * 3 级以下不显示 —— 对他们 can-db 那边恒为空转，摆出来只会让人以为自己错过了什么。
+ * 真相在 cookie 里（`src/lib/naip.ts`），这个 ref 只是它在界面上的影子；挂载后才读，
+ * 因为服务端渲染时没有 `document`。
+ */
+const canHideNaip = computed(
+  () => (props.aipAccess ?? 0) >= AIP_RESTRICTED_CALL,
+);
+const hideNaip = ref(true);
+onMounted(() => {
+  hideNaip.value = readHideNaip();
+});
+function toggleHideNaip() {
+  hideNaip.value = !hideNaip.value;
+  writeHideNaip(hideNaip.value);
+}
 
 function handleSignOut() {
   // 清 cookie 是 can-api 的事 —— 属性是它定的，一个对不上的 Set-Cookie 只会让
@@ -41,7 +72,32 @@ function handleSignOut() {
 </script>
 
 <template>
-  <AppShell v-bind="props" @signout="handleSignOut">
+  <AppShell v-bind="shellProps" @signout="handleSignOut">
+    <template v-if="canHideNaip" #profileMenu>
+      <button
+        type="button"
+        role="menuitemcheckbox"
+        :aria-checked="hideNaip"
+        class="tap-row flex w-full items-start gap-2.5 px-4 py-2.5 text-left text-sm text-muted transition-colors hover:bg-surface-sunken hover:text-ink"
+        @click="toggleHideNaip"
+      >
+        <input
+          type="checkbox"
+          :checked="hideNaip"
+          tabindex="-1"
+          aria-hidden="true"
+          class="pointer-events-none mt-0.5"
+        />
+        <span>
+          <span class="block font-medium text-ink">{{
+            t("unrestricted")
+          }}</span>
+          <span class="mt-1 block text-xs text-faint">{{
+            t("unrestrictedHint")
+          }}</span>
+        </span>
+      </button>
+    </template>
     <slot />
   </AppShell>
 </template>

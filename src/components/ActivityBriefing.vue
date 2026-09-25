@@ -14,7 +14,7 @@
  * The airport, seat type and callsign identify a seat somebody has claimed, so
  * changing them would move a controller without telling them.
  */
-import { computed, onMounted, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import { createTranslator } from "@/lib/i18n";
 import { ratingTrans } from "@/lib/tools";
 import {
@@ -41,6 +41,7 @@ import {
 } from "@jianyuelab-org/can-ui";
 import type { AirportStack, StackSeat } from "@/lib/positionStack";
 import { apiFetch } from "@/lib/canApi";
+import { onNaipChange } from "@/lib/naip";
 
 const props = defineProps<{
   activityId: number;
@@ -356,6 +357,18 @@ async function loadStack() {
     stackBusy.value = false;
   }
 }
+
+/**
+ * 「隐藏 NAIP」切换后，已经取出来的那一摞按新的数据范围重取一次。
+ * 端点的缓存按 cookie 分（`Vary: Cookie`），所以这一次拿到的是新的那份。
+ */
+let stopNaip: (() => void) | null = null;
+onMounted(() => {
+  stopNaip = onNaipChange(() => {
+    if (stack.value) void loadStack();
+  });
+});
+onBeforeUnmount(() => stopNaip?.());
 
 function togglePick(seat: StackSeat) {
   const key = seatKey(seat);

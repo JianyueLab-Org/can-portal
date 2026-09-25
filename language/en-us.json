@@ -25,6 +25,8 @@
     "prizesManage": "Prizes",
     "feedbackManage": "Feedback outcomes",
     "signOut": "Sign Out",
+    "unrestricted": "Hide NAIP",
+    "unrestrictedHint": "On by default: the whole portal reads tier 1–2 data only, leaving out NAIP — SweatBox routes and event positions match what a student can see. Clear it to include the restricted compilation.",
     "search": {
       "label": "Search pages",
       "placeholder": "Jump to a page…",
@@ -639,9 +641,7 @@
       "equipment": "Equipment suffix",
       "equipmentHint": "Rides after the type as B738/L — the same shape a member files",
       "cruiseHint": "Blank picks the Chinese semicircular level from each leg s track and length; fill it to pin every strip to one level",
-      "routeNote": "Routes are planned over the airway network: departures pick up airways at the SID exit, arrivals end on the STAR and landing runway",
-      "unrestricted": "Without the restricted compilation",
-      "unrestrictedHint": "On by default: routes are planned from tier 1–2 data only, leaving out NAIP — this is what a student gets. Clear it to use the compilation's published routings."
+      "routeNote": "Routes are planned over the airway network: departures pick up airways at the SID exit, arrivals end on the STAR and landing runway"
     },
     "errors": {
       "title": "Planted mistakes",

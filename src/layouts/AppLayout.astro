@@ -58,6 +58,7 @@ const pathname = Astro.url.pathname;
       messages={frameMessages}
       userName={user?.name ?? ""}
       userId={user?.username ?? ""}
+      aipAccess={user?.aipAccess ?? 0}
       locale={locale}
       client:load
     >

@@ -57,6 +57,8 @@ export const GET: APIRoute = async (context) => {
       // 是教员在两个机场之间来回切时反复取 500 个机位 —— 现在那是两次跨服务调用
       // 而不是两次本地读，所以它比从前更值。
       "Cache-Control": "private, max-age=3600",
+      // 回答随「隐藏 NAIP」那枚 cookie 变（`src/lib/naip.ts`）；地址不变，所以缓存必须按它分。
+      Vary: "Cookie",
     },
   });
 };

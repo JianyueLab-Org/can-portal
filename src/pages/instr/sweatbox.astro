@@ -31,10 +31,5 @@ const { airports } = await readIndex(Astro);
 ---
 
 <AppLayout title="模拟机场景 · Cerulean Aviation Network">
-  <SweatboxGenerator
-    messages={messages}
-    airports={airports}
-    aipAccess={Astro.locals.user?.aipAccess ?? 0}
-    client:load
-  />
+  <SweatboxGenerator messages={messages} airports={airports} client:load />
 </AppLayout>

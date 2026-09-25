@@ -25,6 +25,8 @@
     "prizesManage": "奖品管理",
     "feedbackManage": "处理结果公示",
     "signOut": "退出登录",
+    "unrestricted": "隐藏 NAIP",
+    "unrestrictedHint": "默认开着：整个门户只读 1–2 级的数据，不出现 NAIP —— SweatBox 场景的航路、活动的席位都按学员拿得到的那一档来。取消则连同受限汇编一起显示。",
     "search": {
       "label": "搜索页面",
       "placeholder": "跳转到页面…",
@@ -639,9 +641,7 @@
       "equipment": "设备代码",
       "equipmentHint": "跟在机型后面，写成 B738/L —— 和成员自己填的飞行计划同一种写法",
       "cruiseHint": "留空则按航段的航向和距离自动取中国半圆高度层；填了就全场统一用这个",
-      "routeNote": "航路由航路网自动规划：离场从 SID 出口点接航路，进场以进场程序和落地跑道收尾",
-      "unrestricted": "不使用受限汇编",
-      "unrestrictedHint": "默认开着：航路按 1–2 级的数据生成，也就是不用 NAIP —— 学员拿到的就是这一条。取消则用汇编的发布航线。"
+      "routeNote": "航路由航路网自动规划：离场从 SID 出口点接航路，进场以进场程序和落地跑道收尾"
     },
     "errors": {
       "title": "计划错误",

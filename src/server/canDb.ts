@@ -9,6 +9,9 @@
  *    的症状是 401，而 401 看起来像「这个成员没权限」，不像「请求没带凭证」。
  *  - **超时要短。** 这两处都是页面上一次点击等着的请求；上游卡住时一个 8 秒的超时
  *    换来一句「暂时读不到」，没有超时换来的是一个转到底的加载圈。
+ *  - **「隐藏 NAIP」在这里追加。** 成员的偏好是一枚 cookie（`src/lib/naip.ts`），
+ *    开着时每一次读都带 `unrestricted=1`。放在这一层而不是各个调用方，是因为漏掉一
+ *    处不会报错，只会让那一页悄悄多出受限数据。这里只有读 —— 这个站不向 can-db 写。
  *  - **失败返回 null，不抛。** 调用方都有退化路径（生成器只填目的地、席位面板回到
  *    手填），而那条退化路径必须是**调用方**选的，不是这里替它决定。
  *
@@ -21,6 +24,7 @@
  */
 import type { APIContext } from "astro";
 import { CAN_DB_ORIGIN } from "@/lib/config";
+import { hideNaipFromCookieHeader, withUnrestricted } from "@/lib/naip";
 
 const TIMEOUT_MS = 8_000;
 
@@ -33,20 +37,24 @@ export async function callDb<T>(
   // 教员（8 级及以上）读得到这批数据，不需要 ADM 另外授予资料库权限 —— can-db 的
   // `session.Member.CanRead` 上写着为什么。
   if (cookie) headers.cookie = cookie;
+  // 3 级以下 can-db 对它空转，所以不按 aipAccess 判断 —— 带上它只可能少看到。
+  const target = hideNaipFromCookieHeader(cookie)
+    ? withUnrestricted(path)
+    : path;
 
   let response: Response;
   try {
-    response = await fetch(CAN_DB_ORIGIN + path, {
+    response = await fetch(CAN_DB_ORIGIN + target, {
       headers,
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
   } catch (error) {
-    console.error(`can-db ${path} unreachable:`, error);
+    console.error(`can-db ${target} unreachable:`, error);
     return null;
   }
 
   if (!response.ok) {
-    console.error(`can-db ${path} answered ${response.status}`);
+    console.error(`can-db ${target} answered ${response.status}`);
     return null;
   }
 

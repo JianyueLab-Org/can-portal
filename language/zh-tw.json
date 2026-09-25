@@ -25,6 +25,8 @@
     "prizesManage": "獎品管理",
     "feedbackManage": "處理結果公示",
     "signOut": "登出",
+    "unrestricted": "隱藏 NAIP",
+    "unrestrictedHint": "預設開啟：整個入口網站只讀 1–2 級的資料，不出現 NAIP —— SweatBox 場景的航路、活動的席位都按學員拿得到的那一檔來。取消則連同受限彙編一起顯示。",
     "search": {
       "label": "搜尋頁面",
       "placeholder": "跳至頁面…",
@@ -639,9 +641,7 @@
       "equipment": "設備代碼",
       "equipmentHint": "接在機型後面，寫成 B738/L —— 和成員自己填的飛行計畫同一種寫法",
       "cruiseHint": "留空則依航段的航向與距離自動取中國半圓高度層；填了就全場統一使用",
-      "routeNote": "航路由航路網自動規劃：離場自 SID 出口點接航路，進場以進場程序與落地跑道收尾",
-      "unrestricted": "不使用受限彙編",
-      "unrestrictedHint": "預設開啟：航路按 1–2 級的資料生成，也就是不用 NAIP —— 學員拿到的就是這一條。取消則用彙編的發布航線。"
+      "routeNote": "航路由航路網自動規劃：離場自 SID 出口點接航路，進場以進場程序與落地跑道收尾"
     },
     "errors": {
       "title": "計畫錯誤",

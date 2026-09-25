@@ -202,7 +202,10 @@ Astro 两种都认。
 台及以上是按呼号前缀取的，可能不全」，`hasEnroute` 为假时说「这一摞里没有区调」。同理
 上游读不到给 502、读到了但是空的给 200 —— 一个是「再试一次」，一个是「自己填吧」。
 
-`src/server/canDb.ts` 是向 can-db 要数据的**唯一**出口，SweatBox 和这里共用它。拆出来
+`src/server/canDb.ts` 是向 can-db 要数据的**唯一**出口，SweatBox 和这里共用它。「隐藏 NAIP」也在这一处加：
+账户菜单里那个开关（3 级 aipAccess 起才出现）写一枚本站 cookie，`callDb` 读到它就给每
+次读追加 `unrestricted=1`，默认隐藏。偏好的读写和默认值在 `src/lib/naip.ts`；读 can-db
+的端点都带 `Vary: Cookie`，因为地址不随它变。拆出来
 之前它在 `sweatboxData.ts` 里，名字绑着 SweatBox；第二个消费者出现时照抄一份是最省事的
 写法，也正是 monorepo 里 `radarTypes.ts` 那类「两份从来没一致过」的来源。
 
