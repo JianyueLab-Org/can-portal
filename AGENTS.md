@@ -16,6 +16,7 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 | `/instr/sweatbox`   | `/instr/sweatbox`   | `SweatboxGenerator.vue` | 8    |
 | `/super/activities` | `/super/activities` | `ManageActivities.vue`  | 11   |
 | `/super/prizes`     | `/super/prizes`     | `ManagePrizes.vue`      | 11   |
+| `/super/lottery`    | （新）              | `ManageLottery.vue`     | 11   |
 | `/super/feedback`   | `/super/feedback`   | `ManageFeedback.vue`    | 11   |
 | `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 12   |
 
@@ -218,6 +219,9 @@ Astro 两种都认。
 
 改文案时**先去 can-web 改**再切过来，如果那条文案两边都在用；只有这个站有的，直接
 改这里。目前只有 `portal` 属于后者。
+
+`lottery.manage` 也只有这个站有：can-web 的 `lottery` 命名空间是成员端，没有
+`manage`。改它直接改这里。
 
 ## 和 can-web 共享的那些文件
 
