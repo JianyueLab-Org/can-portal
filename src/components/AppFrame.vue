@@ -14,6 +14,7 @@ import {
   AppShell,
   type NavItem,
   type NavSecondary,
+  type SiteOrigins,
   type Workspace,
 } from "@jianyuelab-org/can-ui";
 import { computed, onMounted, ref } from "vue";
@@ -33,6 +34,8 @@ const props = defineProps<{
   userId?: string;
   /** 成员的 aipAccess。只决定「隐藏 NAIP」那一项出不出，不是权限判断。 */
   aipAccess?: number;
+  /** AppShell 自己的页脚（SiteFooter compact）也要照这份地址走，和分区切换器同一份 SITE_ORIGINS。 */
+  origins?: SiteOrigins;
 }>();
 
 const t = createTranslator(props.messages ?? {});

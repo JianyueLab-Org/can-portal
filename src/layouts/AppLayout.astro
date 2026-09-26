@@ -73,6 +73,7 @@ const pathname = Astro.url.pathname;
       userId={user?.username ?? ""}
       aipAccess={user?.aipAccess ?? 0}
       locale={locale}
+      origins={SITE_ORIGINS}
       client:load
     >
       <slot />
