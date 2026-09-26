@@ -4,7 +4,7 @@ import ThemeScript from "@jianyuelab-org/can-ui/components/ThemeScript.astro";
 import AppFrame from "@/components/AppFrame.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 import { buildWorkspaces } from "@jianyuelab-org/can-ui";
-import { buildNavigation, buildSecondary } from "@/lib/nav";
+import { buildNavigation, buildSecondary, SITE_ORIGINS } from "@/lib/nav";
 
 interface Props {
   title?: string;
@@ -37,10 +37,14 @@ const secondary = buildSecondary(t, {
  * 顶上的分区切换器，来自 can-ui。**高亮的是「管制员」而不是新开一格**：这些页面
  * 是从管制员中心的侧栏点进来的，教员做完手上的事要回去的也是那里。给门户开第四
  * 格，等于告诉每个成员这里有一个他们进不去的分区。
+ *
+ * `origins` 和 `buildSecondary` 用的是同一份 `SITE_ORIGINS`（`lib/nav.ts`），让
+ * 指向主站的那一格在开发/预发环境里落到本环境自己的主站，而不是永远指向线上。
  */
 const workspaces = buildWorkspaces(t, {
   current: "portal",
   rating: user?.rating,
+  origins: SITE_ORIGINS,
 });
 const pathname = Astro.url.pathname;
 ---

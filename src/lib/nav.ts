@@ -30,14 +30,30 @@
  * 能背地址。导航按等级出现，本来就已经把两拨人分开了。
  */
 import type { Translator } from "@/lib/i18n";
-import type { IconName, NavItem, NavSecondary } from "@jianyuelab-org/can-ui";
+import type {
+  IconName,
+  NavItem,
+  NavSecondary,
+  SiteOrigins,
+} from "@jianyuelab-org/can-ui";
 import { visibleSites, WORKSPACE_SITE_KEYS } from "@jianyuelab-org/can-ui";
 import {
+  CAN_WEB_ORIGIN,
   RATING_ADMIN,
   RATING_INSTRUCTOR,
   RATING_SUP,
   webUrl,
 } from "@/lib/config";
+
+/**
+ * 传给 `visibleSites`/`buildWorkspaces` 的 dev/staging 覆盖。这个仓库的
+ * `config.ts` 只读得到 `CAN_WEB_ORIGIN`，所以只覆盖这一个：本地和 staging 上常
+ * 用链接、分区切换器里指向主站的那一条会落在本环境自己的主站，而不是永远指向
+ * 线上；生产环境这个变量本来就是线上地址，行为不变。
+ */
+export const SITE_ORIGINS: SiteOrigins = {
+  web: CAN_WEB_ORIGIN,
+};
 
 /**
  * 教员那一组 —— 等级 8 起。三条都是本站的页面。
@@ -180,6 +196,7 @@ export function buildSecondary(
         rating: opts.rating,
         signedIn: opts.signedIn,
         excludeCurrent: true,
+        origins: SITE_ORIGINS,
       })
         .filter((site) => !WORKSPACE_SITE_KEYS.includes(site.key))
         .map((site) => ({
