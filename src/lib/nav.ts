@@ -31,7 +31,7 @@
  */
 import type { Translator } from "@/lib/i18n";
 import type { IconName, NavItem, NavSecondary } from "@jianyuelab-org/can-ui";
-import { visibleSites } from "@jianyuelab-org/can-ui";
+import { visibleSites, WORKSPACE_SITE_KEYS } from "@jianyuelab-org/can-ui";
 import {
   RATING_ADMIN,
   RATING_INSTRUCTOR,
@@ -169,17 +169,24 @@ export function buildSecondary(
       // 网络上的其它站。从前这里只硬编码着「会员文档」一条 —— 于是一个教员从门
       // 户去不了雷达、EFB、考试中心，而全网另外三个仓库各自维护着一份不一样的
       // 清单。现在这份来自 can-ui，九个站一份，门户和资料库按评级决定露不露。
+      //
+      // 本站顶上画着 `buildWorkspaces` 那份分区切换器（高亮「管制员」，见
+      // can-ui `sites.ts` 关于 can-portal 的说明），管制员中心和考试中心已经在
+      // 那上面。这里要按 WORKSPACE_SITE_KEYS 排掉同样这两个，不然它们在切换器
+      // 和这份常用链接里各出现一次。
       ...visibleSites({
         locale: opts.locale,
         current: "portal",
         rating: opts.rating,
         signedIn: opts.signedIn,
         excludeCurrent: true,
-      }).map((site) => ({
-        name: site.name,
-        href: site.href,
-        icon: site.icon,
-      })),
+      })
+        .filter((site) => !WORKSPACE_SITE_KEYS.includes(site.key))
+        .map((site) => ({
+          name: site.name,
+          href: site.href,
+          icon: site.icon,
+        })),
     ],
   };
 }
