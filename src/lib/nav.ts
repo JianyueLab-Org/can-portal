@@ -30,7 +30,7 @@
  * 能背地址。导航按等级出现，本来就已经把两拨人分开了。
  */
 import type { Translator } from "@/lib/i18n";
-import type { NavItem, NavSecondary, Workspace } from "@jianyuelab-org/can-ui";
+import type { IconName, NavItem, NavSecondary } from "@jianyuelab-org/can-ui";
 import { visibleSites } from "@jianyuelab-org/can-ui";
 import {
   RATING_ADMIN,
@@ -57,7 +57,7 @@ const INSTRUCTOR: Array<{ key: string; href: string }> = [
  * 活动管理是 SUP/ADM（发积分的就是他们），所以配奖品的也是 SUP；处理结果公示
  * 同理。这三条在 can-web 上就是平铺的，照搬。
  */
-const SUP: Array<{ key: string; href: string; icon: string }> = [
+const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   { key: "activitiesManage", href: "/super/activities", icon: "calendarDays" },
   { key: "prizesManage", href: "/super/prizes", icon: "gift" },
   // 抽奖。和奖品同一档（11）：奖品是 SUP 配的，拿奖品开抽奖的也是 SUP。
@@ -182,37 +182,4 @@ export function buildSecondary(
       })),
     ],
   };
-}
-
-/**
- * 顶上的分区切换器。
- *
- * 它不是这个站的内容，是网络外壳的一部分 —— 成员从这个域名走出去的唯一一条
- * 路。删掉它，离开这个站就只剩下浏览器的地址栏。
- *
- * **高亮的是「管制员」而不是新开一格。** 和 can-web 的 `StaffShell` 逐字相同的
- * 理由：这些页面是从管制员中心的侧栏点进来的，教员做完手上的事要回去的也是那
- * 里。给教员与管理开第四格，等于告诉每个成员这里有一个他们进不去的分区。
- */
-export function buildWorkspaces(t: Translator): Workspace[] {
-  return [
-    {
-      key: "pilots",
-      name: t("workspace.pilots"),
-      href: webUrl("/pilots/"),
-      icon: "paperAirplane",
-    },
-    {
-      key: "controllers",
-      name: t("workspace.controllers"),
-      href: "https://controller.ceruleanavi.net",
-      icon: "signal",
-    },
-    {
-      key: "exams",
-      name: t("workspace.exams"),
-      href: "https://exam.ceruleanavi.net",
-      icon: "academicCap",
-    },
-  ];
 }

@@ -3,7 +3,8 @@ import "@/styles/globals.css";
 import ThemeScript from "@jianyuelab-org/can-ui/components/ThemeScript.astro";
 import AppFrame from "@/components/AppFrame.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
-import { buildNavigation, buildSecondary, buildWorkspaces } from "@/lib/nav";
+import { buildWorkspaces } from "@jianyuelab-org/can-ui";
+import { buildNavigation, buildSecondary } from "@/lib/nav";
 
 interface Props {
   title?: string;
@@ -32,7 +33,15 @@ const secondary = buildSecondary(t, {
   rating: user?.rating,
   signedIn: !!user,
 });
-const workspaces = buildWorkspaces(t);
+/**
+ * 顶上的分区切换器，来自 can-ui。**高亮的是「管制员」而不是新开一格**：这些页面
+ * 是从管制员中心的侧栏点进来的，教员做完手上的事要回去的也是那里。给门户开第四
+ * 格，等于告诉每个成员这里有一个他们进不去的分区。
+ */
+const workspaces = buildWorkspaces(t, {
+  current: "portal",
+  rating: user?.rating,
+});
 const pathname = Astro.url.pathname;
 ---
 
