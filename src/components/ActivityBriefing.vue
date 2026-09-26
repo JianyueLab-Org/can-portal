@@ -126,8 +126,8 @@ const ratingOptions = computed(() =>
 );
 
 /** Picking a seat type retargets the callsign and the default rating gate. */
-function onFacilityChange(value: string) {
-  seatForm.value.facility = value;
+function onFacilityChange(value: string | number) {
+  seatForm.value.facility = String(value);
   const facility = Number(value) as ActivityFacility;
   seatForm.value.minRating = String(DEFAULT_FACILITY_MIN_RATING[facility]);
 }

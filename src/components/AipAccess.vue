@@ -346,7 +346,7 @@ onMounted(load);
               class="w-36"
               :aria-label="t('current.setLevel')"
               @update:model-value="
-                (v: string) => setAccess(row.username, Number(v))
+                (v: string | number) => setAccess(row.username, Number(v))
               "
             />
             <Button
