@@ -1,7 +1,7 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import { getLocale, useTranslations } from "@/lib/i18n";
-import { RATING_ADMIN, RATING_INSTRUCTOR, RATING_SUP } from "@/lib/config";
+import { RATING_INSTRUCTOR, RATING_SUP } from "@/lib/config";
 
 /**
  * 门户首页 —— 一张按等级过滤的入口清单。
@@ -82,15 +82,11 @@ const cards: Card[] = [
           body: t("cards.feedback"),
           group: t("groups.sup"),
         },
-      ]
-    : []),
-  ...(rating === RATING_ADMIN
-    ? [
         {
           href: "/super/promotions",
           title: tf("admin.items.promote"),
           body: t("cards.promotions"),
-          group: tf("admin.title"),
+          group: t("groups.sup"),
         },
       ]
     : []),

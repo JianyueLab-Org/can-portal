@@ -22,6 +22,10 @@ import { apiFetch, unwrapList } from "@/lib/canApi";
 const props = defineProps<{
   messages: Record<string, unknown>;
   sessionUserId: string;
+  viewerRating: number;
+  // SUP (11) 起。页面按 `@/lib/config` 算好传进来 —— 那个模块读 process.env，
+  // 不能进浏览器端的岛屿。
+  canReview: boolean;
 }>();
 const t = createTranslator(props.messages);
 
@@ -89,15 +93,9 @@ function ratingShortOrEmpty(value: RatingRef | null | undefined): string {
 onMounted(async () => {
   if (props.sessionUserId) {
     try {
-      // 首先检查用户数据以验证权限
-      const userResponse = await apiFetch(
-        `/api/v1/pilot/${props.sessionUserId}`,
-      );
-      const userData = await userResponse.json();
-
-      // 检查用户是否为 ADM (rating 12)
-      if (!userData.data || userData.data.user?.rating?.id !== 12) {
-        error.value = t("accessDeniedAdm");
+      // 中间件已经挡过一次，这里只是不去请求一个必然 403 的队列。
+      if (!props.canReview) {
+        error.value = t("accessDeniedSup");
         loading.value = false;
         return;
       }
@@ -154,6 +152,16 @@ const approvedPromotions = computed(
 const rejectedPromotions = computed(
   () => promotions.value.filter((p) => p.status === 2).length,
 );
+
+// can-api 的 DecidePromotion 拒绝两种：审批自己的申请，以及起止等级任一高于
+// 审批人自己的。这里不给按钮，免得点下去才 403。
+function canDecide(promotion: Promotion): boolean {
+  if (promotion.applicant === props.sessionUserId) return false;
+  return (
+    Math.max(ratingId(promotion.fromRating), ratingId(promotion.toRating)) <=
+    props.viewerRating
+  );
+}
 
 function openApprovalModal(promotion: Promotion, action: "approve" | "reject") {
   selectedPromotion.value = promotion;
@@ -387,7 +395,7 @@ const statusFilterOptions = computed(() => [
           <span class="text-muted">{{ formatDate(row.createdDate) }}</span>
         </template>
         <template #cell-actions="{ row }">
-          <div v-if="row.status === 0" class="flex space-x-2">
+          <div v-if="row.status === 0 && canDecide(row)" class="flex space-x-2">
             <Button
               variant="primary"
               size="sm"

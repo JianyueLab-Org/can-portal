@@ -18,7 +18,7 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 | `/super/prizes`     | `/super/prizes`     | `ManagePrizes.vue`      | 11   |
 | `/super/lottery`    | （新）              | `ManageLottery.vue`     | 11   |
 | `/super/feedback`   | `/super/feedback`   | `ManageFeedback.vue`    | 11   |
-| `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 12   |
+| `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 11   |
 
 技术形状和 can-controller / can-efb / can-dev / can-radar / can-exam 一样，**不要
 在这里发明第八套**：Astro SSR（standalone Node 适配器）+ Vue 岛屿 + Tailwind v4，

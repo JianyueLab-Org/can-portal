@@ -2,15 +2,20 @@
 import AppLayout from "@/layouts/AppLayout.astro";
 import SuperPromotions from "@/components/SuperPromotions.vue";
 import { getLocale, getMessages } from "@/lib/i18n";
+import { RATING_SUP } from "@/lib/config";
 
 const messages = getMessages(getLocale(Astro.cookies), "promotion.super");
 const sessionUserId = Astro.locals.user?.username ?? "";
+const viewerRating = Astro.locals.user?.rating ?? 0;
+const canReview = viewerRating >= RATING_SUP;
 ---
 
 <AppLayout title="晋升审批 · Cerulean Aviation Network">
   <SuperPromotions
     messages={messages}
     sessionUserId={sessionUserId}
+    viewerRating={viewerRating}
+    canReview={canReview}
     client:load
   />
 </AppLayout>

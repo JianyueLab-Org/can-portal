@@ -51,15 +51,13 @@ function isUnguarded(pathname: string): boolean {
  * 给出不同答案，会做出一个「看得见但进不去」或者「进得去但找不到入口」的菜单，
  * 而那种不一致没有任何测试会发现。
  *
- * **`/super/promotions` 是 12 而不是 11**，和 can-web 的 `StaffShell` 逐字相
- * 同：晋升审批是 ADM 的事，SUP 提不了也批不了。剩下三个 `/super/*` 是 11 ——
- * 发积分的是 SUP，所以配奖品的也是 SUP。
+ * `/super/*` 默认是 11：发积分的是 SUP，所以配奖品的也是 SUP；晋升审批也是
+ * SUP 起（can-api 的决定路由是 `WithSup`）。
  *
- * 顺序上先长后短：`/super/promotions` 必须排在 `/super` 前面，否则它会先被
- * `/super` 那条以 11 匹配上，ADM 那道门就形同虚设。这是这张表唯一的陷阱。
+ * 顺序上先长后短：ADM 的几条必须排在 `/super` 前面，否则会先被 `/super` 那条
+ * 以 11 匹配上，ADM 那道门就形同虚设。这是这张表唯一的陷阱。
  */
 const FLOORS: Array<{ prefix: string; rating: number }> = [
-  { prefix: "/super/promotions", rating: RATING_ADMIN },
   // 资料库授权也是 ADM。**它必须排在 `/super` 前面**，否则会被那条以 11 匹配
   // 上，于是一个 SUP 能打开一张发放数据库权限的界面 —— 请求会被 can-api 的
   // `WithAdmin` 拒掉，但那时他已经看见了完整的持有人名单。

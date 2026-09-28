@@ -233,16 +233,25 @@ const handlePromote = async () => {
   }
 };
 
-// 获取等级选项（从当前等级+1开始，最高到I3，且不高于发起人自己）
+// 获取等级选项：可以上调也可以下调，当前等级本身不算。
+//
+// 上调最高到 I3，且不高于发起人自己（服务端 `aboveYourOwn`）。下调最低到 OBS
+// —— SUS/INAC 是停权，不走这条流程 —— 而且只对等级不高于发起人的成员开放：
+// 服务端拒绝对等级高于自己的人提任何申请。
 function getRatingOptions(currentRating: number) {
   const options: { id: number; short: string; long: string }[] = [];
+  if (currentRating < 1) return options;
   // I3 是这张表的上限，发起人自己的等级是服务端的上限，取两者更低的那个。
-  // viewerRating 尚未读到时（NaN）只受 I3 约束，和从前一样。
+  // viewerRating 尚未读到时（NaN）只受 I3 约束，也不给下调。
   const ceiling = 10; // I3 - Advanced Instructor
-  const maxRating = Number.isNaN(viewerRating.value)
-    ? ceiling
-    : Math.min(ceiling, viewerRating.value);
-  for (let i = currentRating + 1; i <= maxRating; i++) {
+  const known = !Number.isNaN(viewerRating.value);
+  const maxRating = known ? Math.min(ceiling, viewerRating.value) : ceiling;
+  const ids: number[] = [];
+  if (known && currentRating <= viewerRating.value) {
+    for (let i = 1; i < currentRating; i++) ids.push(i);
+  }
+  for (let i = currentRating + 1; i <= maxRating; i++) ids.push(i);
+  for (const i of ids) {
     const rating = ratingTrans(i, "zh", "full") as RatingInfo | null;
     if (rating) {
       options.push({ id: i, short: rating.short, long: rating.long });
@@ -262,7 +271,12 @@ function isUserActive(user: User): boolean {
 
 function openPromoteModal(user: User) {
   selectedUser.value = user;
-  selectedToRating.value = ratingId(user.rating) + 1;
+  // 默认上调一级；已到上限的默认下调一级。
+  const options = getRatingOptions(ratingId(user.rating));
+  selectedToRating.value =
+    options.find((o) => o.id > ratingId(user.rating))?.id ??
+    options.at(-1)?.id ??
+    ratingId(user.rating);
   comment.value = "";
   formError.value = null;
   notice.value = null;
@@ -471,9 +485,9 @@ const statusSelectOptions = computed(() => [
           </template>
 
           <template #cell-actions="{ row }">
-            <!-- 最高只能申请到I3 (等级10) -->
+            <!-- 有可上调或下调的等级才给按钮；上限 I3，下限 OBS。 -->
             <Button
-              v-if="ratingId(row.rating) >= 1 && ratingId(row.rating) < 10"
+              v-if="getRatingOptions(ratingId(row.rating)).length > 0"
               size="sm"
               @click="openPromoteModal(row)"
             >
@@ -483,7 +497,7 @@ const statusSelectOptions = computed(() => [
               </template>
               {{ t("promoteUser") }}
             </Button>
-            <span v-if="ratingId(row.rating) >= 10" class="text-sm text-muted">
+            <span v-else class="text-sm text-muted">
               {{ t("maxLevelReached") }}
             </span>
           </template>

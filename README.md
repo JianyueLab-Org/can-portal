@@ -20,7 +20,7 @@ Cerulean Aviation Network 的管理面：带学员、审晋升、办活动、发
 | `/super/prizes`     | 奖品管理 —— 积分商城和兑换                 | 11 (SUP) |
 | `/super/lottery`    | 抽奖管理 —— 开草稿、发布、取消、看中奖名单 | 11 (SUP) |
 | `/super/feedback`   | 处理结果公示                               | 11 (SUP) |
-| `/super/promotions` | 晋升审批                                   | 12 (ADM) |
+| `/super/promotions` | 晋升审批                                   | 11 (SUP) |
 
 等级门槛在三个地方生效，而且读的是同一组常量：中间件（进不去）、侧栏（看不见）、
 首页卡片（列不出）。**真正拦住数据的是 can-api**，这三处都只是不给人看点下去必然

@@ -82,20 +82,22 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   // 服务器目录。和上面三条同一档（11）：搬一台 FSD 或语音服务器是运维决定，而跑
   // 活动的那一层就是做运维的那一层。
   { key: "servers", href: "/super/servers", icon: "signal" },
+  // 晋升审批。SUP 起就能批（can-api 的决定路由是 `WithSup`）；教员提，SUP/ADM 批。
+  {
+    key: "admin.items.promote",
+    href: "/super/promotions",
+    icon: "checkCircle",
+  },
 ];
 
 /**
- * ADM 那一条 —— 等级 12。
- *
- * 晋升审批和「晋升」分开，是因为它们是同一条流程的两端：教员提，ADM 批。合成
- * 一组会让一个只有 I1 的人以为自己按得动那个按钮。
+ * ADM 那几条 —— 等级 12。
  */
 const ADMIN: Array<{ key: string; href: string }> = [
-  { key: "admin.items.promote", href: "/super/promotions" },
-  // 航行资料库（can-db）的访问授权。和晋升审批同一组，因为它们是 ADM 仅有的两件
-  // 事 —— 都是「决定别人能做什么」，而不是网络的日常运营。
+  // 航行资料库（can-db）的访问授权。ADM 的事 —— 「决定别人能做什么」，而不是
+  // 网络的日常运营。
   { key: "admin.items.aipAccess", href: "/super/aip-access" },
-  // 开发者授权（can-dev）。和上面两条同一组，同一条理由：都是「决定别人能做什
+  // 开发者授权（can-dev）。和上面一条同一组，同一条理由：都是「决定别人能做什
   // 么」。这一条决定的是谁能做出一张挂着本网络名字、向其他成员要授权的同意页。
   { key: "admin.items.developers", href: "/super/developers" },
 ];
