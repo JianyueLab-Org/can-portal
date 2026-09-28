@@ -428,8 +428,10 @@
         "nameLength": "Name is too long.",
         "descriptionLength": "Description is too long.",
         "cost": "Enter a whole number of points, 1 or more.",
-        "stock": "Enter a whole number of units, 0 or more."
-      }
+        "stock": "Enter a whole number of units, 0 or more.",
+        "invalidTransition": "That redemption has already been handled. The list has been refreshed."
+      },
+      "queueCapped": "Showing the newest {count} redemptions only; older ones, and any pending among them, are not listed."
     }
   },
   "lottery": {

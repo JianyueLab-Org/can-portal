@@ -428,8 +428,10 @@
         "nameLength": "名稱過長。",
         "descriptionLength": "簡述過長。",
         "cost": "請填寫不小於 1 的整數積分。",
-        "stock": "請填寫不小於 0 的整數數量。"
-      }
+        "stock": "請填寫不小於 0 的整數數量。",
+        "invalidTransition": "這筆兌換已經被處理過了，列表已重新整理。"
+      },
+      "queueCapped": "只顯示最近的 {count} 筆兌換；更早的（包括其中待發放的）沒有列出。"
     }
   },
   "lottery": {

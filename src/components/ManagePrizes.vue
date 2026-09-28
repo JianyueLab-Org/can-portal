@@ -96,6 +96,16 @@ const pendingCount = computed(
   () => redemptions.value.filter((r) => r.status === REDEMPTION_PENDING).length,
 );
 
+/**
+ * can-api answers the newest 500 redemptions and no more (`AllRedemptions(…,
+ * 500)`). At the cap the list -- and so `pendingCount` -- may be missing older
+ * rows, which is said on the page rather than left to look complete.
+ */
+const REDEMPTION_CAP = 500;
+const redemptionsCapped = computed(
+  () => redemptions.value.length >= REDEMPTION_CAP,
+);
+
 function errorText(field: keyof PrizeErrors): string | undefined {
   const key = fieldErrors.value[field];
   return key ? t(`errors.${key}`) : undefined;
@@ -226,8 +236,8 @@ async function remove(prize: Prize) {
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const key =
-        payload?.error === "alreadyRedeemed" ? "alreadyRedeemed" : "delete";
+      // can-api's code is `inUse`; the i18n key kept its older name.
+      const key = payload?.error === "inUse" ? "alreadyRedeemed" : "delete";
       feedback.value = { type: "error", text: t(`errors.${key}`) };
       return;
     }
@@ -255,7 +265,17 @@ async function setStatus(redemption: Redemption, status: number) {
         body: JSON.stringify({ status }),
       },
     );
-    if (!response.ok) throw new Error(t("errors.save"));
+    if (!response.ok) {
+      // 409 `invalidTransition`: the row moved on since this list was read
+      // (somebody else fulfilled or cancelled it). Reload so the buttons match.
+      const payload = await response.json().catch(() => ({}));
+      if (payload?.error === "invalidTransition") {
+        feedback.value = { type: "error", text: t("errors.invalidTransition") };
+        await load();
+        return;
+      }
+      throw new Error(t("errors.save"));
+    }
 
     await load();
   } catch (error) {
@@ -380,6 +400,9 @@ onMounted(load);
       :title="t('queue')"
       :subtitle="t('queueHint', { count: String(pendingCount) })"
     >
+      <AlertBox v-if="redemptionsCapped" variant="warning" class="mb-3">
+        {{ t("queueCapped", { count: String(REDEMPTION_CAP) }) }}
+      </AlertBox>
       <DataTable
         :columns="redemptionColumns"
         :rows="redemptions"

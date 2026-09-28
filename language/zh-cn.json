@@ -428,8 +428,10 @@
         "nameLength": "名称过长。",
         "descriptionLength": "简述过长。",
         "cost": "请填写不小于 1 的整数积分。",
-        "stock": "请填写不小于 0 的整数数量。"
-      }
+        "stock": "请填写不小于 0 的整数数量。",
+        "invalidTransition": "这笔兑换已经被处理过了，列表已刷新。"
+      },
+      "queueCapped": "只显示最近的 {count} 笔兑换；更早的（包括其中待发放的）没有列出。"
     }
   },
   "lottery": {
