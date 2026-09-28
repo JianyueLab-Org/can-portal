@@ -213,7 +213,8 @@
       "fetchUserDataError": "取得用戶資料時發生錯誤",
       "fetchDataError": "取得資料時發生錯誤",
       "fetchPromotionDataError": "取得晉升記錄時發生錯誤",
-      "loadingError": "載入錯誤"
+      "loadingError": "載入錯誤",
+      "alreadyPending": "這位成員已有一條待審核的晉升申請，請等它處理完再提交。"
     }
   },
   "activities": {

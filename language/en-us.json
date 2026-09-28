@@ -213,7 +213,8 @@
       "fetchUserDataError": "Error occurred while fetching user data",
       "fetchDataError": "Error occurred while fetching data",
       "fetchPromotionDataError": "Error occurred while fetching promotion data",
-      "loadingError": "Loading Error"
+      "loadingError": "Loading Error",
+      "alreadyPending": "This member already has a pending promotion request. Wait for it to be reviewed before raising another."
     }
   },
   "activities": {

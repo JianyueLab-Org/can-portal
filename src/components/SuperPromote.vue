@@ -63,7 +63,8 @@ interface User {
   // arithmetic on the object silently produced "[object Object]1" as the
   // target rating and a NaN loop bound that emptied the rating picker.
   rating: RatingRef;
-  emailVerified: string | null;
+  /** can-api 给的是布尔值，不是 can-web 时代 Auth.js 那个验证时间戳。 */
+  emailVerified: boolean;
   createdAt: string;
   updatedAt: string;
   divisions: Division[];
@@ -123,14 +124,7 @@ onMounted(async () => {
       // 否则一个 I1 教员会看到 I2/I3 两个选项，选了就是一记 403。
       viewerRating.value = ratingId(userData.data.user?.rating);
 
-      const response = await apiFetch("/api/v1/super/promote");
-      const result = await response.json();
-
-      if (result.status === 200) {
-        promoteData.value = result.data;
-      } else {
-        error.value = t("fetchUserDataError");
-      }
+      await loadPromoteData();
     } catch (err) {
       error.value = t("fetchDataError");
       console.error("Error:", err);
@@ -141,6 +135,18 @@ onMounted(async () => {
     loading.value = false;
   }
 });
+
+/** 读候选名单。提交一条申请之后也重读一次，好让表上的状态跟上。 */
+async function loadPromoteData() {
+  const response = await apiFetch("/api/v1/super/promote");
+  const result = await response.json();
+
+  if (result.status === 200) {
+    promoteData.value = result.data;
+  } else {
+    error.value = t("fetchUserDataError");
+  }
+}
 
 // 过滤用户数据
 const filteredUsers = computed<User[]>(() => {
@@ -219,6 +225,11 @@ const handlePromote = async () => {
       selectedUser.value = null;
       comment.value = "";
       notice.value = { variant: "success", text: t("promotionSuccess") };
+      await loadPromoteData();
+    } else if (result.error === "alreadyPending") {
+      // 这个人已经有一条待审的申请。这是最常见的一种失败（两位教员前后脚提同一
+      // 个人），而它要发起人做的事是「去等」，不是「改表单」，所以单独说。
+      formError.value = t("alreadyPending");
     } else {
       // 错误信封是 {error, message}，没有 `status` —— 所以上面那个判断对任何
       // 失败都只是 undefined。`aboveYourOwn`、`noAuthority`、`notFound` 三种
