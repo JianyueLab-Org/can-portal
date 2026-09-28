@@ -133,6 +133,20 @@ const sortedControllers = computed(() => {
   });
 });
 
+/**
+ * 表格行，带一个 (id, region) 的复合键。
+ *
+ * `row-key="id"` 在一个人持有两个分部时给两行同一个键 —— 和上面 `loadRoster`
+ * 记着的那个 bug 是同一个原因。Vue 按键复用行，排序或筛选一变就可能把一行的内容
+ * 画在另一行的位置上。DataTable 的 `rowKey` 只收字段名，所以加一个字段。
+ */
+const tableRows = computed(() =>
+  sortedControllers.value.map((controller) => ({
+    ...controller,
+    rowKey: `${controller.id}:${controller.region}`,
+  })),
+);
+
 // 统计数据
 const totalControllers = computed(() => controllers.value.length);
 const activeControllers = computed(
@@ -412,7 +426,7 @@ const permissionOptions = computed(() => [
       </template>
 
       <div class="p-4 sm:p-6">
-        <DataTable :columns="columns" :rows="sortedControllers" row-key="id">
+        <DataTable :columns="columns" :rows="tableRows" row-key="rowKey">
           <template #empty>
             <EmptyState
               icon="users"
