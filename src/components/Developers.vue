@@ -34,7 +34,7 @@
  * 事的第三方，把他们全部登出是另一个更响的决定。停用某个应用走的是
  * `oauthClient.disabled`，不是这一页。
  */
-import { onMounted, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 import { createTranslator } from "@/lib/i18n";
 import {
   AlertBox,
@@ -112,28 +112,52 @@ async function load() {
  *
  * `/api/v1/super/members` 是 SUP/ADM 门槛，上限 20 条 —— 那是「够挑出正确的那个
  * 人」而不是「能用来遍历会员名单」的数字，服务端定的。
+ *
+ * 每敲一个字都会触发，所以两件事：停手 250 ms 再发，免得打一个名字发十个请求；
+ * 每次发都记一个序号，回来的不是最新那次就丢掉 —— 否则慢的那个「zh」会在快的
+ * 「zhang」之后落地，把结果换回一份更宽的名单。
  */
+const SEARCH_DEBOUNCE_MS = 250;
+let searchTimer: ReturnType<typeof setTimeout> | undefined;
+let searchSeq = 0;
+
+function scheduleSearch() {
+  clearTimeout(searchTimer);
+  searchTimer = setTimeout(runSearch, SEARCH_DEBOUNCE_MS);
+}
+
+/** 清空搜索，连同还在路上的那次。 */
+function resetSearch() {
+  clearTimeout(searchTimer);
+  searchSeq++;
+  search.value = "";
+  results.value = [];
+  searching.value = false;
+}
+
 async function runSearch() {
+  const seq = ++searchSeq;
   const query = search.value.trim();
   if (query.length < 2) {
     results.value = [];
+    searching.value = false;
     return;
   }
 
   searching.value = true;
+  let found: Member[] = [];
   try {
     const response = await apiFetch(
       `/api/v1/super/members?q=${encodeURIComponent(query)}`,
     );
     const payload = await response.json().catch(() => ({}));
-    results.value = response.ok
-      ? unwrapList<Member>(payload?.data, "members")
-      : [];
+    if (response.ok) found = unwrapList<Member>(payload?.data, "members");
   } catch {
-    results.value = [];
-  } finally {
-    searching.value = false;
+    found = [];
   }
+  if (seq !== searchSeq) return;
+  results.value = found;
+  searching.value = false;
 }
 
 /**
@@ -162,12 +186,12 @@ async function setDeveloper(username: string, developer: boolean) {
     ? t("granted", { id: username })
     : t("revoked", { id: username });
 
-  search.value = "";
-  results.value = [];
+  resetSearch();
   await load();
 }
 
 onMounted(load);
+onBeforeUnmount(() => clearTimeout(searchTimer));
 </script>
 
 <template>
@@ -195,7 +219,7 @@ onMounted(load);
           :label="t('grant.search')"
           :placeholder="t('grant.searchPlaceholder')"
           autocomplete="off"
-          @input="runSearch"
+          @input="scheduleSearch"
         />
       </div>
 
