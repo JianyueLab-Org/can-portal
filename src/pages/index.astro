@@ -1,13 +1,13 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import { getLocale, useTranslations } from "@/lib/i18n";
-import { RATING_INSTRUCTOR, RATING_SUP } from "@/lib/config";
+import { RATING_ADMIN, RATING_INSTRUCTOR, RATING_SUP } from "@/lib/config";
 
 /**
  * 门户首页 —— 一张按等级过滤的入口清单。
  *
  * **不是一个仪表盘。** can-controller 的 `/` 是管制员概览，因为那个站有一件持续
- * 发生的事可以概览（谁在线、自己的席位权限、时长）。这个站没有：七个页面是七件
+ * 发生的事可以概览（谁在线、自己的席位权限、时长）。这个站没有：每个页面是一件
  * 各自独立的工作，没有一个数字是「打开就想看一眼」的。凑一个统计卡片出来只会
  * 让人以为那些数字有意义。
  *
@@ -83,10 +83,33 @@ const cards: Card[] = [
           group: t("groups.sup"),
         },
         {
+          href: "/super/servers",
+          title: tf("servers"),
+          body: t("cards.servers"),
+          group: t("groups.sup"),
+        },
+        {
           href: "/super/promotions",
           title: tf("admin.items.promote"),
           body: t("cards.promotions"),
           group: t("groups.sup"),
+        },
+      ]
+    : []),
+  // `===` 和侧栏一致，理由写在 `src/lib/nav.ts` 的 `buildNavigation()` 上。
+  ...(rating === RATING_ADMIN
+    ? [
+        {
+          href: "/super/aip-access",
+          title: tf("admin.items.aipAccess"),
+          body: t("cards.aipAccess"),
+          group: tf("admin.title"),
+        },
+        {
+          href: "/super/developers",
+          title: tf("admin.items.developers"),
+          body: t("cards.developers"),
+          group: tf("admin.title"),
         },
       ]
     : []),

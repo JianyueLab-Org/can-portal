@@ -782,7 +782,10 @@
       "prizes": "Maintain the prize store and process redemptions.",
       "lottery": "Run prize draws from the shop, publish or cancel them, and see the winners.",
       "feedback": "Publish the outcome of a handled case.",
-      "promotions": "Approve promotion requests submitted by instructors."
+      "promotions": "Approve promotion requests submitted by instructors.",
+      "servers": "Maintain the server directory clients read their addresses from.",
+      "aipAccess": "Grant and revoke access to the aeronautical database.",
+      "developers": "Grant and revoke developer access to the developer centre."
     }
   },
   "aipAccess": {

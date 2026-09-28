@@ -6,7 +6,7 @@
 
 **教员与管理门户** —— `portal.ceruleanavi.net`，Cerulean Aviation Network 的第七个
 Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 `/super/*` 整段搬
-出来的，搬的是**七个页面**：
+出来的，搬的是**七个页面**；加上这里新写的，一共十一个页面和一张首页：
 
 | 这里                | 原来在 can-web      | 岛屿                    | 门槛 |
 | ------------------- | ------------------- | ----------------------- | ---- |
@@ -19,6 +19,9 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 | `/super/lottery`    | （新）              | `ManageLottery.vue`     | 11   |
 | `/super/feedback`   | `/super/feedback`   | `ManageFeedback.vue`    | 11   |
 | `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 11   |
+| `/super/servers`    | （新）              | `ManageServers.vue`     | 11   |
+| `/super/aip-access` | （新）              | `AipAccess.vue`         | 12   |
+| `/super/developers` | （新）              | `Developers.vue`        | 12   |
 
 技术形状和 can-controller / can-efb / can-dev / can-radar / can-exam 一样，**不要
 在这里发明第八套**：Astro SSR（standalone Node 适配器）+ Vue 岛屿 + Tailwind v4，
@@ -59,7 +62,7 @@ ImagePullBackOff。
 
 ## 两个前缀，一个侧栏 —— 这是这个站的形状
 
-七个页面分在 `/instr/*` 和 `/super/*` 下，而侧栏只有一个。这两句都要成立，而且都
+这些页面分在 `/instr/*` 和 `/super/*` 下，而侧栏只有一个。这两句都要成立，而且都
 不是顺手。
 
 **前缀留着，没有像 can-controller 那样拉平。** can-controller 搬家时把
@@ -214,7 +217,7 @@ Astro 两种都认。
 
 `language/*.json` 是从 can-web 的四本词典里**按用到的命名空间切**下来的（65 KB →
 25 KB），只有 `portal` 一个命名空间是这里新写的。理由：`AppLayout.astro` 把整本
-`frame` 词典当 prop 序列化进每个页面的 HTML，一条没人用的文案是七个页面各发一遍的
+`frame` 词典当 prop 序列化进每个页面的 HTML，一条没人用的文案是每个页面各发一遍的
 字节。can-dev 和 can-controller 出于同一个理由做过同样的事。
 
 改文案时**先去 can-web 改**再切过来，如果那条文案两边都在用；只有这个站有的，直接
@@ -254,7 +257,7 @@ bun run build && bun run start
 ```
 
 门禁是 `bun run lint` 加一次 `bun run build`。`astro check` 看不见 `.vue`，而这个站的
-七个页面除了一层 `.astro` 外壳之外全是 Vue 岛屿 —— 所以 `typecheck` 同时跑 `vue-tsc`，
+每个页面除了一层 `.astro` 外壳之外全是 Vue 岛屿 —— 所以 `typecheck` 同时跑 `vue-tsc`，
 **两个都要留着**。
 
 **有一个测试文件了**（`src/server/positionStack.test.ts`，`bun test`，和 can-database
