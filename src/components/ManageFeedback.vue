@@ -71,6 +71,10 @@ const busyId = ref<number | null>(null);
 const feedback = ref<{ type: "success" | "error"; text: string } | null>(null);
 
 const editingId = ref<number | null>(null);
+// 编辑中的案件是否已公示。PATCH 是整条替换，`publish:false` 会把它撤回草稿，
+// 所以编辑已公示的案件时不给「保存草稿」，只给保持公示的「保存修改」；
+// 撤回走列表上带确认的「撤回公示」。
+const editingPublished = ref(false);
 const form = ref({ title: "", summary: "", result: "" });
 const chosen = ref<Record<Side, Person[]>>({ handler: [], subject: [] });
 const fieldErrors = ref<CaseErrors>({});
@@ -128,6 +132,7 @@ function errorText(field: keyof CaseErrors): string | undefined {
 
 function resetForm() {
   editingId.value = null;
+  editingPublished.value = false;
   form.value = { title: "", summary: "", result: "" };
   chosen.value = { handler: [], subject: [] };
   fieldErrors.value = {};
@@ -137,6 +142,7 @@ function resetForm() {
 
 function edit(item: FeedbackCase) {
   editingId.value = item.id;
+  editingPublished.value = item.status === CASE_PUBLISHED;
   form.value = {
     title: item.title,
     summary: item.summary,
@@ -225,6 +231,7 @@ async function save(publish: boolean) {
 
   try {
     const editing = editingId.value;
+    const wasPublished = editingPublished.value;
     const response = await apiFetch(
       editing ? `/api/v1/super/feedback/${editing}` : "/api/v1/super/feedback",
       {
@@ -250,7 +257,13 @@ async function save(publish: boolean) {
 
     feedback.value = {
       type: "success",
-      text: t(publish ? "published" : editing ? "updated" : "created"),
+      text: t(
+        publish && !wasPublished
+          ? "published"
+          : editing
+            ? "updated"
+            : "created",
+      ),
     };
     resetForm();
     await load();
@@ -453,10 +466,18 @@ onMounted(load);
       </div>
 
       <div class="mt-4 flex flex-wrap gap-2">
-        <Button variant="secondary" :loading="saving" @click="save(false)">
+        <Button v-if="editingPublished" :loading="saving" @click="save(true)">
+          {{ t("saveChanges") }}
+        </Button>
+        <Button
+          v-if="!editingPublished"
+          variant="secondary"
+          :loading="saving"
+          @click="save(false)"
+        >
           {{ t("saveDraft") }}
         </Button>
-        <Button :loading="saving" @click="save(true)">
+        <Button v-if="!editingPublished" :loading="saving" @click="save(true)">
           <template #icon><Icon name="megaphone" class="size-4" /></template>
           {{ t("publish") }}
         </Button>

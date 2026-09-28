@@ -23,6 +23,8 @@ import { apiFetch, unwrapList } from "@/lib/canApi";
 const props = defineProps<{
   messages: Record<string, unknown>;
   sessionUserId: string;
+  // `status` 只有 ADM 能写（can-api 的 elevatedRosterFlags）。
+  canEditStatus: boolean;
 }>();
 const t = createTranslator(props.messages);
 
@@ -188,19 +190,22 @@ async function handleSaveChanges() {
     // region 也不是可省的：`division` 的唯一键是 (id, region)，UPDATE 的
     // WHERE 两个都要，否则定位不到跨分区成员的哪一行。它就在编辑中的这行上。
     //
-    // 只发这六个：instructor / director 要 ADM 才能写，home 任何路径都不可写
-    // ——入籍是单向的，转籍是另一条路。
-    const updateData = {
-      region: editingController.value.region,
-      flags: {
-        status: editingController.value.status,
-        del: editingController.value.del,
-        gnd: editingController.value.gnd,
-        app: editingController.value.app,
-        twr: editingController.value.twr,
-        ctr: editingController.value.ctr,
-      },
+    // 只发这些：instructor / director / status 要 ADM 才能写，home 任何路径都
+    // 不可写——入籍是单向的，转籍是另一条路。
+    //
+    // status 只在真的改了时才发。can-api 看的是键在不在，不是值变没变：
+    // 原样带上它，教员和 SUP 连只改一个 GND 签注都会 403。
+    const flags: Record<string, boolean> = {
+      del: editingController.value.del,
+      gnd: editingController.value.gnd,
+      app: editingController.value.app,
+      twr: editingController.value.twr,
+      ctr: editingController.value.ctr,
     };
+    if (editingController.value.status !== selectedController.value.status) {
+      flags.status = editingController.value.status;
+    }
+    const updateData = { region: editingController.value.region, flags };
 
     const response = await apiFetch(
       `/api/v1/super/roster/${selectedController.value.id}`,
@@ -581,6 +586,7 @@ const permissionOptions = computed(() => [
                 </h3>
                 <Toggle
                   v-model="editingController.status"
+                  :disabled="!canEditStatus"
                   :label="t('controllerStatus')"
                   :description="t('controllerStatusDesc')"
                 />

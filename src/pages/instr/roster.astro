@@ -2,11 +2,18 @@
 import AppLayout from "@/layouts/AppLayout.astro";
 import SuperRoster from "@/components/SuperRoster.vue";
 import { getLocale, getMessages } from "@/lib/i18n";
+import { RATING_ADMIN } from "@/lib/config";
 
 const messages = getMessages(getLocale(Astro.cookies), "roster.super");
 const sessionUserId = Astro.locals.user?.username ?? "";
+const canEditStatus = (Astro.locals.user?.rating ?? 0) >= RATING_ADMIN;
 ---
 
 <AppLayout title="花名册 · Cerulean Aviation Network">
-  <SuperRoster messages={messages} sessionUserId={sessionUserId} client:load />
+  <SuperRoster
+    messages={messages}
+    sessionUserId={sessionUserId}
+    canEditStatus={canEditStatus}
+    client:load
+  />
 </AppLayout>

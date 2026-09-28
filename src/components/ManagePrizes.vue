@@ -402,8 +402,10 @@ onMounted(load);
         </template>
         <template #cell-actions="{ row }">
           <div class="flex justify-end gap-2">
+            <!-- 只对待处理的行。已取消的兑换不计入余额（SPENDING_STATUSES），
+                 改成已发放会重新扣一次积分，可能把余额扣成负数。 -->
             <Button
-              v-if="row.status !== REDEMPTION_FULFILLED"
+              v-if="row.status === REDEMPTION_PENDING"
               size="sm"
               :loading="busyRedemption === row.id"
               @click="setStatus(row, REDEMPTION_FULFILLED)"

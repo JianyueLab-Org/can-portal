@@ -563,6 +563,7 @@
       "removeHandler": "Remove this handler",
       "removeSubject": "Remove this member",
       "saveDraft": "Save draft",
+      "saveChanges": "Save changes",
       "publish": "Publish",
       "unpublish": "Unpublish",
       "cancelEdit": "Cancel",

@@ -563,6 +563,7 @@
       "removeHandler": "移除該處理人",
       "removeSubject": "移除該被反饋人員",
       "saveDraft": "儲存草稿",
+      "saveChanges": "儲存修改",
       "publish": "公示",
       "unpublish": "撤下公示",
       "cancelEdit": "取消編輯",
