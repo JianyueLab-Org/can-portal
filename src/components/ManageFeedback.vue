@@ -215,6 +215,32 @@ async function load() {
   }
 }
 
+/**
+ * can-api 拒绝一条公示时的那句话。
+ *
+ * 它不回 422 加逐字段的 `fields` —— 从前那个分支因此永远不会走到，任何拒绝都成了
+ * 一句「保存失败」。它回的是 400 / 409 加一个代码，认得的代码翻成本页的措辞，不认
+ * 得的照搬 `message`（仍然说清了是什么问题），5xx 才退回泛泛的那句。
+ */
+const CASE_ERRORS: Record<string, string> = {
+  incomplete: "errors.incomplete",
+  titleTooLong: "errors.titleLength",
+  codeTaken: "errors.codeTaken",
+  notFound: "errors.notFound",
+};
+
+function caseErrorText(
+  status: number,
+  payload: { error?: unknown; message?: unknown } | null,
+): string {
+  const code = payload?.error;
+  if (typeof code === "string" && Object.hasOwn(CASE_ERRORS, code))
+    return t(CASE_ERRORS[code]);
+  if (status < 500 && typeof payload?.message === "string" && payload.message)
+    return payload.message;
+  return t("errors.save");
+}
+
 async function save(publish: boolean) {
   const input = {
     ...form.value,
@@ -249,11 +275,12 @@ async function save(publish: boolean) {
     );
     const payload = await response.json().catch(() => ({}));
 
-    if (response.status === 422) {
-      fieldErrors.value = payload?.fields ?? {};
+    if (payload?.error === "titleTooLong") {
+      // 标题是唯一一个 can-api 单独点名的字段，落在输入框旁边。
+      fieldErrors.value = { title: "titleLength" };
       return;
     }
-    if (!response.ok) throw new Error(t("errors.save"));
+    if (!response.ok) throw new Error(caseErrorText(response.status, payload));
 
     feedback.value = {
       type: "success",
@@ -298,7 +325,10 @@ async function setStatus(item: FeedbackCase, status: number) {
         publish: status === CASE_PUBLISHED,
       }),
     });
-    if (!response.ok) throw new Error(t("errors.save"));
+    if (!response.ok) {
+      const payload = await response.json().catch(() => ({}));
+      throw new Error(caseErrorText(response.status, payload));
+    }
     await load();
   } catch (error) {
     feedback.value = {

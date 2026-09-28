@@ -612,7 +612,10 @@
         "resultLength": "That is too long.",
         "handlerRequired": "Name at least one handler.",
         "handlerCount": "Too many handlers.",
-        "subjectCount": "Too many members."
+        "subjectCount": "Too many members.",
+        "incomplete": "A title, a summary and a result are all required.",
+        "codeTaken": "That case number is already in use.",
+        "notFound": "This case no longer exists."
       }
     }
   },

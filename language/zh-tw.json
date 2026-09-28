@@ -612,7 +612,10 @@
         "resultLength": "內容過長。",
         "handlerRequired": "至少填寫一位處理人。",
         "handlerCount": "處理人過多。",
-        "subjectCount": "被反饋人員過多。"
+        "subjectCount": "被反饋人員過多。",
+        "incomplete": "標題、經過和結果都必須填寫。",
+        "codeTaken": "這個案件編號已被使用。",
+        "notFound": "這條公示已不存在。"
       }
     }
   },
