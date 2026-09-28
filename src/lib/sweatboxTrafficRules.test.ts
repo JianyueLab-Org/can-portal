@@ -71,3 +71,25 @@ describe("additional airport route rules", () => {
     ]);
   });
 });
+
+describe("traffic mix", () => {
+  test("spreads consecutive choices across partners and airlines", () => {
+    const choices = trafficChoicesFor(
+      "ZZZZ",
+      ["CSN", "CES", "CCA"],
+      ["ZBAA", "ZSPD", "ZUUU"],
+    );
+    expect(choices).toHaveLength(9);
+    // The first round visits every partner once, each on a different airline.
+    expect(choices.slice(0, 3).map((choice) => choice.partner)).toEqual([
+      "ZBAA",
+      "ZSPD",
+      "ZUUU",
+    ]);
+    expect(new Set(choices.slice(0, 3).map((c) => c.airline)).size).toBe(3);
+    // Still every pair exactly once.
+    expect(new Set(choices.map((c) => `${c.airline}-${c.partner}`)).size).toBe(
+      9,
+    );
+  });
+});

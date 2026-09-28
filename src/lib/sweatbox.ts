@@ -143,7 +143,8 @@ export interface SweatboxProcedure {
    * **不能用 `points.at(-1)` / `points[0]` 代替。** NAIP 把一条程序的几个转换首尾相接
    * 塞进同一串点里（346 条 SID、47 条 STAR，一行最多 11 组），所以那两个下标取到的是
    * 「最后/最先存进去的那一组的端点」，可能是面向跑道的一端。规则见 sweatboxData 的
-   * `procedureGate`，和 can-db 的 `procedureGateIdents` 是同一条。
+   * `procedureTrack`，和 can-db 的 `procedureGateIdents` 是同一条。那里也把 `points`
+   * 拼成了这条跑道的一条航迹，而不是几组转换首尾相接。
    *
    * 老数据源不给就是 null，那时退回下标。
    */
@@ -296,8 +297,30 @@ export const TRAFFIC_COUNTS: Record<
  *
  * 9800 ft is 3000 m — a metric level, like everything else filed in China, and
  * a common one to be given crossing into approach control's airspace.
+ *
+ * It is a floor, not the answer: see `appEntryAltitude`.
  */
 export const APP_ENTRY_ALTITUDE = 9800;
+
+/**
+ * How far above the field an arrival enters, at minimum.
+ *
+ * 9800 ft is MSL. At ZULS (11,713 ft) that is underground and at ZUUU's
+ * 1,681 ft it is barely 8,000 ft above the runway, so the entry level has to
+ * follow the field once the field is high. 8000 ft above leaves every
+ * low-lying field on the old 9800.
+ */
+export const APP_ENTRY_ABOVE_FIELD = 8000;
+
+/** The entry altitude for a field, rounded up to the hundred. */
+export function appEntryAltitude(elevation: number | null): number {
+  const field =
+    elevation !== null && Number.isFinite(elevation) ? elevation : 0;
+  return Math.max(
+    APP_ENTRY_ALTITUDE,
+    Math.ceil((field + APP_ENTRY_ABOVE_FIELD) / 100) * 100,
+  );
+}
 
 /** Upper bound per profile, so a slipped keypress cannot ask for 9000 aircraft. */
 export const MAX_PER_PROFILE = 120;
@@ -725,6 +748,55 @@ export function magneticToTrue(
   return Number(((((magneticDeg - variation) % 360) + 360) % 360).toFixed(1));
 }
 
+/**
+ * The runway's true course, threshold to far end.
+ *
+ * `hdg` is the published **magnetic** course, and `destination` walks a
+ * **true** bearing — feeding one to the other puts every aircraft on final off
+ * the centreline by the whole variation, nearly seven degrees at Beijing,
+ * which at 20 NM is two miles abeam. Both thresholds are in the data, so the
+ * true course comes straight from the geometry and needs no variation at all.
+ * Only a strip with no usable far end falls back to converting `hdg`.
+ */
+export function runwayTrueCourse(
+  runway: SweatboxRunway,
+  variation: number | null,
+): number {
+  const lengthNm = distanceNm(
+    runway.lat,
+    runway.lon,
+    runway.endLat,
+    runway.endLon,
+  );
+  // 0.1 NM is 185 m — no runway is that short, so anything under it is a
+  // missing far end rather than a strip.
+  if (!Number.isFinite(lengthNm) || lengthNm < 0.1) {
+    return magneticToTrue(runway.hdg, variation);
+  }
+  return Number(
+    bearingTo(runway.lat, runway.lon, runway.endLat, runway.endLon).toFixed(1),
+  );
+}
+
+/**
+ * Altitude and speed for an aircraft `distance` NM out on final.
+ *
+ * Exported so the table re-places a hand-edited TWR row with the same numbers
+ * the generator used — a row moved from 3 NM to 15 NM that kept its 3 NM
+ * altitude would be 3800 ft under the glide.
+ */
+export function finalApproachState(
+  distance: number,
+  elevation: number | null,
+): { altitude: number; speed: number } {
+  const field =
+    elevation !== null && Number.isFinite(elevation) ? elevation : 0;
+  return {
+    altitude: Math.round(field + distance * FEET_PER_NM_ON_GLIDE),
+    speed: distance < 6 ? 150 : 170,
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Deliberate mistakes
 // ---------------------------------------------------------------------------
@@ -1018,6 +1090,24 @@ function seeded(seed: number): () => number {
  * keys on the callsign and a duplicate silently replaces the earlier aircraft.
  */
 export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
+  return composeTraffic(options).aircraft;
+}
+
+export interface TrafficResult {
+  aircraft: ScenarioAircraft[];
+  /**
+   * GND aircraft asked for that got no stand.
+   *
+   * Counted **per terminal group**, which a comparison of totals cannot do: an
+   * airline tied to T1 at a field with 200 stands, 12 of them in T1, loses
+   * every aircraft past the twelfth while the field-wide count says there is
+   * room. Those aircraft are dropped, and this is how the form finds out.
+   */
+  standShortfall: number;
+}
+
+/** `generateTraffic`, plus what it could not place. */
+export function composeTraffic(options: TrafficOptions): TrafficResult {
   const {
     airport,
     profiles,
@@ -1034,11 +1124,15 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   const partners = options.partners.filter(
     (partner) => partner && partner !== airport.icao,
   );
-  if (!airlines.length || !types.length) return [];
+  if (!airlines.length || !types.length) {
+    return { aircraft: [], standShortfall: 0 };
+  }
 
   const trafficChoices = trafficChoicesFor(airport.icao, airlines, partners);
   const requiredDeparture = requiredDepartureFor(airport.icao, seed);
-  if (!trafficChoices.length && !requiredDeparture) return [];
+  if (!trafficChoices.length && !requiredDeparture) {
+    return { aircraft: [], standShortfall: 0 };
+  }
 
   const random = seeded(seed);
   // Only `REQALT` uses this now. Aircraft on the ground are written at 0 and
@@ -1173,72 +1267,92 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     const other = locate(otherEnd);
     row.route = otherEnd;
 
-    if (other) {
-      const track = outbound
+    // The partner's coordinates only feed the cruise level and the bearing the
+    // fallback procedure is picked by. can-db's plan does not need them, and it
+    // used to be dropped with them: a partner missing from `/airports.json`
+    // filed a bare ICAO code although can-db had routed the pair.
+    const track = other
+      ? outbound
         ? bearingTo(airport.lat, airport.lon, other[0], other[1])
-        : bearingTo(other[0], other[1], airport.lat, airport.lon);
+        : bearingTo(other[0], other[1], airport.lat, airport.lon)
+      : null;
+    if (options.cruise.trim()) row.cruise = options.cruise.trim();
+    else if (other && track !== null) {
       const legNm = distanceNm(airport.lat, airport.lon, other[0], other[1]);
-      row.cruise = options.cruise.trim()
-        ? options.cruise.trim()
-        : String(cruiseLevelFor(track, legNm, spread));
+      row.cruise = String(cruiseLevelFor(track, legNm, spread));
+    }
 
-      if (outbound) {
-        const plan = routeFor(airport.icao, otherEnd);
-        // **can-db chose the SID, not this file.** It picks by search — every
-        // SID whose last point reaches the airway network is a candidate edge,
-        // so the one that wins is the one that actually shortens the journey.
-        // Picking locally by bearing sent ZGGG departures out on AGVIL1 (south
-        // west) towards Beijing; see `SweatboxRoutePlan`.
-        //
-        // `pickProcedure` survives as the fallback for a pair can-db could not
-        // plan, and only then — it is the runway-correct choice, which is the
-        // property worth keeping when there is no plan to defer to.
-        const sid =
-          (plan && byName(airport.sids, plan.sid)) ??
-          pickProcedure(airport.sids, departureRunway.id, track, "last");
-        if (plan) row.route = enrouteOf(plan) || row.route;
-        // What the pseudopilot flies is the SID, picked up from wherever the
-        // aircraft already is — not the filed route, which starts where the
-        // SID ends.
-        if (sid) {
-          const tail = procedureTail(sid.points, row.lat, row.lon, row.heading);
-          row.pseudoRoute = [taxiRoute.trim(), ...tail]
-            .filter(Boolean)
-            .join(" ");
-        }
-      } else {
-        const plan = routeFor(otherEnd, airport.icao);
-        // Placement may already have committed to an arrival; reusing it is
-        // what keeps the strip, the position and the $ROUTE telling one story.
-        // Placement itself now takes the STAR out of this same plan, so the
-        // two agree by construction rather than by coincidence.
-        const star =
-          chosenStar ??
-          (plan && byName(airport.stars, plan.star)) ??
-          pickProcedure(
-            airport.stars,
-            arrivalRunway.id,
-            (track + 180) % 360,
-            "first",
-          );
-        if (plan) row.route = enrouteOf(plan) || row.route;
-        // `IGNAK9J/02R` — the STAR carries the runway it was drawn for.
-        if (star) {
-          row.route = `${row.route} ${star.name}/${arrivalRunway.id}`;
-          // The STAR from the point the aircraft is nearest, then the ILS.
-          // Handing it the whole procedure is what produced the direction
-          // error: an aircraft already inside the terminal area would turn
-          // round and fly back out to the STAR's entry fix first. The trailing
-          // `FI…`/`CI…` intercept points are EuroScope's own and are replaced
-          // by the ILS, exactly as the hand-written approach sets do.
-          const tail = procedureTail(
-            star.points,
-            row.lat,
-            row.lon,
-            row.heading,
-          ).filter((point) => !/^(FI|CI)/.test(point));
-          row.pseudoRoute = [...tail, `ILS${arrivalRunway.id}`].join(" ");
-        }
+    // A parked aircraft has no meaningful heading — GND writes 0, which is a
+    // default, not north. Handed to `procedureTail` it would keep only the SID
+    // points north of the stand; undefined makes it take the nearest point.
+    const heading = row.profile === "GND" ? undefined : row.heading;
+
+    if (outbound) {
+      const plan = routeFor(airport.icao, otherEnd);
+      // **can-db chose the SID, not this file.** It picks by search — every
+      // SID whose last point reaches the airway network is a candidate edge,
+      // so the one that wins is the one that actually shortens the journey.
+      // Picking locally by bearing sent ZGGG departures out on AGVIL1 (south
+      // west) towards Beijing; see `SweatboxRoutePlan`.
+      //
+      // `pickProcedure` survives as the fallback for a pair can-db could not
+      // plan, and only then — it is the runway-correct choice, which is the
+      // property worth keeping when there is no plan to defer to.
+      const sid =
+        (plan && byName(airport.sids, plan.sid)) ??
+        (track !== null
+          ? pickProcedure(airport.sids, departureRunway.id, track, "last")
+          : null);
+      if (plan) row.route = enrouteOf(plan) || row.route;
+      // What the pseudopilot flies is the SID, picked up from wherever the
+      // aircraft already is — not the filed route, which starts where the
+      // SID ends.
+      if (sid) {
+        const tail = procedureTail(sid.points, row.lat, row.lon, heading);
+        // The taxi route is how a parked aircraft reaches the runway. A DEP
+        // row is already on the threshold; taxiing it first sends it back
+        // across the field.
+        row.pseudoRoute = [
+          row.profile === "GND" ? taxiRoute.trim() : "",
+          ...tail,
+        ]
+          .filter(Boolean)
+          .join(" ");
+      }
+    } else {
+      const plan = routeFor(otherEnd, airport.icao);
+      // Placement may already have committed to an arrival; reusing it is
+      // what keeps the strip, the position and the $ROUTE telling one story.
+      // Placement itself now takes the STAR out of this same plan, so the
+      // two agree by construction rather than by coincidence.
+      const star =
+        chosenStar ??
+        (plan && byName(airport.stars, plan.star)) ??
+        (track !== null
+          ? pickProcedure(
+              airport.stars,
+              arrivalRunway.id,
+              (track + 180) % 360,
+              "first",
+            )
+          : null);
+      if (plan) row.route = enrouteOf(plan) || row.route;
+      // `IGNAK9J/02R` — the STAR carries the runway it was drawn for.
+      if (star) {
+        row.route = `${row.route} ${star.name}/${arrivalRunway.id}`;
+        // The STAR from the point the aircraft is nearest, then the ILS.
+        // Handing it the whole procedure is what produced the direction
+        // error: an aircraft already inside the terminal area would turn
+        // round and fly back out to the STAR's entry fix first. The trailing
+        // `FI…`/`CI…` intercept points are EuroScope's own and are replaced
+        // by the ILS, exactly as the hand-written approach sets do.
+        const tail = procedureTail(
+          star.points,
+          row.lat,
+          row.lon,
+          heading,
+        ).filter((point) => !/^(FI|CI)/.test(point));
+        row.pseudoRoute = [...tail, `ILS${arrivalRunway.id}`].join(" ");
       }
     }
 
@@ -1326,6 +1440,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   };
 
   const aircraft: ScenarioAircraft[] = [];
+  let standShortfall = 0;
   let trafficCursor = 0;
   let requiredDepartureUsed = false;
 
@@ -1429,11 +1544,18 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
    * so nothing needs positioning *along* a track any more — the clock does the
    * spreading. Heading is the bearing to the following point, which is what
    * keeps the `$ROUTE` tail agreeing with where the nose is.
+   *
+   * The start is the `gate` when there is one, not `points[0]` — see
+   * `SweatboxProcedure.gate` for why the first stored point can be the wrong
+   * end of the wrong transition.
    */
   const procedureEntry = (
-    points: string[],
+    procedure: SweatboxProcedure,
   ): { lat: number; lon: number; heading: number } | null => {
+    const { points, gate } = procedure;
+    const from = gate ? points.indexOf(gate) : 0;
     const located = points
+      .slice(Math.max(0, from))
       .map((name) => fixIndex.get(name))
       .filter((position): position is [number, number] => !!position);
     if (located.length < 2) return null;
@@ -1445,10 +1567,10 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     };
   };
 
-  // Variation is the whole reason a parked aircraft used to sit skew on its
-  // stand: the packages publish magnetic, the position packet wants true.
+  // Only the fallback in `runwayTrueCourse` needs it: the packages publish
+  // magnetic, the position packet wants true, and the thresholds give true
+  // directly whenever both ends are known.
   const variation = airport.variation ?? null;
-  const trueHeading = (magnetic: number) => magneticToTrue(magnetic, variation);
 
   /**
    * Cumulative `START:` times, one running clock per profile so the streams do
@@ -1507,6 +1629,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
           (!terminal || terminalForStand(airport.icao, stand) === terminal),
       );
       const stands = pickDispersedStands(candidates, indexes.length, random);
+      standShortfall += indexes.length - stands.length;
       stands.forEach((stand, index) => {
         assignments.set(indexes[index], stand);
         usedStands.add(stand.name);
@@ -1541,7 +1664,8 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
   // TWR — on final, on the glide, closing up towards the threshold.
   if (profiles.includes("TWR")) {
     const wanted = clamp(counts.TWR, 0, MAX_PER_PROFILE);
-    const reciprocal = (arrivalRunway.hdg + 180) % 360;
+    // True, from the thresholds — see `runwayTrueCourse`.
+    const reciprocal = (runwayTrueCourse(arrivalRunway, variation) + 180) % 360;
     for (let index = 0; index < wanted; index++) {
       const choice = nextTraffic(false);
       if (!choice) break;
@@ -1559,8 +1683,9 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       row.cruise = "0";
       row.lat = placed.lat;
       row.lon = placed.lon;
-      row.altitude = Math.round(elevation + distance * FEET_PER_NM_ON_GLIDE);
-      row.speed = distance < 6 ? 150 : 170;
+      const onFinal = finalApproachState(distance, elevation);
+      row.altitude = onFinal.altitude;
+      row.speed = onFinal.speed;
       row.heading = Math.round(
         bearingTo(placed.lat, placed.lon, arrivalRunway.lat, arrivalRunway.lon),
       );
@@ -1597,7 +1722,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       row.lon = departureRunway.lon;
       row.altitude = 0;
       row.speed = 0;
-      row.heading = trueHeading(departureRunway.hdg);
+      row.heading = runwayTrueCourse(departureRunway, variation);
       row.start = nextStart("DEP");
       planFor(row, true, index);
       plantError(row, true);
@@ -1672,7 +1797,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       // a sequence to build, and it starts where the arrival starts. Spreading
       // them along the track instead hands the trainee a picture they did not
       // create and cannot have caused.
-      row.altitude = APP_ENTRY_ALTITUDE;
+      row.altitude = appEntryAltitude(airport.elev);
 
       // **The arrival flies the STAR can-db planned for its own city pair.**
       //
@@ -1690,7 +1815,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
       const star =
         (plan && byName(airport.stars, plan.star)) ??
         (streams.length ? streams[index % streams.length] : null);
-      const placed = star ? procedureEntry(star.points) : null;
+      const placed = star ? procedureEntry(star) : null;
 
       if (placed) {
         row.lat = placed.lat;
@@ -1701,7 +1826,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
         // at least inbound even if it is not a procedure.
         const radial = options.arrivalRadials.length
           ? options.arrivalRadials[index % options.arrivalRadials.length]
-          : (arrivalRunway.hdg + 180) % 360;
+          : (runwayTrueCourse(arrivalRunway, variation) + 180) % 360;
         const point = destination(airport.lat, airport.lon, radial, 40);
         row.lat = point.lat;
         row.lon = point.lon;
@@ -1718,7 +1843,7 @@ export function generateTraffic(options: TrafficOptions): ScenarioAircraft[] {
     }
   }
 
-  return aircraft;
+  return { aircraft, standShortfall };
 }
 
 /**
@@ -1738,26 +1863,42 @@ export function ilsLine(runway: SweatboxRunway): string {
   );
 }
 
+/**
+ * What `src/lib/flightplan.ts` calls STRUCTURAL: the separator and line ends.
+ *
+ * Every record here is split on `:` by index, so one colon typed into a
+ * remark shifts every field after it — the defect `559569d9` cleaned out of
+ * 2,246 hand-written `$FP` lines. A line end starts a new record outright.
+ */
+const STRUCTURAL = /[:\r\n]/g;
+
+/** A single-token field: the separator is removed. */
+const token = (value: string) => value.replace(STRUCTURAL, "").trim();
+
+/** Free text (route, remarks): the separator becomes a space. */
+const text = (value: string) =>
+  value.replace(STRUCTURAL, " ").replace(/\s+/g, " ").trim();
+
 /** The `$FP` flight-plan record. Seventeen fields, all positional. */
 function flightPlanLine(aircraft: ScenarioAircraft): string {
   return [
-    `$FP${aircraft.callsign}`,
+    `$FP${token(aircraft.callsign)}`,
     "*A",
-    aircraft.rules,
-    joinAircraft(aircraft.type, aircraft.equipment),
-    aircraft.tas,
-    aircraft.departure,
-    aircraft.departureTime,
-    aircraft.departureTime,
-    aircraft.cruise,
-    aircraft.destination,
+    token(aircraft.rules),
+    token(joinAircraft(aircraft.type, aircraft.equipment)),
+    token(aircraft.tas),
+    token(aircraft.departure),
+    token(aircraft.departureTime),
+    token(aircraft.departureTime),
+    token(aircraft.cruise),
+    token(aircraft.destination),
     "00",
     "00",
     "0",
     "0",
     "",
-    aircraft.remarks,
-    aircraft.route,
+    text(aircraft.remarks),
+    text(aircraft.route),
   ].join(":");
 }
 
@@ -1765,8 +1906,8 @@ function flightPlanLine(aircraft: ScenarioAircraft): string {
 function positionLine(aircraft: ScenarioAircraft): string {
   return [
     "@N",
-    aircraft.callsign,
-    aircraft.squawk,
+    token(aircraft.callsign),
+    token(aircraft.squawk),
     "1",
     toSctCoord(aircraft.lat, "lat"),
     toSctCoord(aircraft.lon, "lon"),
@@ -1811,20 +1952,22 @@ export function buildScenario(model: ScenarioModel): string {
   }
 
   if (model.metar.trim()) {
-    lines.push(`METAR:${model.metar.trim()}`);
+    lines.push(`METAR:${text(model.metar)}`);
     lines.push("");
   }
 
   for (const controller of model.controllers) {
     if (!controller.callsign.trim()) continue;
     lines.push("PSEUDOPILOT:ALL");
-    lines.push(`CONTROLLER:${controller.callsign}:${controller.frequency}`);
+    lines.push(
+      `CONTROLLER:${token(controller.callsign)}:${token(controller.frequency)}`,
+    );
   }
   if (model.controllers.length) lines.push("");
 
   for (const route of model.namedRoutes) {
-    if (!route.name.trim()) continue;
-    lines.push(`ROUTE:${route.name}:${route.points}`);
+    if (!token(route.name)) continue;
+    lines.push(`ROUTE:${token(route.name)}:${text(route.points)}`);
   }
   if (model.namedRoutes.length) lines.push("");
 
@@ -1841,15 +1984,15 @@ export function buildScenario(model: ScenarioModel): string {
   }
 
   for (const aircraft of model.aircraft) {
-    if (!aircraft.callsign.trim()) continue;
+    if (!token(aircraft.callsign)) continue;
     lines.push("PSEUDOPILOT:ALL");
     lines.push(positionLine(aircraft));
     lines.push(flightPlanLine(aircraft));
     if (aircraft.simData) {
-      lines.push(`SIMDATA:${aircraft.callsign}:${SIMDATA_TAIL}`);
+      lines.push(`SIMDATA:${token(aircraft.callsign)}:${SIMDATA_TAIL}`);
     }
-    if (aircraft.pseudoRoute.trim()) {
-      lines.push(`$ROUTE:${aircraft.pseudoRoute.trim()}`);
+    if (text(aircraft.pseudoRoute)) {
+      lines.push(`$ROUTE:${text(aircraft.pseudoRoute)}`);
     }
     lines.push(`DELAY:${aircraft.delayFrom}:${aircraft.delayTo}`);
     if (aircraft.start !== null) lines.push(`START:${aircraft.start}`);
@@ -1860,7 +2003,7 @@ export function buildScenario(model: ScenarioModel): string {
     // hand-written sets use. The aircraft's own seat wins over the scenario's
     // default so one aircraft can be handed to a different position.
     const pseudopilot =
-      aircraft.initialPseudopilot.trim() || model.defaultPseudopilot.trim();
+      token(aircraft.initialPseudopilot) || token(model.defaultPseudopilot);
     if (pseudopilot) {
       lines.push(`INITIALPSEUDOPILOT:${pseudopilot}`);
     }

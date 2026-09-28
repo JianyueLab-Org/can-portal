@@ -369,6 +369,32 @@ function matchesOperation(operation: OperationRule, partner: string): boolean {
   return true;
 }
 
+/**
+ * Deal the per-partner lists out one partner at a time.
+ *
+ * The generator walks this list with a cursor, one aircraft per step, so its
+ * order is the traffic mix. Built partner by partner it put a whole profile on
+ * the first partner — seven TWR arrivals, seven from ZBAA — and the rest of the
+ * list was never reached. Round-robin across partners spreads the destinations;
+ * rotating each partner's list by its position staggers the airlines too, so
+ * the first round is not one airline to every partner. No randomness: the same
+ * inputs give the same scenario, and the seed stays the only thing that varies it.
+ */
+function interleaveByPartner(lists: TrafficChoice[][]): TrafficChoice[] {
+  const rotated = lists
+    .filter((list) => list.length)
+    .map((list, at) => {
+      const shift = at % list.length;
+      return [...list.slice(shift), ...list.slice(0, shift)];
+    });
+  const out: TrafficChoice[] = [];
+  const rounds = Math.max(0, ...rotated.map((list) => list.length));
+  for (let round = 0; round < rounds; round++) {
+    for (const list of rotated) if (round < list.length) out.push(list[round]);
+  }
+  return out;
+}
+
 export function trafficChoicesFor(
   airport: string,
   airlines: string[],
@@ -376,13 +402,16 @@ export function trafficChoicesFor(
 ): TrafficChoice[] {
   const rule = AIRPORT_RULES[airport];
   if (!rule) {
-    return partners.flatMap((partner) =>
-      airlines.map((airline) => ({ airline, partner, terminal: null })),
+    return interleaveByPartner(
+      partners.map((partner) =>
+        airlines.map((airline) => ({ airline, partner, terminal: null })),
+      ),
     );
   }
 
-  const choices: TrafficChoice[] = [];
+  const lists: TrafficChoice[][] = [];
   for (const partner of partners) {
+    const choices: TrafficChoice[] = [];
     for (const airline of airlines) {
       const operations = rule.operations.filter(
         (entry) => entry.airline === airline,
@@ -402,8 +431,9 @@ export function trafficChoicesFor(
         });
       }
     }
+    lists.push(choices);
   }
-  return choices;
+  return interleaveByPartner(lists);
 }
 
 /** Select exactly one required scheduled departure, reproducibly by seed. */

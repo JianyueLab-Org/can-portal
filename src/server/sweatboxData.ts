@@ -101,41 +101,66 @@ interface DbAirportDetail extends DbAirportBase {
 const RUNWAY_TRANSITION = /^RW[0-9]{2}[LRCG]?$/;
 
 /**
- * 这条程序在哪儿接上航路网。
+ * 这条程序在某一条跑道上的**一条**航迹，和它接上航路网的那一点（`gate`）。
  *
- * 按 `transition` 分组，跑道转换那几组不算；SID 取每组的**末**点、STAR 取**首**点。
- * 和 can-db 的 `procedureGateIdents` 是同一条规则 —— 那边修的是入网口选错（28 条 SID
- * 的末点落在 `RWxx` 组上），这边修的是同一个假设：场景里离场航路从 SID 的末点起算。
+ * `points` 是好几组转换首尾相接，不是一条航迹（见上面 `path` 的注释）。生成器拿它当航
+ * 迹用：`procedureTail` 从离飞机最近的点往后切，切下来的会跨进别的转换 —— 19L 的离场
+ * 飞完自己的跑道转换，接着飞 19R 的那一组，再飞公共段；`procedureEntry` 取 `points[0]`
+ * 当进场入口，取到的可能是跑道那一端。
  *
- * 一组都不剩时退回跑道组，再退回整串的首末 —— 宁可给一个偏的点，也不能让这条程序在
- * 生成器里彻底消失。
+ * 所以在这里按 `transition` 拼成一条：
+ *
+ *  - SID：这条跑道的 `RW` 组 → 公共段（`ALL` 或无名）；没有公共段时接第一个航路转换。
+ *  - STAR：第一个航路转换 → 公共段 → 这条跑道的 `RW` 组。
+ *
+ * 航路转换按存储顺序取第一个，一条程序一个入网口，和从前一样。SID 的入网口也和从前一
+ * 样是公共段的末点；STAR 有航路转换时入口是转换的首点而不是公共段的首点 —— 进场从那
+ * 里开始。和 can-db 的 `procedureGateIdents` 一样，跑道转换永远不当入网口 —— 除非一组别的都没有，那时退回这条跑道的组，再退回整串，宁可
+ * 给一个偏的点，也不能让这条程序在生成器里彻底消失。
+ *
+ * 没有 `path`（老数据源）或者只有一组时，原样返回，行为和从前一样。
  */
-function procedureGate(
+export function procedureTrack(
   kind: "sid" | "star",
+  runway: string,
   points: string[],
   path?: Array<{ ident: string | null; transition: string | null }>,
-): string | null {
-  const fallback =
-    kind === "star" ? (points[0] ?? null) : (points.at(-1) ?? null);
-  if (!path?.length) return fallback;
+): { points: string[]; gate: string | null } {
+  const ends = (list: string[]) => ({
+    points: list,
+    gate: (kind === "star" ? list[0] : list.at(-1)) ?? null,
+  });
 
   const groups = new Map<string, string[]>();
-  for (const leg of path) {
+  for (const leg of path ?? []) {
     if (!leg.ident) continue;
     const key = leg.transition ?? "";
     const list = groups.get(key);
     if (list) list.push(leg.ident);
     else groups.set(key, [leg.ident]);
   }
-  const pick = (includeRunway: boolean): string | null => {
-    for (const [name, idents] of groups) {
-      if (!includeRunway && RUNWAY_TRANSITION.test(name)) continue;
-      const ident = kind === "star" ? idents[0] : idents.at(-1);
-      if (ident) return ident;
+  if (groups.size <= 1) return ends(points);
+
+  const keys = [...groups.keys()];
+  const isRunway = (key: string) => RUNWAY_TRANSITION.test(key);
+  const common = keys.filter((key) => key === "ALL" || key === "");
+  const named = keys.filter(
+    (key) => !isRunway(key) && key !== "ALL" && key !== "",
+  );
+  const own = keys.filter((key) => key === `RW${runway}`);
+
+  const order =
+    kind === "sid"
+      ? [...own, ...common, ...(common.length ? [] : named.slice(0, 1))]
+      : [...named.slice(0, 1), ...common, ...own];
+  const track: string[] = [];
+  for (const key of order) {
+    for (const ident of groups.get(key) ?? []) {
+      // 相邻两组在接缝处共用一个点（`… IDUMA` + `IDUMA …`），只留一个。
+      if (track.at(-1) !== ident) track.push(ident);
     }
-    return null;
-  };
-  return pick(false) ?? pick(true) ?? fallback;
+  }
+  return ends(track.length ? track : points);
 }
 
 /**
@@ -284,8 +309,7 @@ export async function readAirport(
         servedRunways(p).map((runway) => ({
           name: p.name,
           runway,
-          points: p.points,
-          gate: procedureGate("sid", p.points, p.path),
+          ...procedureTrack("sid", runway, p.points, p.path),
         })),
       ),
     stars: a.procedures
@@ -294,8 +318,7 @@ export async function readAirport(
         servedRunways(p).map((runway) => ({
           name: p.name,
           runway,
-          points: p.points,
-          gate: procedureGate("star", p.points, p.path),
+          ...procedureTrack("star", runway, p.points, p.path),
         })),
       ),
   };

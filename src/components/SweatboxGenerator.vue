@@ -47,16 +47,18 @@ import {
   SCENARIO_PROFILES,
   TRAFFIC_COUNTS,
   TRAFFIC_LEVELS,
+  appEntryAltitude,
   bearingTo,
   buildScenario,
+  composeTraffic,
   defaultControllers,
   defaultPseudopilotFor,
   destination,
   distanceNm,
   emptyAircraft,
   emptyScenario,
-  generateTraffic,
-  magneticToTrue,
+  finalApproachState,
+  runwayTrueCourse,
   DEFAULT_SPACING,
   SCENARIO_ERROR_KINDS,
   type ScenarioErrorKind,
@@ -277,12 +279,25 @@ const plannedTotal = computed(() =>
 );
 
 /**
+ * What the last generation could not park, per terminal group — see
+ * `TrafficResult.standShortfall`. Cleared when the airport changes.
+ */
+const generatedShortfall = ref(0);
+
+/**
  * GND cannot put out more aircraft than the field has stands, and saying so
  * up front is better than silently generating fewer than asked for.
+ *
+ * The field-wide total is known before generating; the per-terminal one only
+ * after, and it is the larger whenever an airline is tied to a terminal.
  */
 const standShortfall = computed(() => {
   if (!airport.value || !isPicked("GND")) return 0;
-  return Math.max(0, model.value.counts.GND - airport.value.stands.length);
+  return Math.max(
+    model.value.counts.GND - airport.value.stands.length,
+    generatedShortfall.value,
+    0,
+  );
 });
 
 // ---------------------------------------------------------------------------
@@ -290,25 +305,46 @@ const standShortfall = computed(() => {
 // ---------------------------------------------------------------------------
 
 /**
+ * The load in flight. Picking ZGGG and then ZBAA quickly starts two fetches,
+ * and whichever answers last used to win — so a slow ZGGG could land under a
+ * selector that says ZBAA, and every row generated after it would be placed on
+ * the wrong field's runways. A newer load aborts the older one, and a response
+ * that is not the latest request's is dropped.
+ */
+let airportRequest: AbortController | null = null;
+
+/**
  * `keep` 是「隐藏 NAIP」切换时的重取：同一个机场，换一份数据范围。那时不该把教员
  * 选好的跑道和已经生成的航班表一起扔掉 —— 跑道还在就留着，航班表由调用方重新生成。
  */
 async function loadAirport(value: string, keep = false) {
+  airportRequest?.abort();
+  const request = new AbortController();
+  airportRequest = request;
+  const current = () => airportRequest === request;
+
   const previousArrival = arrivalRunwayId.value;
   const previousDeparture = departureRunwayId.value;
   airport.value = null;
   fixes.value = [];
   loadError.value = "";
-  if (!value) return;
+  generatedShortfall.value = 0;
+  if (!value) {
+    loading.value = false;
+    return;
+  }
 
   loading.value = true;
   try {
-    const response = await fetch(`/instr/sweatbox/${value}.json`);
+    const response = await fetch(`/instr/sweatbox/${value}.json`, {
+      signal: request.signal,
+    });
     if (!response.ok) throw new Error(String(response.status));
     const payload = (await response.json()) as {
       airport: SweatboxAirport;
       fixes: SweatboxFix[];
     };
+    if (!current()) return;
     airport.value = payload.airport;
     fixes.value = payload.fixes;
 
@@ -330,9 +366,9 @@ async function loadAirport(value: string, keep = false) {
     // Stands and runways just changed underneath them.
     if (!keep) rows.value = [];
   } catch {
-    loadError.value = t("loadFailed");
+    if (current()) loadError.value = t("loadFailed");
   } finally {
-    loading.value = false;
+    if (current()) loading.value = false;
   }
 }
 
@@ -370,17 +406,59 @@ function replace(row: Row) {
 
   const anchor = anchorFor(row.profile);
   if (!anchor) return;
+  // TWR and DEP sit on the extended centreline, so their radial is the
+  // runway's and only the distance is theirs to edit. Recomputed here rather
+  // than trusted from the row: a radial derived from a DEP row on the
+  // threshold is bearingTo(p, p) = 0, and editing its distance then moved it
+  // due north.
+  const fixed = fixedRadial(row.profile);
+  if (fixed !== null) row.radial = fixed;
   const placed = destination(anchor.lat, anchor.lon, row.radial, row.distance);
   row.lat = placed.lat;
   row.lon = placed.lon;
   // A departure flies away from its anchor; everything else flies back to it.
+  const course = departureCourse();
   row.heading =
     row.profile === "DEP"
-      ? magneticToTrue(
-          departureRunway.value?.hdg ?? row.heading,
-          airport.value?.variation ?? null,
-        )
+      ? (course ?? row.heading)
       : Math.round(bearingTo(placed.lat, placed.lon, anchor.lat, anchor.lon));
+
+  // Altitude and speed follow the placement the way the generator sets them,
+  // so a hand-added row is not left at 0 ft and 0 kt in the air and a TWR row
+  // moved along final stays on the glide.
+  const elevation = airport.value?.elev ?? null;
+  if (row.profile === "TWR") {
+    const onFinal = finalApproachState(row.distance, elevation);
+    row.altitude = onFinal.altitude;
+    row.speed = onFinal.speed;
+  } else if (row.profile === "APP") {
+    row.altitude = appEntryAltitude(elevation);
+    row.speed = 260;
+  } else {
+    row.altitude = 0;
+    row.speed = 0;
+  }
+}
+
+/** The departure runway's true course, or null before one is chosen. */
+function departureCourse(): number | null {
+  return departureRunway.value
+    ? runwayTrueCourse(departureRunway.value, airport.value?.variation ?? null)
+    : null;
+}
+
+/**
+ * The radial a TWR or DEP row is placed on: the true extended centreline —
+ * out along the departure runway, back along the arrival one. Null for the
+ * profiles whose radial is free.
+ */
+function fixedRadial(profile: ScenarioProfile): number | null {
+  const variation = airport.value?.variation ?? null;
+  if (profile === "DEP") return departureCourse();
+  if (profile === "TWR" && arrivalRunway.value) {
+    return (runwayTrueCourse(arrivalRunway.value, variation) + 180) % 360;
+  }
+  return null;
 }
 
 /**
@@ -402,11 +480,13 @@ function toRow(aircraft: ScenarioAircraft): Row {
   return {
     ...aircraft,
     standName: stand?.name ?? "",
-    radial: anchor
-      ? Math.round(
-          bearingTo(anchor.lat, anchor.lon, aircraft.lat, aircraft.lon),
-        )
-      : 0,
+    radial:
+      fixedRadial(aircraft.profile) ??
+      (anchor
+        ? Math.round(
+            bearingTo(anchor.lat, anchor.lon, aircraft.lat, aircraft.lon),
+          )
+        : 0),
     distance: anchor
       ? Number(
           distanceNm(
@@ -510,7 +590,7 @@ async function generate() {
     ]),
   ];
   const routes = await planRoutes(airport.value.icao, partners);
-  const produced = generateTraffic({
+  const { aircraft: produced, standShortfall: shortfall } = composeTraffic({
     airport: airport.value,
     profiles: model.value.profiles,
     counts: model.value.counts,
@@ -534,6 +614,7 @@ async function generate() {
     errorKinds: errorKinds.value,
   });
   rows.value = produced.map(toRow);
+  generatedShortfall.value = shortfall;
   notice.value = t("generated", { count: rows.value.length });
 }
 
@@ -542,7 +623,8 @@ function addRow(profile: ScenarioProfile) {
     ...emptyAircraft(profile),
     standName: "",
     radial: profile === "APP" ? 180 : 0,
-    distance: profile === "GND" ? 0 : 10,
+    // DEP starts on the threshold, as generated ones do; the others 10 NM out.
+    distance: profile === "GND" || profile === "DEP" ? 0 : 10,
   };
   if (profile === "GND") {
     const taken = new Set(rows.value.map((existing) => existing.standName));
@@ -550,14 +632,13 @@ function addRow(profile: ScenarioProfile) {
     if (free) row.standName = free.name;
     row.departure = airport.value?.icao ?? "";
   } else if (profile === "DEP") {
-    row.radial = departureRunway.value?.hdg ?? 0;
     row.departure = airport.value?.icao ?? "";
   } else {
-    if (profile === "TWR") {
-      row.radial = ((arrivalRunway.value?.hdg ?? 0) + 180) % 360;
-    }
     row.destination = airport.value?.icao ?? "";
+    // What the generator gives every arrival: it asks for the field.
+    row.requestAltitude = airport.value?.elev ?? 0;
   }
+  // `replace` sets the TWR/DEP radial to the true centreline.
   replace(row);
   rows.value.push(row);
 }
