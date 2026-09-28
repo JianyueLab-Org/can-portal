@@ -75,8 +75,9 @@ spec:
             # 登录页，以及侧栏里那一排还留在主站的跨站链接。
             - name: CAN_WEB_ORIGIN
               value: https://ceruleanavi.net
-            # SweatBox 参考数据从 can-db 读。**集群内地址** —— can-db 没有
-            # Ingress，它服务的是有许可限制的航行资料，只在集群内监听。
+            # SweatBox 参考数据和活动席位从 can-db 读（src/server/canDb.ts）。
+            # **集群内地址**：can-db 有 Ingress（api-db.ceruleanavi.net），但同一
+            # 个集群里走 Service 少一跳，也不依赖隧道 —— can-database 同理。
             #
             # 它不可达时生成器的机场选择器是空的，页面照常渲染。刻意不让它变成一
             # 个错误页：教员看见「选不出机场」能猜到是数据没来，看见 500 只能猜。
