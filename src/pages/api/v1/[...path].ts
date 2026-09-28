@@ -128,10 +128,15 @@ const ALLOW_LIST: Record<string, Allowed> = {
  */
 const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
   {
-    // 三个岛屿都用它读自己的资料，为的是知道自己管得着哪些分部。
-    test: /^pilot\/[A-Za-z0-9_-]{1,32}$/,
+    // SuperPromote 读调用者自己的资料，为的是知道自己的等级（目标等级以它封顶）。
+    //
+    // **只收纯数字的 CAN ID。** can-api 在 `pilot/` 下还挂着 `data`、`export`、
+    // `flightplan`、`exam` 等一整排成员自己的路由，字母数字的字符集会把它们全部转
+    // 发出去 —— `pilot/export` 是一个成员的全部个人数据。CAN ID 由 can-api 按纯
+    // 数字分配（`store.nextCANID`），所以数字字符集不丢任何合法调用。
+    test: /^pilot\/[0-9]{1,20}$/,
     methods: ["GET"],
-    who: "SuperRoster / SuperPromote / SuperPromotions 读调用者自己的分部权限",
+    who: "SuperPromote.vue 读调用者自己的等级",
   },
   {
     test: /^super\/roster\/[0-9]{1,20}$/,
@@ -203,10 +208,10 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
  * 精确表先查，模式表后查。
  *
  * **顺序是必须的。** `super/roster` 和 `super/prize` 这些精确条目不会被下面的模
- * 式匹配上（模式都要求后面还有一个 id 段），但 `pilot/<id>` 那条模式会匹配
- * 到任何 `pilot/xxx`，而将来若有人加一条精确的 `pilot/data`，它必须先拿到自己
- * 的方法集，否则会被那条只允许 GET 的模式判成 405。can-controller 的同名文件正
- * 是被这一条咬过。
+ * 式匹配上（模式都要求后面还有一个 id 段），但一条动态段放宽过的模式会和精确条
+ * 目重叠 —— `pilot/` 那条从前收字母数字，会匹配到 `pilot/data`。精确条目必须先
+ * 拿到自己的方法集，否则会被一条只允许 GET 的模式判成 405。can-controller 的同名
+ * 文件正是被这一条咬过。
  *
  * **精确表必须走 `Object.hasOwn`，不能直接 `ALLOW_LIST[path]`。** 对象字面量
  * 继承 `Object.prototype`，所以表里从来没写过的一批键**查得到东西**：
@@ -301,6 +306,9 @@ const handler: APIRoute = async (context) => {
     const value = upstream.headers.get(name);
     if (value) out.set(name, value);
   }
+  // 上游没说能不能缓存时按不能处理：这里转发的是带会话的成员数据，一个共享缓存
+  // 按 URL 存下来就会把一个人的花名册交给下一个人。
+  if (!out.has("cache-control")) out.set("cache-control", "private, no-store");
 
   return new Response(upstream.body, { status: upstream.status, headers: out });
 };
