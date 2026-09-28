@@ -200,6 +200,40 @@ const endsAtError = computed(() => {
   );
 });
 
+/**
+ * can-api's refusal for a create/edit/settle/cancel, as a sentence.
+ *
+ * These four used to throw the response away and say "action failed" for all
+ * of them, so a title that was too long and an activity somebody else had
+ * already settled read the same. Known codes get the page's own wording; any
+ * other refusal shows can-api's `message`, which still names the problem.
+ */
+const ACTION_ERRORS: Record<string, string> = {
+  briefingLocked: "errors.activityLocked",
+  endBeforeStart: "endBeforeStart",
+  titleRequired: "errors.titleRequired",
+  titleTooLong: "errors.titleTooLong",
+  descriptionTooLong: "errors.descriptionTooLong",
+  invalidDate: "errors.invalidDate",
+  notFound: "errors.activityNotFound",
+};
+
+async function actionError(res: Response): Promise<string> {
+  const body = (await res.json().catch(() => ({}))) as {
+    error?: unknown;
+    message?: unknown;
+  };
+  const key =
+    typeof body.error === "string" && Object.hasOwn(ACTION_ERRORS, body.error)
+      ? ACTION_ERRORS[body.error]
+      : undefined;
+  if (key) return t(key);
+  // A 5xx message is a fixed "could not…" sentence; the page's own reads better.
+  if (res.status < 500 && typeof body.message === "string" && body.message)
+    return body.message;
+  return t("actionFailed");
+}
+
 async function load(silent = false) {
   // A refresh behind an open modal keeps the table rendered rather than
   // swapping it for a spinner the modal is covering anyway.
@@ -262,7 +296,10 @@ async function create() {
         endsAt: endsAt ? endsAt.toISOString() : "",
       }),
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      dialogError.value = await actionError(res);
+      return;
+    }
     createOpen.value = false;
     feedback.value = { type: "success", text: t("createSuccess") };
     form.value = {
@@ -317,7 +354,10 @@ async function settle() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ action: "settle", attendees }),
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      dialogError.value = await actionError(res);
+      return;
+    }
     modalOpen.value = false;
     feedback.value = { type: "success", text: t("settleSuccess") };
     await load();
@@ -347,7 +387,10 @@ async function confirmCancel() {
         body: JSON.stringify({ action: "cancel" }),
       },
     );
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      dialogError.value = await actionError(res);
+      return;
+    }
     cancelTarget.value = null;
     feedback.value = { type: "success", text: t("cancelSuccess") };
     await load();
@@ -409,7 +452,10 @@ async function saveEdit() {
         endsAt: editEndsAt.value ? `${editEndsAt.value}:00Z` : "",
       }),
     });
-    if (!res.ok) throw new Error();
+    if (!res.ok) {
+      dialogError.value = await actionError(res);
+      return;
+    }
     editOpen.value = false;
     feedback.value = { type: "success", text: t("updateSuccess") };
     await load();
@@ -512,9 +558,11 @@ onMounted(load);
               >
                 {{ t("briefing") }}
               </Button>
-              <!-- The brief stays editable until the activity is cancelled. -->
+              <!-- The brief is editable while the activity is a plan (draft
+                   or open). can-api refuses it once settled or cancelled
+                   (409 briefingLocked), so the button goes with it. -->
               <Button
-                v-if="row.status !== 3"
+                v-if="row.status === 0 || row.status === 1"
                 size="sm"
                 variant="secondary"
                 @click="openEdit(row)"

@@ -360,12 +360,19 @@
         "tooManyRoutes": "This activity already has the maximum number of routes.",
         "tooManyPositions": "This activity already has the maximum number of positions.",
         "briefingLocked": "The activity is settled or cancelled; its briefing cannot be changed.",
-        "routeTooLong": "That route string is too long."
+        "routeTooLong": "That route string is too long.",
+        "activityLocked": "This activity is already settled or cancelled and can no longer be changed.",
+        "titleRequired": "Enter a title.",
+        "titleTooLong": "The title is too long.",
+        "descriptionTooLong": "The description is too long.",
+        "invalidDate": "That is not a valid date and time.",
+        "activityNotFound": "This activity no longer exists."
       },
       "createHint": "Title and start time are enough — routes and ATC seats are added afterwards in the briefing.",
       "cancelTitle": "Cancel this activity",
       "cancelKeep": "Keep it",
-      "cancelConfirmAction": "Cancel the activity"
+      "cancelConfirmAction": "Cancel the activity",
+      "loading": "Loading…"
     }
   },
   "rewards": {

@@ -360,12 +360,19 @@
         "tooManyRoutes": "このイベントのルート数は上限に達しています。",
         "tooManyPositions": "このイベントのポジション数は上限に達しています。",
         "briefingLocked": "精算済みまたは中止のイベントのブリーフィングは変更できません。",
-        "routeTooLong": "ルートが長すぎます。"
+        "routeTooLong": "ルートが長すぎます。",
+        "activityLocked": "このイベントは精算済みまたは中止のため、変更できません。",
+        "titleRequired": "タイトルを入力してください。",
+        "titleTooLong": "タイトルが長すぎます。",
+        "descriptionTooLong": "説明が長すぎます。",
+        "invalidDate": "日時が正しくありません。",
+        "activityNotFound": "このイベントはもう存在しません。"
       },
       "createHint": "タイトルと開始時刻だけで作成できます。ルートと管制席はブリーフィングで追加します。",
       "cancelTitle": "アクティビティを中止",
       "cancelKeep": "中止しない",
-      "cancelConfirmAction": "中止する"
+      "cancelConfirmAction": "中止する",
+      "loading": "読み込み中…"
     }
   },
   "rewards": {

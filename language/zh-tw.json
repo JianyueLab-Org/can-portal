@@ -360,12 +360,19 @@
         "tooManyRoutes": "本場活動的航線數量已達上限。",
         "tooManyPositions": "本場活動的席位數量已達上限。",
         "briefingLocked": "活動已結算或取消，簡報不可修改。",
-        "routeTooLong": "航路過長。"
+        "routeTooLong": "航路過長。",
+        "activityLocked": "活動已結算或取消，不能再修改。",
+        "titleRequired": "請填寫標題。",
+        "titleTooLong": "標題太長。",
+        "descriptionTooLong": "簡介太長。",
+        "invalidDate": "日期時間無效。",
+        "activityNotFound": "這場活動已不存在。"
       },
       "createHint": "填寫標題與開始時間即可，航線與管制席位在簡報中補充。",
       "cancelTitle": "取消活動",
       "cancelKeep": "先不取消",
-      "cancelConfirmAction": "確認取消"
+      "cancelConfirmAction": "確認取消",
+      "loading": "載入中…"
     }
   },
   "rewards": {
