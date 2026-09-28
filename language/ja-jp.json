@@ -372,7 +372,9 @@
       "cancelTitle": "アクティビティを中止",
       "cancelKeep": "中止しない",
       "cancelConfirmAction": "中止する",
-      "loading": "読み込み中…"
+      "loading": "読み込み中…",
+      "stackRejected": "{count} 件は開放できませんでした：{reason}",
+      "stackInterrupted": "途中で接続が切れました。{airport} に {count} ポジションを開放しました。チェックが残っているものは開放されていません。"
     }
   },
   "rewards": {

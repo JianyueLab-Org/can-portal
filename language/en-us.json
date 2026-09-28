@@ -372,7 +372,9 @@
       "cancelTitle": "Cancel this activity",
       "cancelKeep": "Keep it",
       "cancelConfirmAction": "Cancel the activity",
-      "loading": "Loading…"
+      "loading": "Loading…",
+      "stackRejected": "{count} could not be opened: {reason}",
+      "stackInterrupted": "The connection dropped part-way. {count} positions were opened at {airport}; the ones still ticked were not."
     }
   },
   "rewards": {

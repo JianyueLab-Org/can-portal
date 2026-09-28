@@ -372,7 +372,9 @@
       "cancelTitle": "取消活動",
       "cancelKeep": "先不取消",
       "cancelConfirmAction": "確認取消",
-      "loading": "載入中…"
+      "loading": "載入中…",
+      "stackRejected": "{count} 個沒能開出：{reason}",
+      "stackInterrupted": "連線中途中斷。已在 {airport} 開放 {count} 個席位，仍勾選著的沒有開出。"
     }
   },
   "rewards": {

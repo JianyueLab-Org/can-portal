@@ -398,7 +398,9 @@ async function addPickedSeats() {
   feedback.value = null;
   const done: string[] = [];
   let duplicate = 0;
+  let rejected = 0;
   let lastError: unknown = null;
+  let interrupted = false;
   try {
     for (const seat of chosen) {
       const key = seatKey(seat);
@@ -422,22 +424,34 @@ async function addPickedSeats() {
       }
       const code = (await res.json().catch(() => ({}))).error;
       if (code === "duplicateCallsign") duplicate++;
-      else lastError = code;
+      else {
+        rejected++;
+        lastError = code;
+      }
     }
+  } catch (error) {
+    // 网络断在中途。已经开出去的那几个是真开了，下面照样取消勾选、照样刷新。
+    console.error("Adding seats was interrupted:", error);
+    interrupted = true;
+  }
 
-    // 开成了的取消勾选，剩下的留着 —— 人要能看见是哪几个没开出去。
-    if (done.length) {
-      const next = new Set(picked.value);
-      for (const key of done) next.delete(key);
-      picked.value = next;
-    }
+  // 开成了的取消勾选，剩下的留着 —— 人要能看见是哪几个没开出去。
+  if (done.length) {
+    const next = new Set(picked.value);
+    for (const key of done) next.delete(key);
+    picked.value = next;
+  }
 
-    feedback.value = describeAdd(
-      done.length,
-      duplicate,
-      lastError,
-      current.icao,
-    );
+  feedback.value = interrupted
+    ? {
+        type: "error",
+        text: t("stackInterrupted", {
+          count: String(done.length),
+          airport: current.icao,
+        }),
+      }
+    : describeAdd(done.length, duplicate, rejected, lastError, current.icao);
+  try {
     await load(true);
     emit("changed");
   } finally {
@@ -445,39 +459,41 @@ async function addPickedSeats() {
   }
 }
 
-/** 「开了几个、跳过几个、剩下的为什么没开」说成一句话。 */
+/**
+ * 「开了几个、跳过几个、剩下的为什么没开」说成一句话。
+ *
+ * 被拒的（重复呼号以外的任何拒绝：席位满了、频率不对）一律让整句变成错误，哪怕
+ * 同时开成了几个 —— 否则一句绿色的「已开放 3 个」会盖住另外两个没开出去的事实。
+ */
 function describeAdd(
   added: number,
   duplicate: number,
+  rejected: number,
   lastError: unknown,
   airport: string,
 ): { type: "success" | "error"; text: string } {
-  if (added && duplicate) {
-    return {
-      type: "success",
-      text: t("stackAddedSome", {
-        count: String(added),
-        airport,
-        skipped: String(duplicate),
-      }),
-    };
-  }
-  if (added) {
-    return {
-      type: "success",
-      text: t("positionsAdded", { count: String(added), airport }),
-    };
-  }
-  if (duplicate) {
-    return { type: "error", text: t("stackAllDuplicate") };
-  }
-  return {
-    type: "error",
-    text:
+  const opened =
+    added && duplicate
+      ? t("stackAddedSome", {
+          count: String(added),
+          airport,
+          skipped: String(duplicate),
+        })
+      : added
+        ? t("positionsAdded", { count: String(added), airport })
+        : "";
+
+  if (rejected) {
+    const reason =
       typeof lastError === "string" && KNOWN_ERRORS.includes(lastError)
         ? t(`errors.${lastError}`)
-        : t("actionFailed"),
-  };
+        : t("actionFailed");
+    const refused = t("stackRejected", { count: String(rejected), reason });
+    return { type: "error", text: opened ? `${opened} ${refused}` : refused };
+  }
+  if (opened) return { type: "success", text: opened };
+  if (duplicate) return { type: "error", text: t("stackAllDuplicate") };
+  return { type: "error", text: t("actionFailed") };
 }
 
 /** Frequency / rating-gate edits, applied per row on blur-and-save. */
