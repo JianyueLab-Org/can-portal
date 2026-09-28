@@ -844,8 +844,10 @@
     },
     "kinds": {
       "fsd": "FSD",
-      "audio": "语音",
-      "datafeed": "数据源"
+      "audio": "语音（Mumble）",
+      "datafeed": "数据源",
+      "voice": "语音（can-voice）",
+      "automation": "自动化"
     },
     "states": {
       "active": "在用",
@@ -857,7 +859,7 @@
     },
     "add": {
       "title": "添加服务器",
-      "help": "类型决定要填什么：FSD 和语音要主机名加端口，数据源要一个完整 URL。排序值小的在前，客户端把第一条当默认。",
+      "help": "类型决定要填什么：FSD 和两种语音要主机名加端口，数据源和自动化要一个完整的 https URL。排序值小的在前，客户端把第一条当默认。",
       "namePlaceholder": "CAN 主服务器",
       "locationPlaceholder": "中国大陆",
       "host": "主机名",

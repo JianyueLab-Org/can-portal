@@ -12,9 +12,9 @@
  *
  * ## 两条界面上的规矩
  *
- * **按 kind 决定填什么。** fsd / audio 要主机名和端口，datafeed 要完整 URL。表单
- * 跟着 kind 换字段，而不是把三个都摆出来让人猜 —— 上游 `ServerInput.Validate`
- * 也按同一条判，所以填错了不会静默存进去。
+ * **按 kind 决定填什么。** fsd / audio / voice 要主机名和端口，datafeed /
+ * automation 要完整的 https URL。表单跟着 kind 换字段，而不是把几个都摆出来让人
+ * 猜 —— 上游 `ServerInput.Validate` 也按同一条判，所以填错了不会静默存进去。
  *
  * **停用不是删除。** 删除按钮写的是「停用」，因为上游根本没有 delete：一条停用的
  * 记录是「我设置里这个地址是哪来的」唯一的答案，而客户端只取 active 的，所以停用
@@ -39,9 +39,21 @@ import { api, unwrapList } from "@/lib/canApi";
 const props = defineProps<{ messages: Record<string, unknown> }>();
 const t = createTranslator(props.messages);
 
-/** 和 can-api 的 store.ServerKinds 对齐；那边有测试把这三个字符串钉死。 */
-const KINDS = ["fsd", "audio", "datafeed"] as const;
+/** 和 can-api 的 store.ServerKinds 对齐；那边有测试把这五个字符串钉死。 */
+const KINDS = ["fsd", "audio", "voice", "datafeed", "automation"] as const;
 type Kind = (typeof KINDS)[number];
+
+/**
+ * 按 URL 而不是主机加端口寻址的 kind，和 can-api 的 `urlKinds` 对齐。
+ *
+ * audio 和 voice 都监听 64738，是两套协议（Mumble / can-voice 的 QUIC），所以是
+ * 两个 kind 而不是一个；datafeed 和 automation 形状相同、信任等级不同，同理。
+ */
+const URL_KINDS: readonly Kind[] = ["datafeed", "automation"];
+
+function isUrlKind(kind: Kind): boolean {
+  return URL_KINDS.includes(kind);
+}
 
 interface ServerRow {
   id: number;
@@ -93,7 +105,7 @@ const form = ref<{
 });
 
 function addressOf(row: ServerRow): string {
-  if (row.kind === "datafeed") return row.url ?? "—";
+  if (isUrlKind(row.kind)) return row.url ?? "—";
   return row.host ? `${row.host}:${row.port ?? "?"}` : "—";
 }
 
@@ -113,7 +125,7 @@ async function create() {
   error.value = "";
   notice.value = "";
 
-  // datafeed 送 url，其余送 host/port —— 和上游的校验同一条规矩。多送的字段会被
+  // URL 类送 url，其余送 host/port —— 和上游的校验同一条规矩。多送的字段会被
   // 上游按 kind 拒掉，所以这里不是防呆，是别让请求带着自相矛盾的内容出门。
   const body: Record<string, unknown> = {
     kind: form.value.kind,
@@ -121,7 +133,7 @@ async function create() {
     location: form.value.location.trim() || null,
     sortKey: Number(form.value.sortKey) || 0,
   };
-  if (form.value.kind === "datafeed") {
+  if (isUrlKind(form.value.kind)) {
     body.url = form.value.url.trim();
   } else {
     body.host = form.value.host.trim();
@@ -210,11 +222,15 @@ onMounted(load);
         />
 
         <!-- kind 决定填什么：主机+端口，或者一个完整 URL。 -->
-        <template v-if="form.kind === 'datafeed'">
+        <template v-if="isUrlKind(form.kind)">
           <Input
             v-model="form.url"
             label="URL"
-            placeholder="https://data.ceruleanavi.net/v1/data.json"
+            :placeholder="
+              form.kind === 'datafeed'
+                ? 'https://data.ceruleanavi.net/v1/data.json'
+                : 'https://'
+            "
           />
         </template>
         <template v-else>
@@ -224,7 +240,9 @@ onMounted(load);
             :placeholder="
               form.kind === 'fsd'
                 ? 'fsd.ceruleanavi.net'
-                : 'audio.ceruleanavi.net'
+                : form.kind === 'voice'
+                  ? 'voice.ceruleanavi.net'
+                  : 'audio.ceruleanavi.net'
             "
           />
           <Input

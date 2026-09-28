@@ -844,8 +844,10 @@
     },
     "kinds": {
       "fsd": "FSD",
-      "audio": "Voice",
-      "datafeed": "Datafeed"
+      "audio": "Voice (Mumble)",
+      "datafeed": "Datafeed",
+      "voice": "Voice (can-voice)",
+      "automation": "Automation"
     },
     "states": {
       "active": "In use",
@@ -857,7 +859,7 @@
     },
     "add": {
       "title": "Add a server",
-      "help": "The kind decides what to fill in: FSD and voice want a host and port, a datafeed wants a full URL. Lower sort keys come first; clients treat the first as the default.",
+      "help": "The kind decides what to fill in: FSD and both voice kinds want a host and port; a datafeed or automation endpoint wants a full https URL. Lower sort keys come first; clients treat the first as the default.",
       "namePlaceholder": "CAN primary",
       "locationPlaceholder": "Mainland China",
       "host": "Host",
