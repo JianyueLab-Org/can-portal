@@ -2,7 +2,7 @@
 import AppLayout from "@/layouts/AppLayout.astro";
 import SuperPromotions from "@/components/SuperPromotions.vue";
 import { getLocale, getMessages } from "@/lib/i18n";
-import { RATING_SUP } from "@/lib/config";
+import { RATING_SUP } from "@jianyuelab-org/can-ui/sites";
 
 const messages = getMessages(getLocale(Astro.cookies), "promotion.super");
 const sessionUserId = Astro.locals.user?.username ?? "";

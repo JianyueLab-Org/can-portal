@@ -20,7 +20,7 @@
  */
 import type { APIRoute } from "astro";
 import { readAirport, readFirFixes } from "@/server/sweatboxData";
-import { RATING_INSTRUCTOR } from "@/lib/config";
+import { RATING_INSTRUCTOR } from "@jianyuelab-org/can-ui/sites";
 
 export const GET: APIRoute = async (context) => {
   const rating = context.locals.user?.rating;

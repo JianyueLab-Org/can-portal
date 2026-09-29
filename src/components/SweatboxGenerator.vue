@@ -520,7 +520,7 @@ const routeCache = new Map<string, SweatboxRoutePlan | null>();
  *
  * `routeCache` 从前只按城市对存。开关切换之后再重新生成会拿到**上一次那一档**的航路
  * —— 而它是一串合法的代号，图上也正常，没人看得出来。所以状态必须进键。开关本身在
- * 账户菜单里（`AppFrame.vue`），真相是 cookie，`callDb` 在服务端按它追加参数；这一
+ * 账户菜单里（`Frame.vue`），真相是 cookie，`callDb` 在服务端按它追加参数；这一
  * 页只需要知道它变了。
  */
 function cacheKey(pair: string): string {

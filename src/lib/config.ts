@@ -102,19 +102,3 @@ export function signInUrl(returnTo?: URL): string {
 export function webUrl(path: string): string {
   return `${CAN_WEB_ORIGIN}${path}`;
 }
-
-/**
- * 三道评级门槛，和 can-web 的 `ratingTrans` 逐字对齐。
- *
- * 8 是教员（I1/I2/I3），11 是监理（SUP），12 是管理员（ADM）。这三个数在这个仓
- * 库里只出现在这里 —— 中间件、侧栏、页面各自 import 同一份，因为**它们必须一
- * 致**：侧栏按一个数显示、中间件按另一个数放行，会做出一个「看得见但点不进去」
- * 的菜单，而那种不一致没有任何东西能发现。
- *
- * **这些是便利，不是边界。** 真正的判断在 can-api 每条路由自己的守卫上
- * （`WithSuper` / `WithSup`，再加每个 handler 内部的 division 检查）。把这里的
- * 数字改小不会放开任何东西，只会让人看见一组点下去必然 403 的页面。
- */
-export const RATING_INSTRUCTOR = 8;
-export const RATING_SUP = 11;
-export const RATING_ADMIN = 12;

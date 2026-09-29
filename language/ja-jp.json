@@ -47,7 +47,32 @@
     "activities": "イベント",
     "rewards": "ポイント交換",
     "feedback": "対応結果の公示",
-    "servers": "服务器目录"
+    "servers": "服务器目录",
+    "signIn": "ログイン",
+    "signingOut": "ログアウト中…",
+    "close": "閉じる",
+    "dismiss": "通知を閉じる",
+    "sidebar": "サイドバー",
+    "openUserMenu": "ユーザーメニューを開く",
+    "openMenu": "メニューを開く",
+    "siteNavigation": "サイト内ナビゲーション",
+    "signOutFailed": "ログアウトに失敗しました。もう一度お試しください。",
+    "theme": {
+      "label": "外観",
+      "light": "ライト",
+      "dark": "ダーク",
+      "system": "システムに合わせる"
+    },
+    "language": {
+      "label": "言語を選択"
+    },
+    "noAccess": {
+      "title": "このページへのアクセス権がありません",
+      "rating": "このページには評価 {required} 以上が必要です。",
+      "permission": "このページには「{name}」の権限が必要です。",
+      "signedInAs": "ログイン中：{name}（#{id}）",
+      "reachable": "利用できるサイト"
+    }
   },
   "notFound": {
     "code": "404",

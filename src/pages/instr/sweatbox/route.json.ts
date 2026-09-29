@@ -16,7 +16,7 @@
  */
 import type { APIRoute } from "astro";
 import { readRoute } from "@/server/sweatboxData";
-import { RATING_INSTRUCTOR } from "@/lib/config";
+import { RATING_INSTRUCTOR } from "@jianyuelab-org/can-ui/sites";
 
 const ICAO = /^[A-Z0-9]{4}$/;
 

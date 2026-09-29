@@ -1,7 +1,7 @@
 ---
 import "@/styles/globals.css";
 import ThemeScript from "@jianyuelab-org/can-ui/components/ThemeScript.astro";
-import AppFrame from "@/components/AppFrame.vue";
+import Frame from "@/components/Frame.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 import { buildWorkspaces } from "@jianyuelab-org/can-ui";
 import { buildNavigation, buildSecondary, SITE_ORIGINS } from "@/lib/nav";
@@ -20,11 +20,9 @@ const t = useTranslations(locale, "frame");
  * rating，can-api 每个请求都解一次，所以一次晋升在下一次翻页时就生效，而不是等
  * 到下次登录。分界和它的边角写在 `lib/nav.ts`。
  *
- * **这是便利，不是边界** —— 但在这个站上它比在别处更接近边界一点：中间件已经
- * 按同一组常量把不够格的人挡在门外了（`src/middleware.ts`），所以能走到这一行
- * 的人至少是教员。即便如此，真正的判断仍然在 can-api 每条路由自己的守卫上，
- * 外加每个 handler 内部按 division 的那一层 —— 一个 ZGZU 的教员看得见花名册，
- * 但改不动 ZBPE 的人，那道判断这里一行都没有。
+ * **这是便利，不是边界。** 中间件按同一组常量给不够格的人渲染 `NoAccess`
+ * （`src/middleware.ts`、`src/lib/access.ts`）。真正的判断仍然在 can-api 每条路由
+ * 自己的守卫上，外加每个 handler 内部按 division 的那一层。
  */
 const user = Astro.locals.user;
 const navigation = buildNavigation(t, user?.rating);
@@ -34,19 +32,22 @@ const secondary = buildSecondary(t, {
   signedIn: !!user,
 });
 /**
- * 顶上的分区切换器，来自 can-ui。**高亮的是「管制员」而不是新开一格**：这些页面
- * 是从管制员中心的侧栏点进来的，教员做完手上的事要回去的也是那里。给门户开第四
- * 格，等于告诉每个成员这里有一个他们进不去的分区。
+ * 分区切换器，来自 can-ui。**高亮的是「管制员」而不是新开一格**：这些页面是从
+ * 管制员中心的侧栏点进来的，教员做完手上的事要回去的也是那里。
  *
- * `origins` 和 `buildSecondary` 用的是同一份 `SITE_ORIGINS`（`lib/nav.ts`），让
- * 指向主站的那一格在开发/预发环境里落到本环境自己的主站，而不是永远指向线上。
+ * `origins` 和 `buildSecondary` 用同一份 `SITE_ORIGINS`（`lib/nav.ts`）。
  */
 const workspaces = buildWorkspaces(t, {
   current: "portal",
   rating: user?.rating,
   origins: SITE_ORIGINS,
 });
-const pathname = Astro.url.pathname;
+/** 账户菜单显示名字和 `#CID`；CID 是会话里的 `username`。 */
+const frameUser = user
+  ? { name: user.name, id: user.username, rating: user.rating }
+  : null;
+/** 被拒的请求由中间件改写到 `/denied`；侧栏按成员请求的地址高亮。 */
+const pathname = Astro.originPathname;
 ---
 
 <!doctype html>
@@ -62,21 +63,19 @@ const pathname = Astro.url.pathname;
     <ThemeScript />
   </head>
   <body>
-    <AppFrame
-      navigation={navigation}
+    <Frame
+      locale={locale}
+      pathname={pathname}
+      nav={navigation}
       secondary={secondary}
       workspaces={workspaces}
-      activeWorkspace="controllers"
-      pathname={pathname}
-      messages={frameMessages}
-      userName={user?.name ?? ""}
-      userId={user?.username ?? ""}
+      user={frameUser}
       aipAccess={user?.aipAccess ?? 0}
-      locale={locale}
+      messages={frameMessages}
       origins={SITE_ORIGINS}
       client:load
     >
       <slot />
-    </AppFrame>
+    </Frame>
   </body>
 </html>

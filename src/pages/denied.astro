@@ -1,0 +1,36 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import NoAccess from "@jianyuelab-org/can-ui/components/NoAccess.vue";
+import { originsFromEnv } from "@jianyuelab-org/can-ui/sites";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+import { SITE_ORIGINS } from "@/lib/nav";
+
+/**
+ * 评级不够时的 403。
+ *
+ * 中间件把请求改写到这里（`next("/denied")`）：地址栏留在成员请求的地址，
+ * `locals.noAccess` 写着缺哪一级。直接打开 `/denied` 的请求没有它，送回 `/`。
+ */
+const reason = Astro.locals.noAccess;
+const user = Astro.locals.user;
+if (!reason || !user) return Astro.redirect("/");
+Astro.response.status = 403;
+
+const locale = getLocale(Astro.cookies);
+const t = useTranslations(locale, "frame");
+const messages = getMessages(locale, "frame");
+const origins = { ...originsFromEnv(import.meta.env), ...SITE_ORIGINS };
+---
+
+<AppLayout title={`${t("noAccess.title")} · Cerulean Aviation Network`}>
+  <NoAccess
+    reason={reason}
+    userName={user.name}
+    userId={user.username}
+    current="portal"
+    locale={locale}
+    rating={user.rating}
+    messages={messages}
+    origins={origins}
+  />
+</AppLayout>
