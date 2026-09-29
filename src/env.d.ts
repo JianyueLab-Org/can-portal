@@ -1,5 +1,6 @@
 /// <reference types="astro/client" />
 
+import type { NoAccessReason } from "@jianyuelab-org/can-ui";
 import type { SessionUser } from "@/server/canApi";
 
 declare global {
@@ -7,6 +8,8 @@ declare global {
     interface Locals {
       /** 中间件从 can-api 解出来的成员；没登录是 null。 */
       user: SessionUser | null;
+      /** 评级不够时由中间件写入；`src/pages/denied.astro` 按它渲染 NoAccess。 */
+      noAccess?: NoAccessReason;
     }
   }
 }

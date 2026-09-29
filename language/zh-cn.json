@@ -47,7 +47,32 @@
     "activities": "活动",
     "rewards": "积分兑换",
     "feedback": "处理结果公示",
-    "servers": "服务器目录"
+    "servers": "服务器目录",
+    "signIn": "登录",
+    "signingOut": "正在退出…",
+    "close": "关闭",
+    "dismiss": "关闭提示",
+    "sidebar": "侧栏",
+    "openUserMenu": "打开用户菜单",
+    "openMenu": "打开菜单",
+    "siteNavigation": "站内导航",
+    "signOutFailed": "退出失败，请重试。",
+    "theme": {
+      "label": "外观",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    },
+    "language": {
+      "label": "选择语言"
+    },
+    "noAccess": {
+      "title": "你没有这一页的访问权限",
+      "rating": "这一页需要 {required} 级或以上的评级。",
+      "permission": "这一页需要「{name}」权限。",
+      "signedInAs": "当前登录：{name}（#{id}）",
+      "reachable": "你可以使用的站点"
+    }
   },
   "notFound": {
     "code": "404",

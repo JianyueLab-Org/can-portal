@@ -43,7 +43,7 @@ interface Allowed {
 const ALLOW_LIST: Record<string, Allowed> = {
   // 外壳：账户区、退出按钮。
   "auth/session": { methods: ["GET"], who: "middleware / AppLayout" },
-  "auth/signout": { methods: ["POST"], who: "AppShell 退出登录" },
+  "auth/signout": { methods: ["POST"], who: "CanFrame 账户菜单退出登录" },
 
   // 花名册（`/instr/roster`）。读的是 super/roster 而不是公开的 atc/roster：
   // 后者不带邮箱和分部权限，正是教员在这一页上要改的东西。

@@ -2,7 +2,7 @@
  * 侧栏是**一份**数据，不是每个页面各自拼的一串链接。
  *
  * 它在 can-web 上叫 `StaffShell.vue`（更早叫 `ControllersShell.vue`），是一个
- * Vue 组件；搬过来之后拆成了「数据在这里、渲染交给 can-ui 的 `AppShell`」两
+ * Vue 组件；搬过来之后拆成了「数据在这里、渲染交给 can-ui 的 `CanFrame`」两
  * 半，原因和 can-controller 的同名文件一样但很硬：
  *
  * **这个站的一部分链接是跨站的绝对地址**，而那些地址来自环境变量。
@@ -36,14 +36,14 @@ import type {
   NavSecondary,
   SiteOrigins,
 } from "@jianyuelab-org/can-ui";
-import { visibleSites, WORKSPACE_SITE_KEYS } from "@jianyuelab-org/can-ui";
 import {
-  CAN_WEB_ORIGIN,
   RATING_ADMIN,
   RATING_INSTRUCTOR,
   RATING_SUP,
-  webUrl,
-} from "@/lib/config";
+  visibleSites,
+  WORKSPACE_SITE_KEYS,
+} from "@jianyuelab-org/can-ui";
+import { CAN_WEB_ORIGIN, webUrl } from "@/lib/config";
 
 /**
  * 传给 `visibleSites`/`buildWorkspaces` 的 dev/staging 覆盖。这个仓库的

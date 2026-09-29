@@ -47,7 +47,32 @@
     "activities": "Activities",
     "rewards": "Points store",
     "feedback": "Feedback outcomes",
-    "servers": "Server directory"
+    "servers": "Server directory",
+    "signIn": "Sign In",
+    "signingOut": "Signing out…",
+    "close": "Close",
+    "dismiss": "Dismiss",
+    "sidebar": "Sidebar",
+    "openUserMenu": "Open user menu",
+    "openMenu": "Open menu",
+    "siteNavigation": "Site navigation",
+    "signOutFailed": "Sign-out failed. Try again.",
+    "theme": {
+      "label": "Appearance",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "Follow system"
+    },
+    "language": {
+      "label": "Select language"
+    },
+    "noAccess": {
+      "title": "You do not have access to this page",
+      "rating": "This page needs rating {required} or above.",
+      "permission": "This page needs the {name} permission.",
+      "signedInAs": "Signed in as {name} (#{id}).",
+      "reachable": "Sites you can use"
+    }
   },
   "notFound": {
     "code": "404",

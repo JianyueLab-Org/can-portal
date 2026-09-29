@@ -47,7 +47,32 @@
     "activities": "活動",
     "rewards": "積分兌換",
     "feedback": "處理結果公示",
-    "servers": "服务器目录"
+    "servers": "服务器目录",
+    "signIn": "登入",
+    "signingOut": "正在登出…",
+    "close": "關閉",
+    "dismiss": "關閉提示",
+    "sidebar": "側欄",
+    "openUserMenu": "開啟使用者選單",
+    "openMenu": "開啟選單",
+    "siteNavigation": "站內導覽",
+    "signOutFailed": "登出失敗，請重試。",
+    "theme": {
+      "label": "外觀",
+      "light": "淺色",
+      "dark": "深色",
+      "system": "跟隨系統"
+    },
+    "language": {
+      "label": "選擇語言"
+    },
+    "noAccess": {
+      "title": "你沒有此頁的存取權限",
+      "rating": "此頁需要 {required} 級或以上的評級。",
+      "permission": "此頁需要「{name}」權限。",
+      "signedInAs": "目前登入：{name}（#{id}）",
+      "reachable": "你可以使用的站點"
+    }
   },
   "notFound": {
     "code": "404",

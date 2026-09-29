@@ -44,3 +44,6 @@ jobs:
       - run: bun run lint
 
       - run: bun run build
+
+      # can-ui 的 ⌘K 页面表里本站的每一条，都要在 src/pages 里有对应的路由。
+      - run: bun run check:pages

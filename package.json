@@ -19,12 +19,13 @@
     "typecheck:astro": "astro check",
     "typecheck:vue": "node ./scripts/typecheck-vue.mjs",
     "test": "bun test",
-    "lint": "bun run format:check && bun run typecheck && bun run test"
+    "lint": "bun run format:check && bun run typecheck && bun run test",
+    "check:pages": "can-ui-check-pages portal"
   },
   "dependencies": {
     "@astrojs/node": "^11.0.0",
     "@astrojs/vue": "^7.0.0",
-    "@jianyuelab-org/can-ui": "^0.4.2",
+    "@jianyuelab-org/can-ui": "27.1.0",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.2.2",
     "tailwindcss": "^4.3.3",

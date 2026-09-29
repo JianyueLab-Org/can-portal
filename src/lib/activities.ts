@@ -16,16 +16,6 @@ export type ActivityRole = 0 | 1 | 2;
 export const ROLE = { pilot: 0, controller: 1, sup: 2 } as const;
 
 /**
- * 活动管理端的门槛（11 = SUP，见 ratingTrans）——建活动、勾到场、结算发分，以及
- * 在 ATC 预约看板上撤销他人的预约，只有 SUP/ADM 能做。想改门槛只改这里，UI 从
- * 常量读取，服务端（can-api 的 `WithSup` / `MinSupRating`）据此强制。
- *
- * 它**不再**是"选 SUP 身份报名"的门槛：SUP 是工作身份而非报名身份，can-api 的
- * `/api/v1/activity/register` 只接受飞行员与管制员，见 `registrableRoles`。
- */
-export const MIN_SUP_RATING = 11;
-
-/**
  * 活动简述的长度上限。`activity.description` 是 TEXT（64 KB），超长的请求会在
  * 数据库层抛错变成 500——在路由里先挡下来，UI 也据此限制输入。
  */

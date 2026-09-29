@@ -15,7 +15,7 @@
  */
 import type { APIRoute } from "astro";
 import { readAirportStack } from "@/server/positionStack";
-import { RATING_SUP } from "@/lib/config";
+import { RATING_SUP } from "@jianyuelab-org/can-ui/sites";
 import { isValidIcao, normalizeIcao } from "@/lib/activities";
 
 export const GET: APIRoute = async (context) => {
