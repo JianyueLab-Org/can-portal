@@ -115,6 +115,14 @@ const ALLOW_LIST: Record<string, Allowed> = {
     methods: ["GET"],
     who: "Developers.vue 读开发者名单与「有应用无权限」清单",
   },
+
+  // 通知铃（`Frame.vue` 的 `notifications`）。标记一条已读在下面的模式里。
+  notifications: { methods: ["GET"], who: "CanFrame 通知铃：列表" },
+  "notifications/unread": { methods: ["GET"], who: "CanFrame 通知铃：未读数" },
+  "notifications/read-all": {
+    methods: ["POST"],
+    who: "CanFrame 通知铃：全部已读",
+  },
 };
 
 /**
@@ -202,6 +210,11 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     methods: ["PATCH"],
     who: "Developers.vue 授予 / 撤销",
   },
+  {
+    test: /^notifications\/(member|broadcast)\/[0-9]{1,20}$/,
+    methods: ["PATCH"],
+    who: "CanFrame 通知铃：标记一条已读",
+  },
 ];
 
 /**
@@ -225,7 +238,7 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
  * 个站的页眉自己写着「专门用来做高权限操作的域」，一个匿名可触发、响应体长得
  * 像堆栈的未捕获异常摆在那样一个域上，是最不该留的一种噪音。
  */
-function lookup(path: string): Allowed | undefined {
+export function lookup(path: string): Allowed | undefined {
   const exact = Object.hasOwn(ALLOW_LIST, path) ? ALLOW_LIST[path] : undefined;
   return exact ?? ALLOW_PATTERNS.find((entry) => entry.test.test(path));
 }

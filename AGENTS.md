@@ -112,6 +112,11 @@ ZGZU 的教员看得见花名册，但改不动 ZBPE 的人，那道判断这个
 鉴权不在这一层判，理由写在那个文件里。注意中间件对 `/api/` 前缀是放行的，所以一
 个不够格的成员理论上可以直接打这些路径 —— 他会拿到 can-api 的 403，这正是设计。
 
+通知铃（`Frame.vue` 的 `notifications`）走同一个反代：`ALLOW_LIST` 里的
+`notifications`、`notifications/unread`、`notifications/read-all`，`ALLOW_PATTERNS`
+里的 `notifications/{member|broadcast}/{id}`（PATCH）。测试在
+`src/lib/proxyAllowList.test.ts`。
+
 ## SweatBox 的参考数据在 can-db，不在这个仓库
 
 `/instr/sweatbox` 仍然一个 can-api 调用都没有，但它读的东西变了：从前是
