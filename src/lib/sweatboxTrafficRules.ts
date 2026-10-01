@@ -345,6 +345,36 @@ const AIRPORT_RULES: Record<string, AirportTrafficRule> = {
   },
 };
 
+const TRAFFIC_DEFAULTS: Record<string, { airlines: string; partners: string }> =
+  {
+    ZSSS: {
+      airlines: "ANA,JAL,CES,CSH,CCA,CQH,CXA,HBH",
+      partners: "RJTT,ZBAA,ZSPD,ZGSZ,ZSAM,ZSQZ",
+    },
+    ZSPD: {
+      airlines: "ANA,JAL,CES,CSH,CCA,CQH,DKH",
+      partners: "RJBB,RJTT,ZBAA,ZGGG,ZGSZ",
+    },
+    ZBHH: {
+      airlines: "CCA,CES,CSH,CSN,CHH,GCR,CDG,CSZ,CXA",
+      partners: "ZBAA,ZBAD,ZSPD,ZLXY,ZPPP,ZUUU",
+    },
+    RJFF: {
+      airlines: "ANA,JAL,SFJ,JJP,CES,CCA,KAL,CPA",
+      partners: "RJTT,RJOO,RJGG,RJCC,ZSPD,ZBAA,RKSI,VHHH",
+    },
+    RJTT: {
+      airlines: "ANA,JAL,ADO,SKY,SNJ,SFJ,CCA,CES,KAL,AAR,CPA",
+      partners: "RJBB,RJFF,RJCC,RJOO,RJGG,ZSSS,ZSPD,ZBAA,RKSI,VHHH",
+    },
+  };
+
+export function trafficDefaultsFor(
+  airport: string,
+): { airlines: string; partners: string } | null {
+  return TRAFFIC_DEFAULTS[airport] ?? null;
+}
+
 const MAINLAND_PREFIXES = [
   "ZB",
   "ZG",
