@@ -1623,11 +1623,15 @@ export function composeTraffic(options: TrafficOptions): TrafficResult {
       ([a], [b]) => Number(!a) - Number(!b),
     );
     for (const [terminal, indexes] of orderedGroups) {
-      const candidates = airport.stands.filter(
+      const terminalCandidates = airport.stands.filter(
         (stand) =>
           !usedStands.has(stand.name) &&
           (!terminal || terminalForStand(airport.icao, stand) === terminal),
       );
+      const candidates =
+        terminal && terminalCandidates.length === 0
+          ? airport.stands.filter((stand) => !usedStands.has(stand.name))
+          : terminalCandidates;
       const stands = pickDispersedStands(candidates, indexes.length, random);
       standShortfall += indexes.length - stands.length;
       stands.forEach((stand, index) => {

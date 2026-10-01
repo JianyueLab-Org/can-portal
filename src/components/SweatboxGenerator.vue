@@ -76,11 +76,15 @@ import {
 } from "@/lib/sweatbox";
 import { PERFORMANCE_TYPES } from "@/lib/sweatboxPerf";
 import { EQUIPMENT_SUFFIXES } from "@/lib/flightplan";
-import { requiredPartnersFor } from "@/lib/sweatboxTrafficRules";
+import {
+  requiredPartnersFor,
+  trafficDefaultsFor,
+} from "@/lib/sweatboxTrafficRules";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
   airports: SweatboxIndexEntry[];
+  aipAccess: number;
 }>();
 const t = createTranslator(props.messages);
 
