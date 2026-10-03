@@ -239,7 +239,9 @@
       "fetchDataError": "Error occurred while fetching data",
       "fetchPromotionDataError": "Error occurred while fetching promotion data",
       "loadingError": "Loading Error",
-      "alreadyPending": "This member already has a pending promotion request. Wait for it to be reviewed before raising another."
+      "alreadyPending": "This member already has a pending promotion request. Wait for it to be reviewed before raising another.",
+      "noPromoteAuthority": "You do not hold instructor authority in a division this member belongs to (an active membership there with the instructor flag).",
+      "applicantInactive": "This member holds no active division membership. Restore their division status on the roster first."
     }
   },
   "activities": {
