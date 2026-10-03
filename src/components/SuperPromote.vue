@@ -230,10 +230,17 @@ const handlePromote = async () => {
       // 这个人已经有一条待审的申请。这是最常见的一种失败（两位教员前后脚提同一
       // 个人），而它要发起人做的事是「去等」，不是「改表单」，所以单独说。
       formError.value = t("alreadyPending");
+    } else if (result.error === "noAuthority") {
+      // 发起人自己的分部行不够：该分部要有有效成员身份并带教员标记。
+      // SUP 及以上不会走到这里（can-api 的 StaffRegions 给他们全网权限）。
+      formError.value = t("noPromoteAuthority");
+    } else if (result.error === "applicantInactive") {
+      // 和 noAuthority 分开说：缺的是申请人的分部身份，不是发起人的。
+      formError.value = t("applicantInactive");
     } else {
       // 错误信封是 {error, message}，没有 `status` —— 所以上面那个判断对任何
-      // 失败都只是 undefined。`aboveYourOwn`、`noAuthority`、`notFound` 三种
-      // 各要发起人做不同的事，把服务端的话原样带出来。
+      // 失败都只是 undefined。`aboveYourOwn`、`notFound` 等其余几种各要发起人
+      // 做不同的事，把服务端的话原样带出来。
       formError.value = result.message || t("createPromotionFailed");
     }
   } catch (err) {

@@ -239,7 +239,9 @@
       "fetchDataError": "获取数据时发生错误",
       "fetchPromotionDataError": "获取晋升记录时发生错误",
       "loadingError": "载入错误",
-      "alreadyPending": "这位成员已有一条待审批的晋升申请，请等它处理完再提交。"
+      "alreadyPending": "这位成员已有一条待审批的晋升申请，请等它处理完再提交。",
+      "noPromoteAuthority": "你在这位成员所属的分部没有教员权限（需要该分部的有效成员身份并带教员标记）。",
+      "applicantInactive": "这位成员没有任何有效的分部成员身份，请先在花名册里恢复其分部状态。"
     }
   },
   "activities": {

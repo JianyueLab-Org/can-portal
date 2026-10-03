@@ -239,7 +239,9 @@
       "fetchDataError": "取得資料時發生錯誤",
       "fetchPromotionDataError": "取得晉升記錄時發生錯誤",
       "loadingError": "載入錯誤",
-      "alreadyPending": "這位成員已有一條待審核的晉升申請，請等它處理完再提交。"
+      "alreadyPending": "這位成員已有一條待審核的晉升申請，請等它處理完再提交。",
+      "noPromoteAuthority": "你在這位成員所屬的分部沒有教員權限（需要該分部的有效成員身份並帶教員標記）。",
+      "applicantInactive": "這位成員沒有任何有效的分部成員身份，請先在名冊裡恢復其分部狀態。"
     }
   },
   "activities": {
