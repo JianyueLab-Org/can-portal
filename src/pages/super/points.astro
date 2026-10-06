@@ -1,0 +1,19 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManagePoints from "@/components/ManagePoints.vue";
+import { getLocale, getMessages } from "@/lib/i18n";
+
+/**
+ * 积分手动调整 —— SUP/ADM（`/super/*` 前缀，中间件按 11 级判）。
+ *
+ * `sessionUserId` 只用来在选中自己时禁用提交、在自己的记录上禁用撤销。边界是
+ * can-api 的 `self_adjust`。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "points.manage");
+const sessionUserId = Astro.locals.user?.username ?? "";
+---
+
+<AppLayout title="积分调整 · Cerulean Aviation Network">
+  <ManagePoints messages={messages} sessionUserId={sessionUserId} client:load />
+</AppLayout>
