@@ -24,6 +24,7 @@
     "activitiesManage": "活動管理",
     "prizesManage": "獎品管理",
     "lotteryManage": "抽獎管理",
+    "pointsManage": "積分調整",
     "feedbackManage": "處理結果公示",
     "signOut": "登出",
     "unrestricted": "隱藏 NAIP",
@@ -577,6 +578,104 @@
       }
     }
   },
+  "points": {
+    "manage": {
+      "title": "積分調整",
+      "description": "手動為成員發放或扣除積分。每筆紀錄只追加不修改，記錯了就撤銷。",
+      "loading": "載入中…",
+      "close": "關閉",
+      "timeWithLocal": "{zulu} · 本地 {local}",
+      "form": {
+        "title": "調整積分",
+        "help": "成員會看到金額和公開說明，看不到操作人和內部備註。",
+        "search": "搜尋成員",
+        "searchPlaceholder": "CAN ID 或姓名…",
+        "noMatches": "沒有符合的成員。",
+        "select": "選擇",
+        "change": "更換成員",
+        "balance": "目前餘額 {balance}",
+        "balanceLoading": "正在讀取餘額…",
+        "direction": "方向",
+        "grant": "發放",
+        "deduct": "扣除",
+        "amount": "積分",
+        "amountHint": "1 到 1,000,000 之間的整數。",
+        "detail": "公開說明",
+        "detailHint": "成員會在積分明細裡看到這段話。",
+        "note": "內部備註（選填）",
+        "noteHint": "只有 SUP 和 ADM 看得到。",
+        "submit": "檢查並送出"
+      },
+      "confirm": {
+        "title": "確認調整",
+        "member": "成員",
+        "amount": "金額",
+        "balance": "餘額",
+        "unknownBalance": "—",
+        "negative": "調整後餘額為負數。",
+        "action": "確認調整",
+        "keep": "返回"
+      },
+      "reverse": {
+        "title": "撤銷調整",
+        "body": "撤銷 #{id}？系統會記一筆 {amount} 的反向紀錄，原紀錄保留。",
+        "note": "內部備註（選填）",
+        "action": "確認撤銷",
+        "keep": "返回"
+      },
+      "history": {
+        "title": "調整紀錄",
+        "filter": "依成員篩選",
+        "filterPlaceholder": "CAN ID",
+        "apply": "篩選",
+        "clear": "清除",
+        "empty": "還沒有手動調整紀錄",
+        "emptyHint": "上面送出的調整會出現在這裡。",
+        "more": "載入更多",
+        "columns": {
+          "time": "時間",
+          "member": "成員",
+          "amount": "金額",
+          "detail": "公開說明",
+          "note": "內部備註",
+          "operator": "操作人",
+          "status": "狀態"
+        },
+        "status": {
+          "active": "有效",
+          "reversed": "已撤銷",
+          "reversal": "撤銷紀錄"
+        },
+        "reversedBy": "由 #{id} 撤銷",
+        "reverses": "撤銷 #{id}",
+        "reverseAction": "撤銷"
+      },
+      "done": {
+        "adjusted": "已為 {member} 記入 {amount}，目前餘額 {balance}。",
+        "replayed": "這筆請求先前已經記入（{amount}），沒有重複入帳。請先核對下方紀錄。",
+        "reversed": "已撤銷 #{id}，{member} 目前餘額 {balance}。"
+      },
+      "errors": {
+        "load": "無法載入調整紀錄。",
+        "balance": "無法讀取該成員的餘額。",
+        "memberRequired": "請先選擇成員。",
+        "amountRequired": "請填寫積分。",
+        "amount": "積分必須是 1 到 1,000,000 之間的整數。",
+        "detailRequired": "請填寫公開說明。",
+        "detailLength": "公開說明不能超過 255 個字元。",
+        "noteLength": "內部備註不能超過 255 個字元。",
+        "selfAdjust": "不能調整自己的積分。",
+        "invalidAmount": "積分必須是 1 到 1,000,000 之間的非零整數。",
+        "invalidDetail": "公開說明必須是 1 到 255 個字元。",
+        "invalidRequest": "請求有誤，請重新整理頁面後重試。",
+        "notFound": "成員或紀錄不存在。",
+        "notReversible": "撤銷紀錄不能再撤銷。",
+        "alreadyReversed": "這筆調整已經被撤銷過了。",
+        "network": "網路連線失敗，請稍後再試。已填寫的內容會保留，重試不會重複入帳。",
+        "actionFailed": "操作失敗，請稍後重試。"
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "處理結果公示",
@@ -823,6 +922,7 @@
       "activities": "開活動、寫簡報、點名、結算積分。",
       "prizes": "維護積分商城的獎品，處理兌換。",
       "lottery": "用商店獎品開抽獎，發布、取消、查看中獎名單。",
+      "points": "為成員手動發放或扣除積分，撤銷誤操作。",
       "feedback": "發布處理結果公示。",
       "promotions": "審批教員提交的晉升申請。",
       "servers": "維護用戶端讀取位址的伺服器目錄。",

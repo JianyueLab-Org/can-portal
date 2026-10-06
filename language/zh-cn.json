@@ -24,6 +24,7 @@
     "activitiesManage": "活动管理",
     "prizesManage": "奖品管理",
     "lotteryManage": "抽奖管理",
+    "pointsManage": "积分调整",
     "feedbackManage": "处理结果公示",
     "signOut": "退出登录",
     "unrestricted": "隐藏 NAIP",
@@ -577,6 +578,104 @@
       }
     }
   },
+  "points": {
+    "manage": {
+      "title": "积分调整",
+      "description": "手动为成员发放或扣除积分。每笔记录只追加不修改，记错了就撤销。",
+      "loading": "加载中…",
+      "close": "关闭",
+      "timeWithLocal": "{zulu} · 本地 {local}",
+      "form": {
+        "title": "调整积分",
+        "help": "成员会看到金额和公开说明，看不到操作人和内部备注。",
+        "search": "搜索成员",
+        "searchPlaceholder": "CAN ID 或姓名…",
+        "noMatches": "没有匹配的成员。",
+        "select": "选择",
+        "change": "更换成员",
+        "balance": "当前余额 {balance}",
+        "balanceLoading": "正在读取余额…",
+        "direction": "方向",
+        "grant": "发放",
+        "deduct": "扣除",
+        "amount": "积分",
+        "amountHint": "1 到 1,000,000 之间的整数。",
+        "detail": "公开说明",
+        "detailHint": "成员会在积分明细里看到这段话。",
+        "note": "内部备注（可选）",
+        "noteHint": "只有 SUP 和 ADM 看得到。",
+        "submit": "检查并提交"
+      },
+      "confirm": {
+        "title": "确认调整",
+        "member": "成员",
+        "amount": "金额",
+        "balance": "余额",
+        "unknownBalance": "—",
+        "negative": "调整后余额为负数。",
+        "action": "确认调整",
+        "keep": "返回"
+      },
+      "reverse": {
+        "title": "撤销调整",
+        "body": "撤销 #{id}？系统会记一笔 {amount} 的反向记录，原记录保留。",
+        "note": "内部备注（可选）",
+        "action": "确认撤销",
+        "keep": "返回"
+      },
+      "history": {
+        "title": "调整记录",
+        "filter": "按成员筛选",
+        "filterPlaceholder": "CAN ID",
+        "apply": "筛选",
+        "clear": "清除",
+        "empty": "还没有手动调整记录",
+        "emptyHint": "上面提交的调整会出现在这里。",
+        "more": "加载更多",
+        "columns": {
+          "time": "时间",
+          "member": "成员",
+          "amount": "金额",
+          "detail": "公开说明",
+          "note": "内部备注",
+          "operator": "操作人",
+          "status": "状态"
+        },
+        "status": {
+          "active": "有效",
+          "reversed": "已撤销",
+          "reversal": "撤销记录"
+        },
+        "reversedBy": "由 #{id} 撤销",
+        "reverses": "撤销 #{id}",
+        "reverseAction": "撤销"
+      },
+      "done": {
+        "adjusted": "已为 {member} 记入 {amount}，当前余额 {balance}。",
+        "replayed": "这笔请求之前已经记入（{amount}），没有重复入账。请先核对下方记录。",
+        "reversed": "已撤销 #{id}，{member} 当前余额 {balance}。"
+      },
+      "errors": {
+        "load": "无法加载调整记录。",
+        "balance": "无法读取该成员的余额。",
+        "memberRequired": "请先选择成员。",
+        "amountRequired": "请填写积分。",
+        "amount": "积分必须是 1 到 1,000,000 之间的整数。",
+        "detailRequired": "请填写公开说明。",
+        "detailLength": "公开说明不能超过 255 个字符。",
+        "noteLength": "内部备注不能超过 255 个字符。",
+        "selfAdjust": "不能调整自己的积分。",
+        "invalidAmount": "积分必须是 1 到 1,000,000 之间的非零整数。",
+        "invalidDetail": "公开说明必须是 1 到 255 个字符。",
+        "invalidRequest": "请求有误，请刷新页面后重试。",
+        "notFound": "成员或记录不存在。",
+        "notReversible": "撤销记录不能再撤销。",
+        "alreadyReversed": "这笔调整已经被撤销过了。",
+        "network": "网络连接失败，请稍后再试。已填写的内容会保留，重试不会重复入账。",
+        "actionFailed": "操作失败，请稍后重试。"
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "处理结果公示",
@@ -823,6 +922,7 @@
       "activities": "开活动、写简报、点名、结算积分。",
       "prizes": "维护积分商城的奖品，处理兑换。",
       "lottery": "用商店奖品开抽奖，发布、取消、查看中奖名单。",
+      "points": "为成员手动发放或扣除积分，撤销误操作。",
       "feedback": "发布处理结果公示。",
       "promotions": "审批教员提交的晋升申请。",
       "servers": "维护客户端读取地址的服务器目录。",

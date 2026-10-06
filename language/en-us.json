@@ -24,6 +24,7 @@
     "activitiesManage": "Manage Activities",
     "prizesManage": "Prizes",
     "lotteryManage": "Lottery",
+    "pointsManage": "Points adjustment",
     "feedbackManage": "Feedback outcomes",
     "signOut": "Sign Out",
     "unrestricted": "Hide NAIP",
@@ -577,6 +578,104 @@
       }
     }
   },
+  "points": {
+    "manage": {
+      "title": "Points adjustment",
+      "description": "Grant or deduct points by hand. Entries are never edited; a mistake is reversed.",
+      "loading": "Loading…",
+      "close": "Close",
+      "timeWithLocal": "{zulu} · local {local}",
+      "form": {
+        "title": "Adjust points",
+        "help": "The member sees the amount and the public description, not the operator or the internal note.",
+        "search": "Find member",
+        "searchPlaceholder": "CAN ID or name…",
+        "noMatches": "No matching members.",
+        "select": "Select",
+        "change": "Change member",
+        "balance": "Balance {balance}",
+        "balanceLoading": "Loading balance…",
+        "direction": "Direction",
+        "grant": "Grant",
+        "deduct": "Deduct",
+        "amount": "Points",
+        "amountHint": "A whole number from 1 to 1,000,000.",
+        "detail": "Public description",
+        "detailHint": "Shown to the member in their points history.",
+        "note": "Internal note (optional)",
+        "noteHint": "Only SUP and ADM can see this.",
+        "submit": "Review"
+      },
+      "confirm": {
+        "title": "Confirm adjustment",
+        "member": "Member",
+        "amount": "Amount",
+        "balance": "Balance",
+        "unknownBalance": "—",
+        "negative": "The balance will be negative after this adjustment.",
+        "action": "Confirm",
+        "keep": "Back"
+      },
+      "reverse": {
+        "title": "Reverse adjustment",
+        "body": "Reverse #{id}? A matching entry of {amount} is recorded. The original stays.",
+        "note": "Internal note (optional)",
+        "action": "Reverse",
+        "keep": "Back"
+      },
+      "history": {
+        "title": "Adjustments",
+        "filter": "Filter by member",
+        "filterPlaceholder": "CAN ID",
+        "apply": "Filter",
+        "clear": "Clear",
+        "empty": "No manual adjustments yet",
+        "emptyHint": "Adjustments submitted above appear here.",
+        "more": "Load more",
+        "columns": {
+          "time": "Time",
+          "member": "Member",
+          "amount": "Amount",
+          "detail": "Public description",
+          "note": "Internal note",
+          "operator": "Operator",
+          "status": "Status"
+        },
+        "status": {
+          "active": "Active",
+          "reversed": "Reversed",
+          "reversal": "Reversal"
+        },
+        "reversedBy": "Reversed by #{id}",
+        "reverses": "Reverses #{id}",
+        "reverseAction": "Reverse"
+      },
+      "done": {
+        "adjusted": "Recorded {amount} for {member}. Balance is now {balance}.",
+        "replayed": "This request was already recorded earlier ({amount}). Nothing was added twice. Check the history below.",
+        "reversed": "Reversed #{id}. {member}'s balance is now {balance}."
+      },
+      "errors": {
+        "load": "Could not load the adjustments.",
+        "balance": "Could not load this member's balance.",
+        "memberRequired": "Select a member first.",
+        "amountRequired": "Enter the points.",
+        "amount": "Points must be a whole number from 1 to 1,000,000.",
+        "detailRequired": "Enter a public description.",
+        "detailLength": "The public description must be at most 255 characters.",
+        "noteLength": "The internal note must be at most 255 characters.",
+        "selfAdjust": "You cannot adjust your own points.",
+        "invalidAmount": "Points must be a non-zero whole number up to 1,000,000.",
+        "invalidDetail": "The public description must be 1 to 255 characters.",
+        "invalidRequest": "The request was invalid. Reload the page and try again.",
+        "notFound": "The member or entry does not exist.",
+        "notReversible": "A reversal cannot be reversed.",
+        "alreadyReversed": "This adjustment has already been reversed.",
+        "network": "Network error. Try again later. The form is kept, and retrying will not record it twice.",
+        "actionFailed": "Something went wrong. Try again later."
+      }
+    }
+  },
   "feedback": {
     "manage": {
       "title": "Feedback outcomes",
@@ -823,6 +922,7 @@
       "activities": "Create events, write briefings, mark attendance, settle points.",
       "prizes": "Maintain the prize store and process redemptions.",
       "lottery": "Run prize draws from the shop, publish or cancel them, and see the winners.",
+      "points": "Grant or deduct member points by hand, and reverse mistakes.",
       "feedback": "Publish the outcome of a handled case.",
       "promotions": "Approve promotion requests submitted by instructors.",
       "servers": "Maintain the server directory clients read their addresses from.",
