@@ -19,6 +19,7 @@ Cerulean Aviation Network 的管理面：带学员、审晋升、办活动、发
 | `/super/activities` | 活动管理 —— 开活动、点名、结算积分         | 11 (SUP) |
 | `/super/prizes`     | 奖品管理 —— 积分商城和兑换                 | 11 (SUP) |
 | `/super/lottery`    | 抽奖管理 —— 开草稿、发布、取消、看中奖名单 | 11 (SUP) |
+| `/super/points`     | 积分调整 —— 手动发放、扣除、撤销           | 11 (SUP) |
 | `/super/feedback`   | 处理结果公示                               | 11 (SUP) |
 | `/super/promotions` | 晋升审批                                   | 11 (SUP) |
 
