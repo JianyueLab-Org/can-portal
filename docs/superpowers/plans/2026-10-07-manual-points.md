@@ -194,7 +194,11 @@ function entry(overrides: Partial<ManualEntry> = {}): ManualEntry {
 
 describe("limits", () => {
   test("match the can-api contract", () => {
-    expect(POINTS_LIMITS).toEqual({ amount: 1_000_000, detail: 255, note: 255 });
+    expect(POINTS_LIMITS).toEqual({
+      amount: 1_000_000,
+      detail: 255,
+      note: 255,
+    });
     expect(HISTORY_PAGE_SIZE).toBe(50);
   });
 });
@@ -331,7 +335,12 @@ describe("validateAdjust", () => {
 describe("adjustBody", () => {
   test("sends a signed number, trimmed text and no note when blank", () => {
     const body = adjustBody(
-      form({ direction: "deduct", amount: " 30 ", detail: " 误发 ", note: "  " }),
+      form({
+        direction: "deduct",
+        amount: " 30 ",
+        detail: " 误发 ",
+        note: "  ",
+      }),
       REF,
     );
     expect(body).toEqual({
@@ -1212,11 +1221,7 @@ const sessionUserId = Astro.locals.user?.username ?? "";
 ---
 
 <AppLayout title="积分调整 · Cerulean Aviation Network">
-  <ManagePoints
-    messages={messages}
-    sessionUserId={sessionUserId}
-    client:load
-  />
+  <ManagePoints messages={messages} sessionUserId={sessionUserId} client:load />
 </AppLayout>
 ```
 
@@ -1388,12 +1393,12 @@ const selfSelected = computed(() =>
   isSelf(form.value.username, props.sessionUserId),
 );
 
-const directionSegments = computed<
-  Array<{ value: Direction; label: string }>
->(() => [
-  { value: "grant", label: t("form.grant") },
-  { value: "deduct", label: t("form.deduct") },
-]);
+const directionSegments = computed<Array<{ value: Direction; label: string }>>(
+  () => [
+    { value: "grant", label: t("form.grant") },
+    { value: "deduct", label: t("form.deduct") },
+  ],
+);
 
 const pendingAmount = computed(() => signedAmount(form.value));
 
@@ -1865,9 +1870,11 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
             >
           </template>
           <template #cell-detail="{ row }">
-            <span class="whitespace-normal text-sm text-ink" :class="dim(row)">{{
-              row.detail
-            }}</span>
+            <span
+              class="whitespace-normal text-sm text-ink"
+              :class="dim(row)"
+              >{{ row.detail }}</span
+            >
           </template>
           <template #cell-note="{ row }">
             <span
@@ -2102,7 +2109,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 In `src/lib/access.test.ts`, in the test `"/super is SUP, /instr is instructor"`, directly after `expect(requiredRating("/super/promotions")).toBe(11);`, add:
 
 ```ts
-    expect(requiredRating("/super/points")).toBe(11);
+expect(requiredRating("/super/points")).toBe(11);
 ```
 
 Run: `cd /Users/jhl/Documents/Dev/CeruleanAviationNetwork/can-portal && bun test src/lib/access.test.ts`
@@ -2281,28 +2288,28 @@ Expected: `git diff --cached --name-only` prints only `can-portal`. `git ls-tree
 
 **Spec coverage (spec section "can-portal"):**
 
-| Spec requirement                                                                   | Task                                                                           |
-| ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| `src/pages/super/points.astro` mounts `ManagePoints.vue`; namespace `points.manage` | 4, 3                                                                           |
-| `/super` gated at 11; no `FLOORS` row                                              | 5 (pinned in `access.test.ts`), no `access.ts` change                          |
-| Member picker via `/super/members?q=`, same as `AipAccess.vue`                     | 4 (copied debounce and stale-drop), 2 (`who` updated)                          |
-| On select: fetch and show the current balance                                      | 1 (`balancePath`), 2 (proxy), 4 (`loadBalance`)                                |
-| Grant/deduct toggle plus positive integer amount; toggle sets the sign             | 1 (`parseAmount`, `signedAmount`), 4 (`Segmented`)                             |
-| Public description required, internal note optional                                | 1 (`validateAdjust`, `adjustBody`), 4                                          |
-| Submit disabled when the selected member is the signed-in user                     | 1 (`isSelf`), 4 (`selfSelected`, `sessionUserId` prop)                         |
-| Confirmation: member, signed amount, `balance → new balance`; negative red, not blocked | 1 (`projectedBalance`, `formatSigned`), 4 (confirm dialog)                 |
-| `reference` from `crypto.randomUUID()` at open, reused on retry, replaced after success | 1 (`newReference`), 4 (`reference` ref, `submit`)                          |
-| History table: time, member, amount, description, note, operator, status          | 4 (`columns`)                                                                  |
-| Filter by member; cursor pagination                                                | 1 (`manualPath`, `mergeEntries`), 4 (`applyFilter`, `loadHistory(false)`)      |
-| Reverse button on un-reversed, non-reversal rows; confirmation with optional note  | 1 (`entryState`, `canReverse`, `reverseBody`), 4 (reverse dialog)              |
-| Reversed rows greyed and linked to the reversing row                               | 4 (`dim`, `anchor`, `reversedBy` link)                                         |
-| Every error code maps to a localised message                                       | 1 (`errorKey`), 3 (test checks every code in four locales)                     |
-| Proxy `ALLOW_LIST` three entries with `who`; `ALLOW_PATTERNS` reverse with `who`   | 2                                                                              |
-| `proxyAllowList.test.ts` covers the four entries                                   | 2                                                                              |
-| `nav.ts` `{ key: "pointsManage", href: "/super/points", icon }`; label; home card  | 5 (icon `adjustments`), 3 (labels)                                             |
-| `src/lib/points.ts`: validation, wire types, error mapping; `bun test`             | 1                                                                              |
-| Gate: `bun run lint && bun run build`                                              | Every task; 4 and 5 run `build`                                                |
-| Order: can-portal after can-api, can-ui, can-web; root pointers last               | 0 (branch), 7 (PR, merge after can-api, pointer after merge)                   |
+| Spec requirement                                                                        | Task                                                                      |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| `src/pages/super/points.astro` mounts `ManagePoints.vue`; namespace `points.manage`     | 4, 3                                                                      |
+| `/super` gated at 11; no `FLOORS` row                                                   | 5 (pinned in `access.test.ts`), no `access.ts` change                     |
+| Member picker via `/super/members?q=`, same as `AipAccess.vue`                          | 4 (copied debounce and stale-drop), 2 (`who` updated)                     |
+| On select: fetch and show the current balance                                           | 1 (`balancePath`), 2 (proxy), 4 (`loadBalance`)                           |
+| Grant/deduct toggle plus positive integer amount; toggle sets the sign                  | 1 (`parseAmount`, `signedAmount`), 4 (`Segmented`)                        |
+| Public description required, internal note optional                                     | 1 (`validateAdjust`, `adjustBody`), 4                                     |
+| Submit disabled when the selected member is the signed-in user                          | 1 (`isSelf`), 4 (`selfSelected`, `sessionUserId` prop)                    |
+| Confirmation: member, signed amount, `balance → new balance`; negative red, not blocked | 1 (`projectedBalance`, `formatSigned`), 4 (confirm dialog)                |
+| `reference` from `crypto.randomUUID()` at open, reused on retry, replaced after success | 1 (`newReference`), 4 (`reference` ref, `submit`)                         |
+| History table: time, member, amount, description, note, operator, status                | 4 (`columns`)                                                             |
+| Filter by member; cursor pagination                                                     | 1 (`manualPath`, `mergeEntries`), 4 (`applyFilter`, `loadHistory(false)`) |
+| Reverse button on un-reversed, non-reversal rows; confirmation with optional note       | 1 (`entryState`, `canReverse`, `reverseBody`), 4 (reverse dialog)         |
+| Reversed rows greyed and linked to the reversing row                                    | 4 (`dim`, `anchor`, `reversedBy` link)                                    |
+| Every error code maps to a localised message                                            | 1 (`errorKey`), 3 (test checks every code in four locales)                |
+| Proxy `ALLOW_LIST` three entries with `who`; `ALLOW_PATTERNS` reverse with `who`        | 2                                                                         |
+| `proxyAllowList.test.ts` covers the four entries                                        | 2                                                                         |
+| `nav.ts` `{ key: "pointsManage", href: "/super/points", icon }`; label; home card       | 5 (icon `adjustments`), 3 (labels)                                        |
+| `src/lib/points.ts`: validation, wire types, error mapping; `bun test`                  | 1                                                                         |
+| Gate: `bun run lint && bun run build`                                                   | Every task; 4 and 5 run `build`                                           |
+| Order: can-portal after can-api, can-ui, can-web; root pointers last                    | 0 (branch), 7 (PR, merge after can-api, pointer after merge)              |
 
 **Placeholder scan:** none. Every code step has full code; every dictionary entry is spelled out for all four locales.
 
