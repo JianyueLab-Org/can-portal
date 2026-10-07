@@ -42,6 +42,7 @@ interface Prize {
   cost: number;
   stock: number;
   redeemedCount: number;
+  updatedAt: string;
 }
 interface Redemption {
   id: number;
@@ -63,7 +64,13 @@ const feedback = ref<{ type: "success" | "error"; text: string } | null>(null);
 
 /** The form doubles as the editor: an id means "save over that one". */
 const editingId = ref<number | null>(null);
-const form = ref({ name: "", description: "", cost: "", stock: "" });
+const form = ref({
+  name: "",
+  description: "",
+  cost: "",
+  stock: "",
+  updatedAt: "",
+});
 const fieldErrors = ref<PrizeErrors>({});
 
 const STATUS_VARIANT: Record<number, "warning" | "success" | "neutral"> = {
@@ -113,7 +120,13 @@ function errorText(field: keyof PrizeErrors): string | undefined {
 
 function resetForm() {
   editingId.value = null;
-  form.value = { name: "", description: "", cost: "", stock: "" };
+  form.value = {
+    name: "",
+    description: "",
+    cost: "",
+    stock: "",
+    updatedAt: "",
+  };
   fieldErrors.value = {};
 }
 
@@ -124,6 +137,7 @@ function edit(prize: Prize) {
     description: prize.description ?? "",
     cost: String(prize.cost),
     stock: String(prize.stock),
+    updatedAt: prize.updatedAt,
   };
   fieldErrors.value = {};
   window.scrollTo({ top: 0, behavior: "smooth" });
@@ -181,6 +195,7 @@ async function save() {
 
   try {
     const editing = editingId.value;
+    const body = prizeBody(form.value);
     const response = await apiFetch(
       editing ? `/api/v1/super/prize/${editing}` : "/api/v1/super/prize",
       {
@@ -188,7 +203,9 @@ async function save() {
         headers: { "Content-Type": "application/json" },
         // Not the form object: it holds cost and stock as the strings an
         // <input> binds, and can-api declares both as numbers.
-        body: JSON.stringify(prizeBody(form.value)),
+        body: JSON.stringify(
+          editing ? { ...body, updatedAt: form.value.updatedAt } : body,
+        ),
       },
     );
     const payload = await response.json().catch(() => ({}));
@@ -204,6 +221,11 @@ async function save() {
           : undefined;
       if (mapped) {
         fieldErrors.value = mapped;
+        return;
+      }
+      if (response.status === 409 && payload?.error === "stalePrize") {
+        feedback.value = { type: "error", text: t("errors.stale") };
+        await load();
         return;
       }
       throw new Error(t("errors.save"));

@@ -459,7 +459,9 @@
       "errors": {
         "load": "Could not load prizes.",
         "save": "Could not save.",
+        "stale": "This prize changed while you were editing. The list has been refreshed.",
         "delete": "Could not delete.",
+        "stalePrize": "This prize changed since you opened it. Reloaded the list; review the current stock before saving.",
         "alreadyRedeemed": "Members have already redeemed this — set its stock to 0 to retire it instead.",
         "nameRequired": "Enter a name.",
         "nameLength": "Name is too long.",
