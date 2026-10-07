@@ -1,4 +1,6 @@
 import { describe, expect, test } from "bun:test";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { DENIED_PATH, noAccessReason, requiredRating } from "./access";
 
 describe("requiredRating", () => {
@@ -44,5 +46,16 @@ describe("noAccessReason", () => {
     expect(noAccessReason("/instr/roster", 8)).toBeNull();
     expect(noAccessReason("/super/prizes", 11)).toBeNull();
     expect(noAccessReason("/super/developers", 12)).toBeNull();
+  });
+});
+
+describe("roster status access", () => {
+  test("allows the SUP floor to edit controller status", () => {
+    const source = readFileSync(
+      fileURLToPath(new URL("../pages/instr/roster.astro", import.meta.url)),
+      "utf8",
+    );
+    expect(source).toContain("RATING_SUP");
+    expect(source).toContain(">= RATING_SUP");
   });
 });
