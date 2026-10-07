@@ -78,6 +78,8 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   { key: "prizesManage", href: "/super/prizes", icon: "gift" },
   // 抽奖。和奖品同一档（11）：奖品是 SUP 配的，拿奖品开抽奖的也是 SUP。
   { key: "lotteryManage", href: "/super/lottery", icon: "sparkles" },
+  // 积分手动调整。和奖品、抽奖同一档（11）：can-api 的路由是 `WithSup`。
+  { key: "pointsManage", href: "/super/points", icon: "adjustments" },
   { key: "feedbackManage", href: "/super/feedback", icon: "megaphone" },
   // 服务器目录。和上面三条同一档（11）：搬一台 FSD 或语音服务器是运维决定，而跑
   // 活动的那一层就是做运维的那一层。

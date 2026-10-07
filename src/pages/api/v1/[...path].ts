@@ -84,6 +84,21 @@ const ALLOW_LIST: Record<string, Allowed> = {
     who: "ManageLottery.vue 列表与新建草稿",
   },
 
+  // 积分手动调整（`/super/points`）。can-api 那边四条都是 `WithSup`。撤销在下面
+  // 的模式里。
+  "super/points/balance": {
+    methods: ["GET"],
+    who: "ManagePoints.vue 选中成员后读余额",
+  },
+  "super/points/adjust": {
+    methods: ["POST"],
+    who: "ManagePoints.vue 发放 / 扣除",
+  },
+  "super/points/manual": {
+    methods: ["GET"],
+    who: "ManagePoints.vue 调整记录（按成员筛选、游标翻页）",
+  },
+
   // 处理结果公示（`/super/feedback`）。
   "super/feedback": {
     methods: ["GET", "POST"],
@@ -95,7 +110,7 @@ const ALLOW_LIST: Record<string, Allowed> = {
   // 资料库授权页也用它来挑人。
   "super/members": {
     methods: ["GET"],
-    who: "ManageFeedback.vue 成员搜索 / AipAccess.vue 挑人授权",
+    who: "ManageFeedback.vue 成员搜索 / AipAccess.vue 挑人授权 / ManagePoints.vue 挑人调积分",
   },
 
   // 服务器目录 —— 客户端问 can-api 要地址的那份表，这一页是它的管理端。
@@ -183,6 +198,12 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     test: /^super\/lottery\/[0-9]{1,20}\/(publish|cancel)$/,
     methods: ["POST"],
     who: "ManageLottery.vue 发布 / 取消",
+  },
+  {
+    // 只有 reverse 一个动作，写死而不是 `[a-z]+`。
+    test: /^super\/points\/[0-9]{1,20}\/reverse$/,
+    methods: ["POST"],
+    who: "ManagePoints.vue 撤销一笔手动调整",
   },
   {
     test: /^super\/feedback\/[0-9]{1,20}$/,
