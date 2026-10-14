@@ -19,7 +19,7 @@
     "typecheck:astro": "astro check",
     "typecheck:vue": "node ./scripts/typecheck-vue.mjs",
     "test": "bun test",
-    "lint": "bun run format:check && bun run typecheck && bun run test",
+    "lint": "bun run format:check && bun run typecheck && bun run test && bun run check:pages",
     "check:pages": "can-ui-check-pages portal"
   },
   "dependencies": {
