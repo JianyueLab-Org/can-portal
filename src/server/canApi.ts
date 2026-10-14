@@ -62,12 +62,15 @@ export async function callApi<T = unknown>(
   >;
 
   if (!response.ok) {
+    const errorBody = body ?? {};
     return {
       ok: false,
       status: response.status,
       data: null,
-      error: String(body.error ?? "http_error"),
-      message: typeof body.message === "string" ? body.message : undefined,
+      error:
+        typeof errorBody.error === "string" ? errorBody.error : "http_error",
+      message:
+        typeof errorBody.message === "string" ? errorBody.message : undefined,
     };
   }
 
@@ -81,7 +84,7 @@ export async function callApi<T = unknown>(
   };
 }
 
-/** 请求所属的成员，没登录是 null。 */
+/** The authenticated member returned by can-api. */
 export interface SessionUser {
   username: string;
   name: string;
@@ -99,27 +102,45 @@ export interface SessionUser {
   aipAccess: number;
 }
 
-/**
- * 向 can-api 解出调用者。
- *
- * `/api/v1/auth/session` 在没人登录时回的是 200 + `user: null`，不是 401 ——
- * 「没登录」在公开页面上是预期状态而不是错误 —— 所以这里对「没登录」和「调用
- * 失败」都返回 null。
- *
- * 失败和登出不可区分是**安全的那个方向**：can-api 不可达时页面按匿名渲染，而
- * 不是按某个人渲染。
- *
- * 侧栏里哪些条目出现，取决于这里读回来的 `rating` —— 这是**便利，不是边界**。
- * 真正的判断在 can-api 每条路由自己的守卫上；把 rating 改大只会让菜单多出几个
- * 点下去必然 403 的链接。
- */
+export type SessionResolution =
+  | { state: "authenticated"; user: SessionUser }
+  | { state: "signed-out" }
+  | { state: "unavailable" };
+
+function isSessionUser(value: unknown): value is SessionUser {
+  if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+  const user = value as Record<string, unknown>;
+  return (
+    typeof user.username === "string" &&
+    user.username.length > 0 &&
+    typeof user.name === "string" &&
+    typeof user.email === "string" &&
+    typeof user.rating === "number" &&
+    Number.isFinite(user.rating) &&
+    typeof user.aipAccess === "number" &&
+    Number.isFinite(user.aipAccess)
+  );
+}
+
+/** Only an explicit anonymous response or HTTP 401 confirms sign-out. */
 export async function resolveSession(
   context: Pick<APIContext, "request">,
-): Promise<SessionUser | null> {
-  const result = await callApi<{ user: SessionUser | null }>(
-    context,
-    "/api/v1/auth/session",
-  );
-  if (!result.ok || !result.data) return null;
-  return result.data.user ?? null;
+): Promise<SessionResolution> {
+  try {
+    const result = await callApi<{ user?: unknown }>(
+      context,
+      "/api/v1/auth/session",
+    );
+    if (result.status === 401) return { state: "signed-out" };
+    if (result.status !== 200 || !result.data || Array.isArray(result.data)) {
+      return { state: "unavailable" };
+    }
+    if (result.data.user === null) return { state: "signed-out" };
+    if (isSessionUser(result.data.user)) {
+      return { state: "authenticated", user: result.data.user };
+    }
+  } catch {
+    // Invalid JSON shapes and interrupted response bodies are not sign-outs.
+  }
+  return { state: "unavailable" };
 }
