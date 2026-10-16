@@ -81,7 +81,7 @@ export async function callApi<T = unknown>(
   };
 }
 
-/** 请求所属的成员，没登录是 null。 */
+/** The authenticated member returned by can-api. */
 export interface SessionUser {
   username: string;
   name: string;
@@ -99,27 +99,55 @@ export interface SessionUser {
   aipAccess: number;
 }
 
-/**
- * 向 can-api 解出调用者。
- *
- * `/api/v1/auth/session` 在没人登录时回的是 200 + `user: null`，不是 401 ——
- * 「没登录」在公开页面上是预期状态而不是错误 —— 所以这里对「没登录」和「调用
- * 失败」都返回 null。
- *
- * 失败和登出不可区分是**安全的那个方向**：can-api 不可达时页面按匿名渲染，而
- * 不是按某个人渲染。
- *
- * 侧栏里哪些条目出现，取决于这里读回来的 `rating` —— 这是**便利，不是边界**。
- * 真正的判断在 can-api 每条路由自己的守卫上；把 rating 改大只会让菜单多出几个
- * 点下去必然 403 的链接。
- */
+export type SessionOutcome =
+  | { kind: "authenticated"; user: SessionUser }
+  | { kind: "signed-out" }
+  | { kind: "unavailable" };
+
+/** Resolve the session without turning upstream outages into sign-outs. */
 export async function resolveSession(
   context: Pick<APIContext, "request">,
-): Promise<SessionUser | null> {
+): Promise<SessionOutcome> {
+  if (!context.request.headers.get("cookie")) return { kind: "signed-out" };
+
   const result = await callApi<{ user: SessionUser | null }>(
     context,
     "/api/v1/auth/session",
   );
-  if (!result.ok || !result.data) return null;
-  return result.data.user ?? null;
+  if (!result.ok) {
+    return result.status === 401
+      ? { kind: "signed-out" }
+      : { kind: "unavailable" };
+  }
+  if (
+    !result.data ||
+    !isRecord(result.data) ||
+    !Object.hasOwn(result.data, "user")
+  ) {
+    return { kind: "unavailable" };
+  }
+  if (result.data.user === null) return { kind: "signed-out" };
+  return isSessionUser(result.data.user)
+    ? { kind: "authenticated", user: result.data.user }
+    : { kind: "unavailable" };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function isSessionUser(value: unknown): value is SessionUser {
+  return (
+    isRecord(value) &&
+    typeof value.username === "string" &&
+    value.username.length > 0 &&
+    typeof value.name === "string" &&
+    typeof value.email === "string" &&
+    typeof value.rating === "number" &&
+    Number.isInteger(value.rating) &&
+    typeof value.aipAccess === "number" &&
+    Number.isInteger(value.aipAccess) &&
+    value.aipAccess >= 0 &&
+    value.aipAccess <= 5
+  );
 }

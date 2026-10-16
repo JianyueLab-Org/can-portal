@@ -42,14 +42,26 @@ export const onRequest = defineMiddleware(async (context, next) => {
     return withSecurityHeaders(await next());
   }
 
-  const user = await resolveSession(context);
-  context.locals.user = user;
+  const session = await resolveSession(context);
+  context.locals.user = session.kind === "authenticated" ? session.user : null;
 
-  if (!user) {
+  if (session.kind === "unavailable") {
+    return withSecurityHeaders(
+      new Response("Session verification is unavailable. Please try again.", {
+        status: 503,
+        headers: {
+          "Content-Type": "text/plain; charset=utf-8",
+          "Cache-Control": "private, no-store",
+        },
+      }),
+    );
+  }
+
+  if (session.kind === "signed-out") {
     return withSecurityHeaders(context.redirect(signInUrl(context.url)));
   }
 
-  const reason = noAccessReason(pathname, user.rating);
+  const reason = noAccessReason(pathname, session.user.rating);
   if (reason) {
     context.locals.noAccess = reason;
     return withSecurityHeaders(await next(DENIED_PATH));

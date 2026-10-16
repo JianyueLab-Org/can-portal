@@ -42,6 +42,11 @@ spec:
   # 两个副本，和几个兄弟站一致。这个站的用户是教员和管理层，几十个人而不是几千
   # 个，但副本数是为了滚动更新时不断服务，不是为了吞吐。
   replicas: 2
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
   selector:
     matchLabels:
       app: can-portal
@@ -91,6 +96,10 @@ spec:
           # 探的是 /healthz，不是 /。`/` 在这个站上会先问一次 can-api 再可能
           # 302，拿它当探活等于每 10 秒给上游加一次白流量，而且会把上游的抖动放
           # 大成自己的 Pod 重启。详见 src/pages/healthz.ts。
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "10"]
           readinessProbe:
             httpGet:
               path: /healthz
