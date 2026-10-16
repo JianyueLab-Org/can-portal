@@ -21,11 +21,20 @@ permissions:
 # **那份数据搬进 can-db 了**，这个仓库现在一个字节都不带，所以它可以公开、可以拿到
 # 组织 secret、可以和另外五个卫星站用同一个三行的调用。少一份要各自维护的部署脚本。
 jobs:
+  check:
+    uses: ./.github/workflows/check.yml
+    permissions:
+      contents: read
+      packages: read
+
   deploy:
-    uses: JianyueLab-Org/actions/.github/workflows/deploy-k8s.yml@main
+    needs: check
+    uses: JianyueLab-Org/actions/.github/workflows/deploy-k8s.yml@615b32a26cc306ee63eefc3ae2cbee41bd5519e # main
     with:
       image: ghcr.io/jianyuelab-org/can-portal
       namespace: can-portal
       manifest: deploy/k8s.yaml
       environment_url: https://portal.ceruleanavi.net
-    secrets: inherit
+    secrets:
+      KUBECONFIG_B64: ${{ secrets.KUBECONFIG_B64 }}
+      GHCR_PULL_TOKEN: ${{ secrets.GHCR_PULL_TOKEN }}
