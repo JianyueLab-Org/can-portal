@@ -329,6 +329,14 @@
       "cancelConfirm": "Cancel this activity? It will no longer be shown.",
       "attendance": "Attendance",
       "attendanceHint": "Check who actually attended. Settling awards points and cannot be undone.",
+
+      "evidenceHint": "Online evidence is shown beside each member. Unchecked members without evidence may receive the expected no-show adjustment.",
+      "noEndEvidenceHint": "This activity has no end time, so online status cannot be checked and no automatic adjustment will be applied.",
+      "evidence": {
+        "online": "online evidence",
+        "missing": "no online evidence",
+        "unavailable": "not checked"
+      },
       "editHint": "Update the brief. Any SUP can edit it, whoever created the activity.",
       "createSuccess": "Activity created.",
       "updateSuccess": "Brief updated.",

@@ -329,6 +329,14 @@
       "cancelConfirm": "このイベントを中止しますか？以後は表示されなくなります。",
       "attendance": "参加確認",
       "attendanceHint": "実際に参加した人にチェックを入れてください。精算するとポイントが付与され、取り消せません。",
+
+      "evidenceHint": "Online evidence is shown beside each member. Unchecked members without evidence may receive the expected no-show adjustment.",
+      "noEndEvidenceHint": "This activity has no end time, so online status cannot be checked and no automatic adjustment will be applied.",
+      "evidence": {
+        "online": "online evidence",
+        "missing": "no online evidence",
+        "unavailable": "not checked"
+      },
       "editHint": "ブリーフィングを更新します。作成者にかかわらず、どのSUPでも編集できます。",
       "createSuccess": "イベントを作成しました。",
       "updateSuccess": "ブリーフィングを更新しました。",

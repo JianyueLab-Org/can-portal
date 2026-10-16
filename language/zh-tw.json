@@ -329,6 +329,14 @@
       "cancelConfirm": "確認取消該活動？取消後將不再顯示。",
       "attendance": "到場確認",
       "attendanceHint": "勾選實際到場的成員，結算後發放積分且不可更改。",
+
+      "evidenceHint": "每位成員旁顯示在線證據。未勾選且沒有證據的成員可能會按預計缺席調整處理。",
+      "noEndEvidenceHint": "本活動沒有結束時間，無法核驗在線狀態，也不會自動調整積分。",
+      "evidence": {
+        "online": "有在線證據",
+        "missing": "未檢測到在線",
+        "unavailable": "未檢測"
+      },
       "editHint": "更新活動簡述。不論由誰建立，所有 SUP 皆可修改。",
       "createSuccess": "活動已建立。",
       "updateSuccess": "活動簡述已更新。",

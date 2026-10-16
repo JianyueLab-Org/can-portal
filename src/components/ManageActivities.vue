@@ -2,7 +2,6 @@
 import { computed, onMounted, ref } from "vue";
 import { createTranslator } from "@/lib/i18n";
 import {
-  pointsFor,
   formatZulu,
   formatLocal,
   isValidActivityEnd,
@@ -23,6 +22,7 @@ import {
   Skeleton,
 } from "@jianyuelab-org/can-ui";
 import { apiFetch, unwrapList } from "@/lib/canApi";
+import { evidenceState, settlementPreview } from "@/lib/activitySettlement";
 
 const props = defineProps<{ messages: Record<string, unknown> }>();
 const t = createTranslator(props.messages);
@@ -48,6 +48,10 @@ interface RosterRow {
   role: number;
   attended: boolean;
   pointsAwarded: number;
+  /** Backend evidence from the activity window; absent on older API responses. */
+  onlineEvidence?: boolean;
+  /** Automatic no-show adjustment, zero when no end time exists. */
+  noShowPoints?: number;
 }
 
 const activities = ref<Activity[]>([]);
@@ -158,11 +162,22 @@ function statusVariant(status: number): "success" | "neutral" | "danger" {
 function roleLabel(role: number): string {
   return t(`roles.${ROLE_KEYS[role] ?? "pilot"}`);
 }
-/** Points an attendee in this seat would earn — 0 (shown as "—") for SUP. */
-function previewPoints(role: number): number {
-  if (!current.value) return 0;
-  const r: 0 | 1 | 2 = role === 2 ? 2 : role === 1 ? 1 : 0;
-  return pointsFor(r, current.value.professional);
+function settlementPoints(row: RosterRow): number {
+  const endsAt = current.value?.endsAt;
+  return settlementPreview(
+    row,
+    attended.value[row.username] === true,
+    Boolean(current.value?.professional),
+    Boolean(endsAt && Date.parse(endsAt) <= Date.now()),
+  );
+}
+function evidenceLabel(row: RosterRow): string {
+  return t(
+    `evidence.${evidenceState(current.value?.endsAt, row.onlineEvidence)}`,
+  );
+}
+function formatPoints(points: number): string {
+  return points > 0 ? `+${points}` : String(points);
 }
 /** Zulu and the viewer's own clock, side by side — never one without the other. */
 function formatDate(iso: string): string {
@@ -670,6 +685,9 @@ onMounted(load);
       <AlertBox v-if="dialogError" variant="danger" class="mb-4">{{
         dialogError
       }}</AlertBox>
+      <AlertBox variant="info" class="mb-4">
+        {{ current?.endsAt ? t("evidenceHint") : t("noEndEvidenceHint") }}
+      </AlertBox>
       <Skeleton v-if="rosterLoading" variant="text" :count="4" />
       <div
         v-else-if="!roster.length"
@@ -697,15 +715,25 @@ onMounted(load);
             <span class="truncate text-sm text-muted">{{ r.name }}</span>
           </label>
           <Badge variant="neutral" size="sm">{{ roleLabel(r.role) }}</Badge>
-          <span
-            v-if="attended[r.username] && previewPoints(r.role) > 0"
-            class="w-8 shrink-0 text-right text-xs font-semibold text-success-fg"
-          >
-            +{{ previewPoints(r.role) }}
+          <span class="min-w-24 text-right text-xs text-muted">
+            {{ evidenceLabel(r) }}
           </span>
-          <span v-else class="w-8 shrink-0 text-right text-xs text-faint"
-            >—</span
+          <span
+            class="w-10 shrink-0 text-right text-xs font-semibold"
+            :class="
+              settlementPoints(r) > 0
+                ? 'text-success-fg'
+                : settlementPoints(r) < 0
+                  ? 'text-danger-fg'
+                  : 'text-faint'
+            "
           >
+            {{
+              settlementPoints(r) === 0
+                ? "—"
+                : formatPoints(settlementPoints(r))
+            }}
+          </span>
         </li>
       </ul>
       <template #footer>
