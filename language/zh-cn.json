@@ -329,6 +329,14 @@
       "cancelConfirm": "确认取消该活动？取消后将不再展示。",
       "attendance": "到场确认",
       "attendanceHint": "勾选实际到场的成员，结算后发放积分且不可更改。",
+
+      "evidenceHint": "每位成员旁显示在线证据。未勾选且没有证据的成员可能会按预计缺席调整处理。",
+      "noEndEvidenceHint": "本活动没有结束时间，无法核验在线状态，也不会自动调整积分。",
+      "evidence": {
+        "online": "有在线证据",
+        "missing": "未检测到在线",
+        "unavailable": "未检测"
+      },
       "editHint": "更新活动简述。不论由谁创建，所有 SUP 均可修改。",
       "createSuccess": "活动已创建。",
       "updateSuccess": "活动简述已更新。",
