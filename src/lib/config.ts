@@ -97,8 +97,3 @@ export function signInUrl(returnTo?: URL): string {
   const target = `${origin()}${returnTo.pathname}${returnTo.search}`;
   return `${base}?callbackUrl=${encodeURIComponent(target)}`;
 }
-
-/** 主站上某个页面的绝对地址。侧栏的跨站链接都由它拼。 */
-export function webUrl(path: string): string {
-  return `${CAN_WEB_ORIGIN}${path}`;
-}

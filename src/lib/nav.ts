@@ -5,14 +5,9 @@
  * Vue 组件；搬过来之后拆成了「数据在这里、渲染交给 can-ui 的 `CanFrame`」两
  * 半，原因和 can-controller 的同名文件一样但很硬：
  *
- * **这个站的一部分链接是跨站的绝对地址**，而那些地址来自环境变量。
- * `src/lib/config.ts` 在模块顶层读 `process.env`，任何被岛屿 import 的模块这么
- * 做都会在浏览器里炸成 `process is not defined`。所以链接在 Astro 侧（服务端）
- * 拼好，作为 props 进岛屿。
+ * 跨站地址只有主站一个：`SITE_ORIGINS` 把 `CAN_WEB_ORIGIN` 交给 can-ui。
  *
- * 名字是 i18n 的**键**，不是文案：翻译发生在 `buildNavigation()` 里，键名一个
- * 字都没改，和 can-web 的 `frame` 命名空间对得上，所以四本词典是从那边整段切
- * 过来的而不是重写的。
+ * 名字是 i18n 的**键**，不是文案：翻译发生在 `buildNavigation()` 里。
  *
  * ## 两个前缀，一个侧栏 —— 这是这个站存在的形状
  *
@@ -150,7 +145,7 @@ export function buildNavigation(t: Translator, rating?: number): NavItem[] {
   if (rating === RATING_ADMIN) {
     items.push({
       name: t("admin.title"),
-      icon: "key",
+      icon: "cog6Tooth",
       children: children(ADMIN),
     });
   }
