@@ -22,6 +22,7 @@ import { apiFetch, unwrapList } from "@/lib/canApi";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  locale: string;
   sessionUserId: string;
   // `status` 由 SUP/ADM 修改；`instructor` / `director` 仍只有 ADM 能写。
   canEditStatus: boolean;
@@ -456,7 +457,7 @@ const permissionOptions = computed(() => [
 
           <template #cell-region="{ row }">
             <span :class="!row.status ? 'opacity-60' : ''">
-              {{ divisionTrans(row.region.toString()) }}
+              {{ divisionTrans(row.region, locale) }}
             </span>
           </template>
 
@@ -584,7 +585,7 @@ const permissionOptions = computed(() => [
                     type="text"
                     :label="t('region')"
                     :model-value="
-                      divisionTrans(editingController.region.toString())
+                      divisionTrans(editingController.region, locale)
                     "
                     disabled
                   />
