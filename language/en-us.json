@@ -63,12 +63,6 @@
       "reachable": "Sites you can use"
     }
   },
-  "notFound": {
-    "code": "404",
-    "title": "This page is off the charts",
-    "description": "The page you asked for does not exist, or it may have moved since you last flew here.",
-    "home": "Back to home"
-  },
   "roster": {
     "super": {
       "title": "Admin · ATC Roster",

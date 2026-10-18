@@ -292,3 +292,7 @@ bun run build && bun run start
 3. **can-web 的旧地址转向。** 已经加了（`src/pages/instr/[...path].astro` 和
    `src/pages/super/[...path].astro`），但那七个地址在教员们的书签和各分部的文档里
    躺了很久，转向要留足够久。
+
+## 页面宽度
+
+整站全宽。`CanFrame` 的正文区自带 `px-4 sm:px-6 lg:px-8`，没有最大宽度；页面不写 `mx-auto max-w-*`，也不加左右内边距。窄的只有卡片、对话框和长文的行宽。

@@ -63,12 +63,6 @@
       "reachable": "你可以使用的站点"
     }
   },
-  "notFound": {
-    "code": "404",
-    "title": "这个页面偏离了航路",
-    "description": "你访问的页面不存在，或者已经被移动到了别处。",
-    "home": "返回首页"
-  },
   "roster": {
     "super": {
       "title": "管理员 - 管制员名册",

@@ -195,7 +195,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 </script>
 
 <template>
-  <div class="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 lg:px-8">
+  <div class="w-full">
     <PageHeader
       :eyebrow="t('eyebrow')"
       :title="t('title')"
