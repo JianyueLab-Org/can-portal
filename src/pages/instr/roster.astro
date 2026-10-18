@@ -4,7 +4,8 @@ import SuperRoster from "@/components/SuperRoster.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 import { RATING_SUP } from "@jianyuelab-org/can-ui/sites";
 
-const messages = getMessages(getLocale(Astro.cookies), "roster.super");
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "roster.super");
 const sessionUserId = Astro.locals.user?.username ?? "";
 const canEditStatus = (Astro.locals.user?.rating ?? 0) >= RATING_SUP;
 const tf = useTranslations(getLocale(Astro.cookies), "frame");
@@ -13,6 +14,7 @@ const tf = useTranslations(getLocale(Astro.cookies), "frame");
 <AppLayout title={tf("instructors.items.roster")}>
   <SuperRoster
     messages={messages}
+    locale={locale}
     sessionUserId={sessionUserId}
     canEditStatus={canEditStatus}
     client:load

@@ -26,6 +26,7 @@ import { apiFetch } from "@/lib/canApi";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  locale: string;
   sessionUserId: string;
 }>();
 const t = createTranslator(props.messages);
@@ -183,7 +184,9 @@ const filteredUsers = computed<User[]>(() => {
  * back when the API picked one of the caller's division rows arbitrarily.
  */
 const regionLabel = computed(() =>
-  (promoteData.value?.regions ?? []).map(divisionTrans).join(" / "),
+  (promoteData.value?.regions ?? [])
+    .map((region) => divisionTrans(region, props.locale))
+    .join(" / "),
 );
 
 const totalUsers = computed(() => promoteData.value?.users.length || 0);
