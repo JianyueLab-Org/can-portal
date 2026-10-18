@@ -1,10 +1,5 @@
 {
   "frame": {
-    "controllers": {
-      "quickAccess": {
-        "title": "Quick Access"
-      }
-    },
     "instructors": {
       "title": "Instructors",
       "items": {
@@ -12,6 +7,9 @@
         "promotion": "Promotion",
         "sweatbox": "SweatBox"
       }
+    },
+    "sup": {
+      "title": "Supervisor (SUP)"
     },
     "admin": {
       "title": "Admin (ADM)",
@@ -36,18 +34,8 @@
       "hint": "Search"
     },
     "skipToContent": "Skip to main content",
-    "workspace": {
-      "label": "Workspace",
-      "pilots": "Pilots",
-      "controllers": "ATC",
-      "exams": "Exams"
-    },
     "closeSidebar": "Close navigation",
     "openSidebar": "Open navigation",
-    "atcRoster": "ATC Roster",
-    "activities": "Activities",
-    "rewards": "Points store",
-    "feedback": "Feedback outcomes",
     "servers": "Server directory",
     "signIn": "Sign In",
     "signingOut": "Signing out…",
@@ -329,7 +317,6 @@
       "cancelConfirm": "Cancel this activity? It will no longer be shown.",
       "attendance": "Attendance",
       "attendanceHint": "Check who actually attended. Settling awards points and cannot be undone.",
-
       "evidenceHint": "Online evidence is shown beside each member. Unchecked members without evidence may receive the expected no-show adjustment.",
       "noEndEvidenceHint": "This activity has no end time, so online status cannot be checked and no automatic adjustment will be applied.",
       "evidence": {

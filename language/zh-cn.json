@@ -1,10 +1,5 @@
 {
   "frame": {
-    "controllers": {
-      "quickAccess": {
-        "title": "快速访问"
-      }
-    },
     "instructors": {
       "title": "教员",
       "items": {
@@ -12,6 +7,9 @@
         "promotion": "晋升",
         "sweatbox": "模拟机场景"
       }
+    },
+    "sup": {
+      "title": "监理 (SUP)"
     },
     "admin": {
       "title": "管理员 (ADM)",
@@ -36,18 +34,8 @@
       "hint": "搜索"
     },
     "skipToContent": "跳到主要内容",
-    "workspace": {
-      "label": "工作区",
-      "pilots": "飞行员",
-      "controllers": "管制员",
-      "exams": "考试中心"
-    },
     "closeSidebar": "关闭导航",
     "openSidebar": "打开导航",
-    "atcRoster": "管制员名册",
-    "activities": "活动",
-    "rewards": "积分兑换",
-    "feedback": "处理结果公示",
     "servers": "服务器目录",
     "signIn": "登录",
     "signingOut": "正在退出…",
@@ -329,7 +317,6 @@
       "cancelConfirm": "确认取消该活动？取消后将不再展示。",
       "attendance": "到场确认",
       "attendanceHint": "勾选实际到场的成员，结算后发放积分且不可更改。",
-
       "evidenceHint": "每位成员旁显示在线证据。未勾选且没有证据的成员可能会按预计缺席调整处理。",
       "noEndEvidenceHint": "本活动没有结束时间，无法核验在线状态，也不会自动调整积分。",
       "evidence": {
