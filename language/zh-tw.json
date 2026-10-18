@@ -63,12 +63,6 @@
       "reachable": "你可以使用的站點"
     }
   },
-  "notFound": {
-    "code": "404",
-    "title": "這個頁面偏離了航路",
-    "description": "你造訪的頁面不存在，或者已經被移動到了別處。",
-    "home": "返回首頁"
-  },
   "roster": {
     "super": {
       "title": "管理員 - 管制員名冊",
