@@ -29,7 +29,7 @@
  *
  * 侧栏不分开，是因为一个既是教员又是 ADM 的人在两半之间要能走过去。分成两个
  * 侧栏之后，他在 `/instr/roster` 上就没有通往 `/super/promotions` 的入口了，只
- * 能背地址。导航按等级出现，本来就已经把两拨人分开了。
+ * 能背地址。导航按等级出现，教员、监理、ADM 三组各自按门槛显隐。
  */
 import type { Translator } from "@/lib/i18n";
 import type { IconName, NavItem, SiteOrigins } from "@jianyuelab-org/can-ui";
@@ -156,4 +156,17 @@ export function buildNavigation(t: Translator, rating?: number): NavItem[] {
   }
 
   return items;
+}
+
+/**
+ * 首页去哪：成员看得见的第一页。和侧栏读同一份 `buildNavigation`。
+ * 没有可见的页面时是 null。
+ */
+export function homePath(rating?: number): string | null {
+  for (const item of buildNavigation((key) => key, rating)) {
+    if (item.href) return item.href;
+    const child = item.children?.find((entry) => entry.href);
+    if (child) return child.href;
+  }
+  return null;
 }

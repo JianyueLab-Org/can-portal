@@ -905,28 +905,6 @@
       }
     }
   },
-  "portal": {
-    "title": "Instructors & Management",
-    "greeting": "Welcome back, {name}",
-    "description": "The network's management side: train students, approve promotions, run events, stock prizes, publish case outcomes. Which cards you see depends on your rating.",
-    "groups": {
-      "sup": "Supervisor (SUP)"
-    },
-    "cards": {
-      "roster": "Review and adjust controllers' division permissions.",
-      "promote": "Submit a promotion request for a student who has earned it.",
-      "sweatbox": "Generate EuroScope simulator scenarios before a training session.",
-      "activities": "Create events, write briefings, mark attendance, settle points.",
-      "prizes": "Maintain the prize store and process redemptions.",
-      "lottery": "Run prize draws from the shop, publish or cancel them, and see the winners.",
-      "points": "Grant or deduct member points by hand, and reverse mistakes.",
-      "feedback": "Publish the outcome of a handled case.",
-      "promotions": "Approve promotion requests submitted by instructors.",
-      "servers": "Maintain the server directory clients read their addresses from.",
-      "aipAccess": "Grant and revoke access to the aeronautical database.",
-      "developers": "Grant and revoke developer access to the developer centre."
-    }
-  },
   "aipAccess": {
     "eyebrow": "Administrator",
     "title": "Aeronautical database access",

@@ -54,10 +54,9 @@ describe("lottery.manage dictionary", () => {
     }
   });
 
-  test("names the page in the sidebar and on the home page", () => {
+  test("names the page in the sidebar", () => {
     for (const locale of LOCALES) {
       expect(typeof getMessages(locale, "frame").lotteryManage).toBe("string");
-      expect(typeof getMessages(locale, "portal.cards").lottery).toBe("string");
     }
   });
 });

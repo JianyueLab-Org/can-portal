@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test";
-import { buildNavigation } from "./nav";
+import { buildNavigation, homePath } from "./nav";
 
 const t = (key: string) => key;
 const groups = (rating?: number) =>
@@ -53,5 +53,17 @@ describe("buildNavigation", () => {
       expect(item.href).toBeUndefined();
       expect(item.children?.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("homePath", () => {
+  test("first page the rating can see", () => {
+    expect(homePath(8)).toBe("/instr/roster");
+    expect(homePath(11)).toBe("/instr/roster");
+    expect(homePath(12)).toBe("/instr/roster");
+  });
+
+  test("nothing visible, null", () => {
+    expect(homePath(undefined)).toBeNull();
   });
 });

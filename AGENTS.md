@@ -6,11 +6,14 @@
 
 **教员与管理门户** —— `portal.ceruleanavi.net`，Cerulean Aviation Network 的第七个
 Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 `/super/*` 整段搬
-出来的，搬的是**七个页面**；加上这里新写的，一共十二个页面和一张首页：
+出来的，搬的是**七个页面**；加上这里新写的，一共十二个页面。
+
+`/` 没有页面，302 到当前等级在侧栏里看得见的第一页，由 `src/lib/nav.ts` 的
+`homePath()` 按侧栏同一份数据算出；没有可见页面时改写到 `/denied`。没有卡片首页。
 
 | 这里                | 原来在 can-web      | 岛屿                    | 门槛 |
 | ------------------- | ------------------- | ----------------------- | ---- |
-| `/`                 | （新）              | 纯 Astro                | 8    |
+| `/`                 | （新）              | 无页面，302             | 8    |
 | `/instr/roster`     | `/instr/roster`     | `SuperRoster.vue`       | 8    |
 | `/instr/promote`    | `/instr/promote`    | `SuperPromote.vue`      | 8    |
 | `/instr/sweatbox`   | `/instr/sweatbox`   | `SweatboxGenerator.vue` | 8    |
