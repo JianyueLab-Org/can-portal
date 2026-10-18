@@ -3,13 +3,14 @@ import "@/styles/globals.css";
 import ThemeScript from "@jianyuelab-org/can-ui/components/ThemeScript.astro";
 import Frame from "@/components/Frame.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
-import { buildWorkspaces } from "@jianyuelab-org/can-ui";
-import { buildNavigation, buildSecondary, SITE_ORIGINS } from "@/lib/nav";
+import { buildNavigation, SITE_ORIGINS } from "@/lib/nav";
+import { pageTitle } from "@/lib/pageTitle";
 
 interface Props {
+  /** 页面名；站名由 `pageTitle` 拼在后面。 */
   title?: string;
 }
-const { title = "教员与管理 · Cerulean Aviation Network" } = Astro.props;
+const { title } = Astro.props;
 
 const locale = getLocale(Astro.cookies);
 const frameMessages = getMessages(locale, "frame");
@@ -26,22 +27,6 @@ const t = useTranslations(locale, "frame");
  */
 const user = Astro.locals.user;
 const navigation = buildNavigation(t, user?.rating);
-const secondary = buildSecondary(t, {
-  locale,
-  rating: user?.rating,
-  signedIn: !!user,
-});
-/**
- * 分区切换器，来自 can-ui。**高亮的是「管制员」而不是新开一格**：这些页面是从
- * 管制员中心的侧栏点进来的，教员做完手上的事要回去的也是那里。
- *
- * `origins` 和 `buildSecondary` 用同一份 `SITE_ORIGINS`（`lib/nav.ts`）。
- */
-const workspaces = buildWorkspaces(t, {
-  current: "portal",
-  rating: user?.rating,
-  origins: SITE_ORIGINS,
-});
 /** 账户菜单显示名字和 `#CID`；CID 是会话里的 `username`。 */
 const frameUser = user
   ? { name: user.name, id: user.username, rating: user.rating }
@@ -58,8 +43,17 @@ const pathname = Astro.originPathname;
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="icon" type="image/png" sizes="512x512" href="/icon-512.png" />
-    <meta name="theme-color" content="#4c92c1" />
-    <title>{title}</title>
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#ffffff"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#0b0f14"
+    />
+    <title>{pageTitle(title, locale)}</title>
     <ThemeScript />
   </head>
   <body>
@@ -67,8 +61,6 @@ const pathname = Astro.originPathname;
       locale={locale}
       pathname={pathname}
       nav={navigation}
-      secondary={secondary}
-      workspaces={workspaces}
       user={frameUser}
       aipAccess={user?.aipAccess ?? 0}
       messages={frameMessages}

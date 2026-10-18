@@ -1,10 +1,5 @@
 {
   "frame": {
-    "controllers": {
-      "quickAccess": {
-        "title": "快速存取"
-      }
-    },
     "instructors": {
       "title": "教員",
       "items": {
@@ -12,6 +7,9 @@
         "promotion": "晉升",
         "sweatbox": "模擬機場景"
       }
+    },
+    "sup": {
+      "title": "監理"
     },
     "admin": {
       "title": "管理員",
@@ -36,19 +34,9 @@
       "hint": "搜尋"
     },
     "skipToContent": "跳至主要內容",
-    "workspace": {
-      "label": "工作區",
-      "pilots": "飛行員",
-      "controllers": "管制員",
-      "exams": "考試中心"
-    },
     "closeSidebar": "關閉導覽",
     "openSidebar": "開啟導覽",
-    "atcRoster": "管制員名冊",
-    "activities": "活動",
-    "rewards": "積分兌換",
-    "feedback": "處理結果公示",
-    "servers": "服务器目录",
+    "servers": "伺服器目錄",
     "signIn": "登入",
     "signingOut": "正在登出…",
     "close": "關閉",
@@ -329,7 +317,6 @@
       "cancelConfirm": "確認取消該活動？取消後將不再顯示。",
       "attendance": "到場確認",
       "attendanceHint": "勾選實際到場的成員，結算後發放積分且不可更改。",
-
       "evidenceHint": "每位成員旁顯示在線證據。未勾選且沒有證據的成員可能會按預計缺席調整處理。",
       "noEndEvidenceHint": "本活動沒有結束時間，無法核驗在線狀態，也不會自動調整積分。",
       "evidence": {
@@ -916,28 +903,6 @@
         "airport": "機場",
         "rules": "飛行規則"
       }
-    }
-  },
-  "portal": {
-    "title": "教員與管理",
-    "greeting": "{name}，歡迎回來",
-    "description": "這裡是網路的管理面：帶學員、審晉升、辦活動、發獎品、公示處理結果。你看得見哪幾張卡片，取決於你的等級。",
-    "groups": {
-      "sup": "監理 (SUP)"
-    },
-    "cards": {
-      "roster": "檢視和調整管制員的分部權限。",
-      "promote": "為夠格的學員提交晉升申請。",
-      "sweatbox": "產生 EuroScope 模擬機場景，帶學員上機前用。",
-      "activities": "開活動、寫簡報、點名、結算積分。",
-      "prizes": "維護積分商城的獎品，處理兌換。",
-      "lottery": "用商店獎品開抽獎，發布、取消、查看中獎名單。",
-      "points": "為成員手動發放或扣除積分，撤銷誤操作。",
-      "feedback": "發布處理結果公示。",
-      "promotions": "審批教員提交的晉升申請。",
-      "servers": "維護用戶端讀取位址的伺服器目錄。",
-      "aipAccess": "授予和撤銷航行資料庫的存取權限。",
-      "developers": "授予和撤銷開發者中心的開發者權限。"
     }
   },
   "aipAccess": {

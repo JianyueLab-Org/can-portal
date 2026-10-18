@@ -12,7 +12,7 @@ Cerulean Aviation Network 的管理面：带学员、审晋升、办活动、发
 
 | 地址                | 做什么                                     | 最低等级 |
 | ------------------- | ------------------------------------------ | -------- |
-| `/`                 | 入口清单，按等级过滤                       | 8 (I1)   |
+| `/`                 | 302 到当前等级看得见的第一页               | 8 (I1)   |
 | `/instr/roster`     | 花名册 —— 看和改管制员的分部权限           | 8 (I1)   |
 | `/instr/promote`    | 晋升 —— 为够格的学员提交申请               | 8 (I1)   |
 | `/instr/sweatbox`   | 模拟机场景生成器                           | 8 (I1)   |
@@ -22,10 +22,12 @@ Cerulean Aviation Network 的管理面：带学员、审晋升、办活动、发
 | `/super/points`     | 积分调整 —— 手动发放、扣除、撤销           | 11 (SUP) |
 | `/super/feedback`   | 处理结果公示                               | 11 (SUP) |
 | `/super/promotions` | 晋升审批                                   | 11 (SUP) |
+| `/super/servers`    | 服务器目录                                 | 11 (SUP) |
+| `/super/aip-access` | 航行资料库访问授权                         | 12 (ADM) |
+| `/super/developers` | 开发者授权                                 | 12 (ADM) |
 
-等级门槛在三个地方生效，而且读的是同一组常量：中间件（进不去）、侧栏（看不见）、
-首页卡片（列不出）。**真正拦住数据的是 can-api**，这三处都只是不给人看点下去必然
-403 的东西。
+等级门槛在两个地方生效，而且读的是同一组常量：中间件（进不去）、侧栏（看不见）。
+**真正拦住数据的是 can-api**，这两处都只是不给人看点下去必然 403 的东西。
 
 ## 跑起来
 
@@ -80,6 +82,6 @@ SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/Sector bun run build:sweatbo
 
 - **can-api** — 数据全部来自它。这个站的每一次读写最终都落到它的 `/api/v1/super/*`。
 - **can-web** — 主站。登录页在那儿，被搬走的七个地址在那儿有转向。
-- **can-controller** — 管制员中心。它的侧栏链到这里的教员和 ADM 页面。
+- **can-controller** — 管制员中心。这里的页面经网络切换器进入，它的侧栏不链到这里。
 - **can-ui** — 设计系统。这个站的每一个组件都来自它。
 - **Sector** — SweatBox 参考数据的来源。

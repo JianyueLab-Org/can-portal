@@ -5,16 +5,13 @@
  * Vue 组件；搬过来之后拆成了「数据在这里、渲染交给 can-ui 的 `CanFrame`」两
  * 半，原因和 can-controller 的同名文件一样但很硬：
  *
- * **这个站的一部分链接是跨站的绝对地址**，而那些地址来自环境变量。
- * `src/lib/config.ts` 在模块顶层读 `process.env`，任何被岛屿 import 的模块这么
- * 做都会在浏览器里炸成 `process is not defined`。所以链接在 Astro 侧（服务端）
- * 拼好，作为 props 进岛屿。
+ * 跨站地址只有主站一个：`SITE_ORIGINS` 把 `CAN_WEB_ORIGIN` 交给 can-ui。
  *
- * 名字是 i18n 的**键**，不是文案：翻译发生在 `buildNavigation()` 里，键名一个
- * 字都没改，和 can-web 的 `frame` 命名空间对得上，所以四本词典是从那边整段切
- * 过来的而不是重写的。
+ * 名字是 i18n 的**键**，不是文案：翻译发生在 `buildNavigation()` 里。
  *
  * ## 两个前缀，一个侧栏 —— 这是这个站存在的形状
+ *
+ * 侧栏三组：教员（8）、监理（11）、ADM（12）。
  *
  * 这些页面分在 `/instr/*` 和 `/super/*` 下，而侧栏只有一个。这两句都要成立：
  *
@@ -27,51 +24,47 @@
  *
  * 侧栏不分开，是因为一个既是教员又是 ADM 的人在两半之间要能走过去。分成两个
  * 侧栏之后，他在 `/instr/roster` 上就没有通往 `/super/promotions` 的入口了，只
- * 能背地址。导航按等级出现，本来就已经把两拨人分开了。
+ * 能背地址。导航按等级出现，教员、监理、ADM 三组各自按门槛显隐。
  */
 import type { Translator } from "@/lib/i18n";
-import type {
-  IconName,
-  NavItem,
-  NavSecondary,
-  SiteOrigins,
-} from "@jianyuelab-org/can-ui";
+import type { IconName, NavItem, SiteOrigins } from "@jianyuelab-org/can-ui";
 import {
   RATING_ADMIN,
   RATING_INSTRUCTOR,
   RATING_SUP,
-  visibleSites,
-  WORKSPACE_SITE_KEYS,
-} from "@jianyuelab-org/can-ui";
-import { CAN_WEB_ORIGIN, webUrl } from "@/lib/config";
+} from "@jianyuelab-org/can-ui/sites";
+import { CAN_WEB_ORIGIN } from "@/lib/config";
 
 /**
- * 传给 `visibleSites`/`buildWorkspaces` 的 dev/staging 覆盖。这个仓库的
- * `config.ts` 只读得到 `CAN_WEB_ORIGIN`，所以只覆盖这一个：本地和 staging 上常
- * 用链接、分区切换器里指向主站的那一条会落在本环境自己的主站，而不是永远指向
- * 线上；生产环境这个变量本来就是线上地址，行为不变。
+ * 传给 can-ui 的 dev/staging 覆盖。这个仓库的 `config.ts` 只读得到
+ * `CAN_WEB_ORIGIN`，所以只覆盖这一个：本地和 staging 上指向主站的链接会落在本
+ * 环境自己的主站，而不是永远指向线上；生产环境这个变量本来就是线上地址，行为
+ * 不变。
  */
 export const SITE_ORIGINS: SiteOrigins = {
   web: CAN_WEB_ORIGIN,
 };
 
-/**
- * 教员那一组 —— 等级 8 起。三条都是本站的页面。
- *
- * 折叠成一组而不是三条平铺：一个 SUP 同时看得见这一组和下面那几条，平铺会让侧
- * 栏变成七条没有层次的链接，而它们本来就分属两件事。
- */
-const INSTRUCTOR: Array<{ key: string; href: string }> = [
-  { key: "instructors.items.roster", href: "/instr/roster" },
-  { key: "instructors.items.promotion", href: "/instr/promote" },
-  { key: "instructors.items.sweatbox", href: "/instr/sweatbox" },
+/** 教员那一组 —— 等级 8 起。三条都是本站的页面。 */
+const INSTRUCTOR: Array<{ key: string; href: string; icon: IconName }> = [
+  { key: "instructors.items.roster", href: "/instr/roster", icon: "users" },
+  {
+    key: "instructors.items.promotion",
+    href: "/instr/promote",
+    icon: "academicCap",
+  },
+  {
+    key: "instructors.items.sweatbox",
+    href: "/instr/sweatbox",
+    icon: "computerDesktop",
+  },
 ];
 
 /**
- * SUP 那三条 —— 等级 11 起，平铺而不折叠。
+ * 监理那一组 —— 等级 11 起，七条。
  *
  * 活动管理是 SUP/ADM（发积分的就是他们），所以配奖品的也是 SUP；处理结果公示
- * 同理。这三条在 can-web 上就是平铺的，照搬。
+ * 同理。
  */
 const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   { key: "activitiesManage", href: "/super/activities", icon: "calendarDays" },
@@ -81,7 +74,7 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   // 积分手动调整。和奖品、抽奖同一档（11）：can-api 的路由是 `WithSup`。
   { key: "pointsManage", href: "/super/points", icon: "adjustments" },
   { key: "feedbackManage", href: "/super/feedback", icon: "megaphone" },
-  // 服务器目录。和上面三条同一档（11）：搬一台 FSD 或语音服务器是运维决定，而跑
+  // 服务器目录。和上面几条同一档（11）：搬一台 FSD 或语音服务器是运维决定，而跑
   // 活动的那一层就是做运维的那一层。
   { key: "servers", href: "/super/servers", icon: "signal" },
   // 晋升审批。SUP 起就能批（can-api 的决定路由是 `WithSup`）；教员提，SUP/ADM 批。
@@ -92,16 +85,16 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   },
 ];
 
-/**
- * ADM 那几条 —— 等级 12。
- */
-const ADMIN: Array<{ key: string; href: string }> = [
-  // 航行资料库（can-db）的访问授权。ADM 的事 —— 「决定别人能做什么」，而不是
-  // 网络的日常运营。
-  { key: "admin.items.aipAccess", href: "/super/aip-access" },
-  // 开发者授权（can-dev）。和上面一条同一组，同一条理由：都是「决定别人能做什
-  // 么」。这一条决定的是谁能做出一张挂着本网络名字、向其他成员要授权的同意页。
-  { key: "admin.items.developers", href: "/super/developers" },
+/** ADM 那两条 —— 等级 12。都是「决定别人能做什么」。 */
+const ADMIN: Array<{ key: string; href: string; icon: IconName }> = [
+  // 航行资料库（can-db）的访问授权。
+  { key: "admin.items.aipAccess", href: "/super/aip-access", icon: "key" },
+  // 开发者授权（can-dev）：谁能做出一张挂着本网络名字、向其他成员要授权的同意页。
+  {
+    key: "admin.items.developers",
+    href: "/super/developers",
+    icon: "commandLine",
+  },
 ];
 
 /**
@@ -124,37 +117,36 @@ const ADMIN: Array<{ key: string; href: string }> = [
 export function buildNavigation(t: Translator, rating?: number): NavItem[] {
   if (typeof rating !== "number") return [];
 
+  const children = (entries: typeof SUP) =>
+    entries.map((entry) => ({
+      name: t(entry.key),
+      href: entry.href,
+      icon: entry.icon,
+    }));
+
   const items: NavItem[] = [];
 
   if (rating >= RATING_INSTRUCTOR) {
     items.push({
       name: t("instructors.title"),
-      icon: "shieldCheck",
-      children: INSTRUCTOR.map((entry) => ({
-        name: t(entry.key),
-        href: entry.href,
-      })),
+      icon: "academicCap",
+      children: children(INSTRUCTOR),
     });
   }
 
   if (rating >= RATING_SUP) {
-    items.push(
-      ...SUP.map((entry) => ({
-        name: t(entry.key),
-        href: entry.href,
-        icon: entry.icon,
-      })),
-    );
+    items.push({
+      name: t("sup.title"),
+      icon: "shieldCheck",
+      children: children(SUP),
+    });
   }
 
   if (rating === RATING_ADMIN) {
     items.push({
       name: t("admin.title"),
-      icon: "shieldCheck",
-      children: ADMIN.map((entry) => ({
-        name: t(entry.key),
-        href: entry.href,
-      })),
+      icon: "cog6Tooth",
+      children: children(ADMIN),
     });
   }
 
@@ -162,52 +154,14 @@ export function buildNavigation(t: Translator, rating?: number): NavItem[] {
 }
 
 /**
- * 钉在轨底的常用链接，全部跨站。
- *
- * 每一条都是「在这个工作台上做完事之后，要去核对的那一面」：公开花名册是花名册
- * 页面写完之后成员看到的样子，活动、积分兑换、处理结果公示同理 —— 管理端在这
- * 里，成员端在主站，管理员两边都要看。
- *
- * 它们是钉住的而不是一个「快速访问」折叠菜单 —— can-web 上正是后者，那让最常用
- * 的几条多了两次点击。
+ * 首页去哪：成员看得见的第一页。和侧栏读同一份 `buildNavigation`。
+ * 没有可见的页面时是 null。
  */
-export function buildSecondary(
-  t: Translator,
-  opts: { locale: string; rating?: number; signedIn: boolean },
-): NavSecondary {
-  return {
-    label: t("controllers.quickAccess.title"),
-    items: [
-      { name: t("atcRoster"), href: webUrl("/roster"), icon: "users" },
-      {
-        name: t("activities"),
-        href: webUrl("/activities"),
-        icon: "calendarDays",
-      },
-      { name: t("rewards"), href: webUrl("/rewards"), icon: "gift" },
-      { name: t("feedback"), href: webUrl("/feedback"), icon: "megaphone" },
-      // 网络上的其它站。从前这里只硬编码着「会员文档」一条 —— 于是一个教员从门
-      // 户去不了雷达、EFB、考试中心，而全网另外三个仓库各自维护着一份不一样的
-      // 清单。现在这份来自 can-ui，九个站一份，门户和资料库按评级决定露不露。
-      //
-      // 本站顶上画着 `buildWorkspaces` 那份分区切换器（高亮「管制员」，见
-      // can-ui `sites.ts` 关于 can-portal 的说明），管制员中心和考试中心已经在
-      // 那上面。这里要按 WORKSPACE_SITE_KEYS 排掉同样这两个，不然它们在切换器
-      // 和这份常用链接里各出现一次。
-      ...visibleSites({
-        locale: opts.locale,
-        current: "portal",
-        rating: opts.rating,
-        signedIn: opts.signedIn,
-        excludeCurrent: true,
-        origins: SITE_ORIGINS,
-      })
-        .filter((site) => !WORKSPACE_SITE_KEYS.includes(site.key))
-        .map((site) => ({
-          name: site.name,
-          href: site.href,
-          icon: site.icon,
-        })),
-    ],
-  };
+export function homePath(rating?: number): string | null {
+  for (const item of buildNavigation((key) => key, rating)) {
+    if (item.href) return item.href;
+    const child = item.children?.find((entry) => entry.href);
+    if (child) return child.href;
+  }
+  return null;
 }

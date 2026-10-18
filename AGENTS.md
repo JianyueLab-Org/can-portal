@@ -6,11 +6,14 @@
 
 **教员与管理门户** —— `portal.ceruleanavi.net`，Cerulean Aviation Network 的第七个
 Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 `/super/*` 整段搬
-出来的，搬的是**七个页面**；加上这里新写的，一共十二个页面和一张首页：
+出来的，搬的是**七个页面**；加上这里新写的，一共十二个页面。
+
+`/` 没有页面，302 到当前等级在侧栏里看得见的第一页，由 `src/lib/nav.ts` 的
+`homePath()` 按侧栏同一份数据算出；没有可见页面时改写到 `/denied`。没有卡片首页。
 
 | 这里                | 原来在 can-web      | 岛屿                    | 门槛 |
 | ------------------- | ------------------- | ----------------------- | ---- |
-| `/`                 | （新）              | 纯 Astro                | 8    |
+| `/`                 | （新）              | 无页面，302             | 8    |
 | `/instr/roster`     | `/instr/roster`     | `SuperRoster.vue`       | 8    |
 | `/instr/promote`    | `/instr/promote`    | `SuperPromote.vue`      | 8    |
 | `/instr/sweatbox`   | `/instr/sweatbox`   | `SweatboxGenerator.vue` | 8    |
@@ -80,7 +83,7 @@ ImagePullBackOff。
 
 **侧栏不分开**，因为一个既是教员又是 ADM 的人要能在两半之间走过去。分成两个侧栏
 之后，他在 `/instr/roster` 上就没有通往 `/super/promotions` 的入口了，只能背地
-址。导航按等级出现（`src/lib/nav.ts`），本来就已经把两拨人分开了。
+址。侧栏三组：教员（8）、监理（11）、ADM（12），按等级出现（`src/lib/nav.ts`），把几拨人分开。
 
 ## 中间件按 rating 挡人，这是这个站和另外六个的区别
 
@@ -96,7 +99,7 @@ ImagePullBackOff。
 `NoAccess` 说明缺哪一级，并列出他还能去的站。
 
 三个数字（8 / 11 / 12）是 can-ui 的 `RATING_*`（`@jianyuelab-org/can-ui/sites`），
-中间件、侧栏和首页卡片各自 import 同一份。**它们必须一致**：侧栏按一个数显示、中间件按另一
+中间件和侧栏各自 import 同一份。**它们必须一致**：侧栏按一个数显示、中间件按另一
 个数放行，会做出一个「看得见但点不进去」的菜单，而那种不一致没有任何测试会发现。
 
 **这仍然是便利，不是边界。** 真正的判断在 can-api 每条路由自己的守卫上

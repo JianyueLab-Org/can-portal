@@ -1,16 +1,17 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import SuperPromotions from "@/components/SuperPromotions.vue";
-import { getLocale, getMessages } from "@/lib/i18n";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 import { RATING_SUP } from "@jianyuelab-org/can-ui/sites";
 
 const messages = getMessages(getLocale(Astro.cookies), "promotion.super");
 const sessionUserId = Astro.locals.user?.username ?? "";
 const viewerRating = Astro.locals.user?.rating ?? 0;
 const canReview = viewerRating >= RATING_SUP;
+const tf = useTranslations(getLocale(Astro.cookies), "frame");
 ---
 
-<AppLayout title="晋升审批 · Cerulean Aviation Network">
+<AppLayout title={tf("admin.items.promote")}>
   <SuperPromotions
     messages={messages}
     sessionUserId={sessionUserId}

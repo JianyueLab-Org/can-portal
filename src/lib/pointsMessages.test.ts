@@ -79,11 +79,10 @@ describe("points.manage dictionary", () => {
     }
   });
 
-  test("names the page in the sidebar and on the home page", () => {
+  test("names the page in the sidebar", () => {
     for (const locale of LOCALES) {
       const dict = dictionary(locale);
       expect(typeof at(dict, "frame").pointsManage).toBe("string");
-      expect(typeof at(dict, "portal.cards").points).toBe("string");
     }
   });
 });

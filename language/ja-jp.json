@@ -1,10 +1,5 @@
 {
   "frame": {
-    "controllers": {
-      "quickAccess": {
-        "title": "クイックアクセス"
-      }
-    },
     "instructors": {
       "title": "教官",
       "items": {
@@ -12,6 +7,9 @@
         "promotion": "昇格",
         "sweatbox": "シミュレータ・シナリオ"
       }
+    },
+    "sup": {
+      "title": "監理（SUP）"
     },
     "admin": {
       "title": "管理者（ADM）",
@@ -36,19 +34,9 @@
       "hint": "検索"
     },
     "skipToContent": "本文へスキップ",
-    "workspace": {
-      "label": "ワークスペース",
-      "pilots": "パイロット",
-      "controllers": "管制員",
-      "exams": "試験センター"
-    },
     "closeSidebar": "ナビゲーションを閉じる",
     "openSidebar": "ナビゲーションを開く",
-    "atcRoster": "管制員名簿",
-    "activities": "イベント",
-    "rewards": "ポイント交換",
-    "feedback": "対応結果の公示",
-    "servers": "服务器目录",
+    "servers": "サーバー一覧",
     "signIn": "ログイン",
     "signingOut": "ログアウト中…",
     "close": "閉じる",
@@ -329,7 +317,6 @@
       "cancelConfirm": "このイベントを中止しますか？以後は表示されなくなります。",
       "attendance": "参加確認",
       "attendanceHint": "実際に参加した人にチェックを入れてください。精算するとポイントが付与され、取り消せません。",
-
       "evidenceHint": "Online evidence is shown beside each member. Unchecked members without evidence may receive the expected no-show adjustment.",
       "noEndEvidenceHint": "This activity has no end time, so online status cannot be checked and no automatic adjustment will be applied.",
       "evidence": {
@@ -916,28 +903,6 @@
         "airport": "空港",
         "rules": "飛行方式"
       }
-    }
-  },
-  "portal": {
-    "title": "教官と管理",
-    "greeting": "{name} さん、おかえりなさい",
-    "description": "ネットワークの管理側です。学生の指導、昇格の承認、イベントの運営、景品の管理、処理結果の公示。表示されるカードは自分のレーティングによって変わります。",
-    "groups": {
-      "sup": "スーパーバイザー (SUP)"
-    },
-    "cards": {
-      "roster": "管制官の分区権限を確認・変更します。",
-      "promote": "条件を満たした学生の昇格を申請します。",
-      "sweatbox": "訓練前に EuroScope のシミュレーターシナリオを生成します。",
-      "activities": "イベントの作成、ブリーフィング、出欠確認、ポイント精算。",
-      "prizes": "景品ストアの管理と交換の処理。",
-      "lottery": "ストアの景品で抽選を作成し、公開・中止、当選者の確認を行います。",
-      "points": "メンバーのポイントを手動で付与・減算し、誤りを取り消します。",
-      "feedback": "処理結果を公示します。",
-      "promotions": "教官が提出した昇格申請を承認します。",
-      "servers": "クライアントが接続先を読み込むサーバーディレクトリを管理します。",
-      "aipAccess": "航空情報データベースへのアクセス権を付与・取り消します。",
-      "developers": "デベロッパーセンターの開発者権限を付与・取り消します。"
     }
   },
   "aipAccess": {

@@ -29,7 +29,7 @@ jobs:
 
   deploy:
     needs: check
-    uses: JianyueLab-Org/actions/.github/workflows/deploy-k8s.yml@615b32a26cc306ee63eefc3ae2cbee41bd5519e # main
+    uses: JianyueLab-Org/actions/.github/workflows/deploy-k8s.yml@615b32a26cc306ee63eefc3ae2cbee41bd5519e1 # main
     with:
       image: ghcr.io/jianyuelab-org/can-portal
       namespace: can-portal

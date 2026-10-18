@@ -1,10 +1,5 @@
 {
   "frame": {
-    "controllers": {
-      "quickAccess": {
-        "title": "快速访问"
-      }
-    },
     "instructors": {
       "title": "教员",
       "items": {
@@ -12,6 +7,9 @@
         "promotion": "晋升",
         "sweatbox": "模拟机场景"
       }
+    },
+    "sup": {
+      "title": "监理 (SUP)"
     },
     "admin": {
       "title": "管理员 (ADM)",
@@ -36,18 +34,8 @@
       "hint": "搜索"
     },
     "skipToContent": "跳到主要内容",
-    "workspace": {
-      "label": "工作区",
-      "pilots": "飞行员",
-      "controllers": "管制员",
-      "exams": "考试中心"
-    },
     "closeSidebar": "关闭导航",
     "openSidebar": "打开导航",
-    "atcRoster": "管制员名册",
-    "activities": "活动",
-    "rewards": "积分兑换",
-    "feedback": "处理结果公示",
     "servers": "服务器目录",
     "signIn": "登录",
     "signingOut": "正在退出…",
@@ -329,7 +317,6 @@
       "cancelConfirm": "确认取消该活动？取消后将不再展示。",
       "attendance": "到场确认",
       "attendanceHint": "勾选实际到场的成员，结算后发放积分且不可更改。",
-
       "evidenceHint": "每位成员旁显示在线证据。未勾选且没有证据的成员可能会按预计缺席调整处理。",
       "noEndEvidenceHint": "本活动没有结束时间，无法核验在线状态，也不会自动调整积分。",
       "evidence": {
@@ -916,28 +903,6 @@
         "airport": "机场",
         "rules": "飞行规则"
       }
-    }
-  },
-  "portal": {
-    "title": "教员与管理",
-    "greeting": "{name}，欢迎回来",
-    "description": "这里是网络的管理面：带学员、审晋升、办活动、发奖品、公示处理结果。你看得见哪几张卡片，取决于你的等级。",
-    "groups": {
-      "sup": "监理 (SUP)"
-    },
-    "cards": {
-      "roster": "查看和调整管制员的分部权限。",
-      "promote": "为够格的学员提交晋升申请。",
-      "sweatbox": "生成 EuroScope 模拟机场景，带学员上机前用。",
-      "activities": "开活动、写简报、点名、结算积分。",
-      "prizes": "维护积分商城的奖品，处理兑换。",
-      "lottery": "用商店奖品开抽奖，发布、取消、查看中奖名单。",
-      "points": "为成员手动发放或扣除积分，撤销误操作。",
-      "feedback": "发布处理结果公示。",
-      "promotions": "审批教员提交的晋升申请。",
-      "servers": "维护客户端读取地址的服务器目录。",
-      "aipAccess": "授予和撤销航行资料库的访问权限。",
-      "developers": "授予和撤销开发者中心的开发者权限。"
     }
   },
   "aipAccess": {

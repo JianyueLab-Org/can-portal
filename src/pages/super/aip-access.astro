@@ -1,7 +1,7 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import AipAccess from "@/components/AipAccess.vue";
-import { getLocale, getMessages } from "@/lib/i18n";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 
 /**
  * 航行资料库的访问授权 —— **ADM only**。
@@ -13,8 +13,9 @@ import { getLocale, getMessages } from "@/lib/i18n";
 const locale = getLocale(Astro.cookies);
 const messages = getMessages(locale, "aipAccess");
 const sessionUserId = Astro.locals.user?.username ?? "";
+const tf = useTranslations(locale, "frame");
 ---
 
-<AppLayout title="资料库权限 · Cerulean Aviation Network">
+<AppLayout title={tf("admin.items.aipAccess")}>
   <AipAccess messages={messages} sessionUserId={sessionUserId} client:load />
 </AppLayout>

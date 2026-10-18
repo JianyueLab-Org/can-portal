@@ -18,9 +18,7 @@ import {
   originsFromEnv,
   type FrameUser,
   type NavItem,
-  type NavSecondary,
   type SiteOrigins,
-  type Workspace,
 } from "@jianyuelab-org/can-ui";
 import { createTranslator } from "@/lib/i18n";
 import { AIP_RESTRICTED_CALL, readHideNaip, writeHideNaip } from "@/lib/naip";
@@ -29,8 +27,6 @@ const props = defineProps<{
   locale: string;
   pathname: string;
   nav: NavItem[];
-  secondary?: NavSecondary;
-  workspaces?: Workspace[];
   user: FrameUser | null;
   /** 成员的 aipAccess。只决定「隐藏 NAIP」那一项出不出。 */
   aipAccess: number;
@@ -63,9 +59,6 @@ function toggleHideNaip() {
     :locale="locale"
     :pathname="pathname"
     :nav="nav"
-    :secondary="secondary"
-    :workspaces="workspaces"
-    active-workspace="controllers"
     :user="user"
     notifications
     :messages="messages"
