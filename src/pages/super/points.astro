@@ -1,7 +1,7 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import ManagePoints from "@/components/ManagePoints.vue";
-import { getLocale, getMessages } from "@/lib/i18n";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 
 /**
  * 积分手动调整 —— SUP/ADM（`/super/*` 前缀，中间件按 11 级判）。
@@ -12,8 +12,9 @@ import { getLocale, getMessages } from "@/lib/i18n";
 const locale = getLocale(Astro.cookies);
 const messages = getMessages(locale, "points.manage");
 const sessionUserId = Astro.locals.user?.username ?? "";
+const tf = useTranslations(locale, "frame");
 ---
 
-<AppLayout title="积分调整 · Cerulean Aviation Network">
+<AppLayout title={tf("pointsManage")}>
   <ManagePoints messages={messages} sessionUserId={sessionUserId} client:load />
 </AppLayout>

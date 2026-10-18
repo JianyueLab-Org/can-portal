@@ -1,15 +1,16 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import ManageActivities from "@/components/ManageActivities.vue";
-import { getLocale, getMessages } from "@/lib/i18n";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 
 const locale = getLocale(Astro.cookies);
 const messages = {
   ...getMessages(locale, "activities.common"),
   ...getMessages(locale, "activities.manage"),
 };
+const tf = useTranslations(locale, "frame");
 ---
 
-<AppLayout title="活动管理 · Cerulean Aviation Network">
+<AppLayout title={tf("activitiesManage")}>
   <ManageActivities messages={messages} client:load />
 </AppLayout>

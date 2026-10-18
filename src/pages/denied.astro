@@ -22,7 +22,7 @@ const messages = getMessages(locale, "frame");
 const origins = { ...originsFromEnv(import.meta.env), ...SITE_ORIGINS };
 ---
 
-<AppLayout title={`${t("noAccess.title")} · Cerulean Aviation Network`}>
+<AppLayout title={t("noAccess.title")}>
   <NoAccess
     reason={reason}
     userName={user.name}

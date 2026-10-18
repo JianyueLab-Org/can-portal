@@ -1,12 +1,13 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import ManagePrizes from "@/components/ManagePrizes.vue";
-import { getLocale, getMessages } from "@/lib/i18n";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 
 const locale = getLocale(Astro.cookies);
 const messages = getMessages(locale, "rewards.manage");
+const tf = useTranslations(locale, "frame");
 ---
 
-<AppLayout title="奖品管理 · Cerulean Aviation Network">
+<AppLayout title={tf("prizesManage")}>
   <ManagePrizes messages={messages} client:load />
 </AppLayout>

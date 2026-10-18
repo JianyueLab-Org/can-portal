@@ -1,7 +1,7 @@
 ---
 import AppLayout from "@/layouts/AppLayout.astro";
 import Developers from "@/components/Developers.vue";
-import { getLocale, getMessages } from "@/lib/i18n";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
 
 /**
  * 开发者授权 —— **ADM only**。
@@ -14,8 +14,9 @@ import { getLocale, getMessages } from "@/lib/i18n";
 const locale = getLocale(Astro.cookies);
 const messages = getMessages(locale, "developers");
 const sessionUserId = Astro.locals.user?.username ?? "";
+const tf = useTranslations(locale, "frame");
 ---
 
-<AppLayout title="开发者授权 · Cerulean Aviation Network">
+<AppLayout title={tf("admin.items.developers")}>
   <Developers messages={messages} sessionUserId={sessionUserId} client:load />
 </AppLayout>

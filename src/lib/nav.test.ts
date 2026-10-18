@@ -65,5 +65,6 @@ describe("homePath", () => {
 
   test("nothing visible, null", () => {
     expect(homePath(undefined)).toBeNull();
+    expect(homePath(5)).toBeNull();
   });
 });
