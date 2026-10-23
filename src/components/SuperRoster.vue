@@ -26,6 +26,8 @@ const props = defineProps<{
   sessionUserId: string;
   // `status` 由 SUP/ADM 修改；`instructor` / `director` 仍只有 ADM 能写。
   canEditStatus: boolean;
+  // ADM 才能授予或撤销教员权限（can-api 的 `elevatedRosterFlags`）。
+  canEditInstructor: boolean;
 }>();
 const t = createTranslator(props.messages);
 
@@ -208,8 +210,9 @@ async function handleSaveChanges() {
     // 只发这些：instructor / director 要 ADM 才能写，status 由 SUP/ADM 修改，
     // home 任何路径都不可写——入籍是单向的，转籍是另一条路。
     //
-    // status 只在真的改了时才发。can-api 看的是键在不在，不是值变没变：
-    // 原样带上它，教员和 SUP 连只改一个 GND 签注都会 403。
+    // status 和 instructor 只在真的改了时才发。can-api 看的是键在不在，不是值
+    // 变没变：原样带上 status，教员和 SUP 连只改一个 GND 签注都会 403；
+    // instructor 同理，非 ADM 带上它也是 403。
     const flags: Record<string, boolean> = {
       del: editingController.value.del,
       gnd: editingController.value.gnd,
@@ -219,6 +222,11 @@ async function handleSaveChanges() {
     };
     if (editingController.value.status !== selectedController.value.status) {
       flags.status = editingController.value.status;
+    }
+    if (
+      editingController.value.instructor !== selectedController.value.instructor
+    ) {
+      flags.instructor = editingController.value.instructor;
     }
     const updateData = { region: editingController.value.region, flags };
 
@@ -288,7 +296,8 @@ const controlPositions = computed(
 );
 
 // Instructor / director / home are granted through a formal process and are
-// read-only here — one shape for all three.
+// read-only here — one shape for all three. The one exception: an ADM gets a
+// switch for `instructor`.
 const grantedFlags = computed(
   () =>
     [
@@ -607,7 +616,8 @@ const permissionOptions = computed(() => [
                 />
               </section>
 
-              <!-- Special Permissions — read-only, granted elsewhere. -->
+              <!-- Special Permissions — read-only, granted elsewhere, except
+                   `instructor` for an ADM. -->
               <section>
                 <h3
                   class="mb-3 text-sm font-semibold uppercase tracking-wider text-faint"
@@ -615,30 +625,34 @@ const permissionOptions = computed(() => [
                   {{ t("specialPermissions") }}
                 </h3>
                 <div class="space-y-4">
-                  <div
-                    v-for="flag in grantedFlags"
-                    :key="flag.key"
-                    class="flex items-start justify-between gap-4"
-                  >
-                    <div class="min-w-0">
-                      <p class="text-sm font-medium text-ink">
-                        {{ flag.label }}
-                      </p>
-                      <p class="mt-0.5 text-sm text-muted">
-                        {{ t("requiresFormalProcess") }}
-                      </p>
+                  <template v-for="flag in grantedFlags" :key="flag.key">
+                    <Toggle
+                      v-if="flag.key === 'instructor' && canEditInstructor"
+                      v-model="editingController.instructor"
+                      :label="flag.label"
+                      :description="t('instructorPermissionAdminDesc')"
+                    />
+                    <div v-else class="flex items-start justify-between gap-4">
+                      <div class="min-w-0">
+                        <p class="text-sm font-medium text-ink">
+                          {{ flag.label }}
+                        </p>
+                        <p class="mt-0.5 text-sm text-muted">
+                          {{ t("requiresFormalProcess") }}
+                        </p>
+                      </div>
+                      <Badge
+                        v-if="editingController[flag.key]"
+                        :variant="flag.variant"
+                      >
+                        <Icon :name="flag.icon" class="size-4" />
+                        {{ t("authorized") }}
+                      </Badge>
+                      <Badge v-else variant="neutral">
+                        {{ t("unauthorized") }}
+                      </Badge>
                     </div>
-                    <Badge
-                      v-if="editingController[flag.key]"
-                      :variant="flag.variant"
-                    >
-                      <Icon :name="flag.icon" class="size-4" />
-                      {{ t("authorized") }}
-                    </Badge>
-                    <Badge v-else variant="neutral">
-                      {{ t("unauthorized") }}
-                    </Badge>
-                  </div>
+                  </template>
                 </div>
               </section>
 

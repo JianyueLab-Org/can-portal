@@ -103,6 +103,7 @@
       "specialPermissions": "特殊权限",
       "instructorPermission": "教员权限",
       "instructorPermissionDesc": "需要通过正式流程申请和审批",
+      "instructorPermissionAdminDesc": "管理员可授予或撤销该成员在此分部的教员权限",
       "directorPermission": "主管权限",
       "directorPermissionDesc": "需要通过正式流程申请和审批",
       "homePermission": "本部标识",
