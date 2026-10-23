@@ -104,6 +104,7 @@
       "specialPermissions": "Special Permissions",
       "instructorPermission": "Instructor Permission",
       "instructorPermissionDesc": "Requires formal application and approval process",
+      "instructorPermissionAdminDesc": "Administrators can grant or revoke this member's instructor permission in this division",
       "directorPermission": "Director Permission",
       "directorPermissionDesc": "Requires formal application and approval process",
       "homePermission": "Home Division",

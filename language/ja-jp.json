@@ -104,6 +104,7 @@
       "specialPermissions": "特別権限",
       "instructorPermission": "教官権限",
       "instructorPermissionDesc": "正式な申請と承認手続きが必要です",
+      "instructorPermissionAdminDesc": "管理者はこのメンバーのこの支部での教官権限を付与・取り消しできます",
       "directorPermission": "ディレクター権限",
       "directorPermissionDesc": "正式な申請と承認手続きが必要です",
       "homePermission": "所属支部",

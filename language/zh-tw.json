@@ -104,6 +104,7 @@
       "specialPermissions": "特殊權限",
       "instructorPermission": "教員權限",
       "instructorPermissionDesc": "需要通過正式流程申請和審核",
+      "instructorPermissionAdminDesc": "管理員可授予或撤銷該成員在此分部的教員權限",
       "directorPermission": "主管權限",
       "directorPermissionDesc": "需要通過正式流程申請和審核",
       "homePermission": "本部標識",
