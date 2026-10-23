@@ -18,16 +18,18 @@ import {
 export const DENIED_PATH = "/denied";
 
 /**
- * 先长后短：ADM 的两条必须排在 `/super` 前面，否则会先被 `/super` 以 11 匹配上。
+ * 先长后短：ADM 的三条必须排在 `/super` 前面，否则会先被 `/super` 以 11 匹配上。
  *
  * - `/super/aip-access`：资料库授权，列着持有人名单。ADM。
  * - `/super/developers`：开发者授权，列着谁注册了应用。ADM。
+ * - `/super/audit`：管理操作时间线。ADM。
  * - `/super/*`：SUP（发积分、配奖品、晋升审批都是 SUP 起）。
  * - `/instr/*`：教员。
  */
 const FLOORS: ReadonlyArray<{ prefix: string; rating: number }> = [
   { prefix: "/super/aip-access", rating: RATING_ADMIN },
   { prefix: "/super/developers", rating: RATING_ADMIN },
+  { prefix: "/super/audit", rating: RATING_ADMIN },
   { prefix: "/super", rating: RATING_SUP },
   { prefix: "/instr", rating: RATING_INSTRUCTOR },
 ];

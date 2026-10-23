@@ -16,7 +16,8 @@
       "items": {
         "promote": "晉升審核",
         "aipAccess": "資料庫權限",
-        "developers": "開發者授權"
+        "developers": "開發者授權",
+        "audit": "操作日誌"
       }
     },
     "activitiesManage": "活動管理",
@@ -1011,6 +1012,78 @@
       "title": "有應用、沒權限",
       "help": "這些人名下有 OAuth 應用，但已經不持有開發者權限。這不一定是錯的 —— 撤銷一個仍然擁有應用的人是正當操作。但如果這一欄是剛加上去的，那麼這裡列出的就是回填漏掉的人。",
       "restore": "補授權"
+    }
+  },
+  "audit": {
+    "eyebrow": "管理員",
+    "title": "操作日誌",
+    "description": "入口網站上每一次成功的管理寫入。只追加，不能改，不能刪。",
+    "filters": {
+      "all": "全部操作",
+      "actor": "操作人",
+      "target": "對象",
+      "actorPlaceholder": "CAN ID",
+      "targetPlaceholder": "CAN ID"
+    },
+    "groups": {
+      "roster": "花名冊",
+      "promotion": "晉升",
+      "points": "積分",
+      "activity": "活動",
+      "prize": "獎品",
+      "lottery": "抽獎",
+      "feedback": "公示",
+      "server": "伺服器",
+      "access": "權限"
+    },
+    "actions": {
+      "roster": { "update": "改花名冊" },
+      "promotion": { "raise": "提交晉升", "decide": "審批晉升" },
+      "points": { "adjust": "調整積分", "reverse": "撤銷積分" },
+      "activity": {
+        "create": "新建活動",
+        "update": "改活動",
+        "addRoute": "加航線",
+        "deleteRoute": "刪航線",
+        "addPosition": "開席位",
+        "updatePosition": "改席位",
+        "deletePosition": "刪席位",
+        "releasePosition": "釋放席位",
+        "attendance": "記出勤",
+        "settle": "結算活動",
+        "cancel": "取消活動"
+      },
+      "prize": { "upsert": "獎品", "delete": "下架獎品" },
+      "redemption": { "update": "處理兌換" },
+      "lottery": {
+        "create": "新建抽獎",
+        "update": "改抽獎",
+        "publish": "發布抽獎",
+        "cancel": "取消抽獎"
+      },
+      "feedback": { "upsert": "處理公示", "delete": "刪公示" },
+      "server": {
+        "create": "加伺服器",
+        "update": "改伺服器",
+        "retire": "下線伺服器"
+      },
+      "aipAccess": { "grant": "資料權限" },
+      "developer": { "set": "開發者授權" }
+    },
+    "columns": {
+      "createdAt": "時間",
+      "actor": "操作人",
+      "action": "操作",
+      "target": "對象",
+      "summary": "說明"
+    },
+    "emptyTarget": "—",
+    "empty": "還沒有記錄",
+    "emptyHelp": "成功的管理操作會顯示在這裡。上線之前的改動不會回填。",
+    "more": "載入更多",
+    "errors": {
+      "generic": "讀不了操作日誌。",
+      "forbidden": "只有管理員能看操作日誌。"
     }
   }
 }

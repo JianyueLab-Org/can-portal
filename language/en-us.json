@@ -16,7 +16,8 @@
       "items": {
         "promote": "Promotion Approval",
         "aipAccess": "Database access",
-        "developers": "Developer access"
+        "developers": "Developer access",
+        "audit": "Audit log"
       }
     },
     "activitiesManage": "Manage Activities",
@@ -1011,6 +1012,81 @@
       "title": "Owns applications, holds no access",
       "help": "These members own OAuth applications but no longer hold developer access. That is not necessarily wrong — revoking someone who still owns applications is a legitimate thing to do. But if this column has just been added, these are the people the backfill missed.",
       "restore": "Grant back"
+    }
+  },
+  "audit": {
+    "eyebrow": "Administrator",
+    "title": "Audit log",
+    "description": "Every successful management write on the portal. Append-only: it cannot be edited or deleted.",
+    "filters": {
+      "all": "All actions",
+      "actor": "Actor",
+      "target": "Target",
+      "actorPlaceholder": "CAN ID",
+      "targetPlaceholder": "CAN ID"
+    },
+    "groups": {
+      "roster": "Roster",
+      "promotion": "Promotion",
+      "points": "Points",
+      "activity": "Activity",
+      "prize": "Prize",
+      "lottery": "Lottery",
+      "feedback": "Feedback",
+      "server": "Server",
+      "access": "Access"
+    },
+    "actions": {
+      "roster": { "update": "Update roster" },
+      "promotion": {
+        "raise": "Submit promotion",
+        "decide": "Decide promotion"
+      },
+      "points": { "adjust": "Adjust points", "reverse": "Reverse points" },
+      "activity": {
+        "create": "Create activity",
+        "update": "Update activity",
+        "addRoute": "Add route",
+        "deleteRoute": "Delete route",
+        "addPosition": "Open position",
+        "updatePosition": "Update position",
+        "deletePosition": "Delete position",
+        "releasePosition": "Release position",
+        "attendance": "Record attendance",
+        "settle": "Settle activity",
+        "cancel": "Cancel activity"
+      },
+      "prize": { "upsert": "Save prize", "delete": "Remove prize" },
+      "redemption": { "update": "Update redemption" },
+      "lottery": {
+        "create": "Create lottery",
+        "update": "Update lottery",
+        "publish": "Publish lottery",
+        "cancel": "Cancel lottery"
+      },
+      "feedback": { "upsert": "Update feedback", "delete": "Delete feedback" },
+      "server": {
+        "create": "Add server",
+        "update": "Update server",
+        "retire": "Retire server"
+      },
+      "aipAccess": { "grant": "Grant data access" },
+      "developer": { "set": "Set developer" }
+    },
+    "columns": {
+      "createdAt": "Time",
+      "actor": "Actor",
+      "action": "Action",
+      "target": "Target",
+      "summary": "Summary"
+    },
+    "emptyTarget": "—",
+    "empty": "No entries yet",
+    "emptyHelp": "Successful management actions show up here. Changes from before this went live are not backfilled.",
+    "more": "Load more",
+    "errors": {
+      "generic": "The audit log could not be read.",
+      "forbidden": "Only an administrator can view the audit log."
     }
   }
 }
