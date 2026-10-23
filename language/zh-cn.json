@@ -16,7 +16,8 @@
       "items": {
         "promote": "晋升审批",
         "aipAccess": "资料库权限",
-        "developers": "开发者授权"
+        "developers": "开发者授权",
+        "audit": "操作日志"
       }
     },
     "activitiesManage": "活动管理",
@@ -1012,6 +1013,78 @@
       "title": "有应用、没权限",
       "help": "这些人名下有 OAuth 应用，但已经不持有开发者权限。这不一定是错的 —— 撤销一个仍然拥有应用的人是正当操作。但如果这一列是刚加上去的，那么这里列出的就是回填漏掉的人。",
       "restore": "补授权"
+    }
+  },
+  "audit": {
+    "eyebrow": "管理员",
+    "title": "操作日志",
+    "description": "门户上每一次成功的管理写入。只追加，不能改，不能删。",
+    "filters": {
+      "all": "全部操作",
+      "actor": "操作人",
+      "target": "对象",
+      "actorPlaceholder": "CAN ID",
+      "targetPlaceholder": "CAN ID"
+    },
+    "groups": {
+      "roster": "花名册",
+      "promotion": "晋升",
+      "points": "积分",
+      "activity": "活动",
+      "prize": "奖品",
+      "lottery": "抽奖",
+      "feedback": "公示",
+      "server": "服务器",
+      "access": "权限"
+    },
+    "actions": {
+      "roster": { "update": "改花名册" },
+      "promotion": { "raise": "提交晋升", "decide": "审批晋升" },
+      "points": { "adjust": "调整积分", "reverse": "撤销积分" },
+      "activity": {
+        "create": "新建活动",
+        "update": "改活动",
+        "addRoute": "加航线",
+        "deleteRoute": "删航线",
+        "addPosition": "开席位",
+        "updatePosition": "改席位",
+        "deletePosition": "删席位",
+        "releasePosition": "释放席位",
+        "attendance": "记出勤",
+        "settle": "结算活动",
+        "cancel": "取消活动"
+      },
+      "prize": { "upsert": "奖品", "delete": "下架奖品" },
+      "redemption": { "update": "处理兑换" },
+      "lottery": {
+        "create": "新建抽奖",
+        "update": "改抽奖",
+        "publish": "发布抽奖",
+        "cancel": "取消抽奖"
+      },
+      "feedback": { "upsert": "处理公示", "delete": "删公示" },
+      "server": {
+        "create": "加服务器",
+        "update": "改服务器",
+        "retire": "下线服务器"
+      },
+      "aipAccess": { "grant": "资料权限" },
+      "developer": { "set": "开发者授权" }
+    },
+    "columns": {
+      "createdAt": "时间",
+      "actor": "操作人",
+      "action": "操作",
+      "target": "对象",
+      "summary": "说明"
+    },
+    "emptyTarget": "—",
+    "empty": "还没有记录",
+    "emptyHelp": "成功的管理操作会显示在这里。上线之前的改动不会回填。",
+    "more": "加载更多",
+    "errors": {
+      "generic": "读不了操作日志。",
+      "forbidden": "只有管理员能看操作日志。"
     }
   }
 }

@@ -119,8 +119,8 @@ const ALLOW_LIST: Record<string, Allowed> = {
     who: "ManageServers.vue 列表与新建",
   },
 
-  // 航行资料库（can-db）的访问授权名单。can-api 那边是 `WithAdmin` —— 全服务仅
-  // 有的两条 ADM 路由。这一层照旧不判等级，只判「这个路径允许被转发吗」。
+  // 航行资料库（can-db）的访问授权名单。can-api 那边是 `WithAdmin`，和开发者
+  // 授权、操作日志同档。这一层照旧不判等级，只判「这个路径允许被转发吗」。
   "super/aip-access": { methods: ["GET"], who: "AipAccess.vue 读持有人名单" },
 
   // 开发者名单（can-dev 的门）。can-api 那边同样是 `WithAdmin`。响应里有两份清
@@ -130,6 +130,9 @@ const ALLOW_LIST: Record<string, Allowed> = {
     methods: ["GET"],
     who: "Developers.vue 读开发者名单与「有应用无权限」清单",
   },
+
+  // 管理操作时间线。只转发精确的 GET：带 id、尾斜杠都不在这张表上。
+  "super/audit": { methods: ["GET"], who: "AuditLog.vue 管理操作时间线" },
 
   // 通知铃（`Frame.vue` 的 `notifications`）。标记一条已读在下面的模式里。
   notifications: { methods: ["GET"], who: "CanFrame 通知铃：列表" },

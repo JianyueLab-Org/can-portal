@@ -7,6 +7,7 @@ describe("requiredRating", () => {
   test("ADM pages win over /super", () => {
     expect(requiredRating("/super/aip-access")).toBe(12);
     expect(requiredRating("/super/developers")).toBe(12);
+    expect(requiredRating("/super/audit")).toBe(12);
   });
 
   test("/super is SUP, /instr is instructor", () => {
@@ -40,12 +41,17 @@ describe("noAccessReason", () => {
       kind: "rating",
       required: 12,
     });
+    expect(noAccessReason("/super/audit", 11)).toEqual({
+      kind: "rating",
+      required: 12,
+    });
   });
 
   test("enough rating", () => {
     expect(noAccessReason("/instr/roster", 8)).toBeNull();
     expect(noAccessReason("/super/prizes", 11)).toBeNull();
     expect(noAccessReason("/super/developers", 12)).toBeNull();
+    expect(noAccessReason("/super/audit", 12)).toBeNull();
   });
 });
 

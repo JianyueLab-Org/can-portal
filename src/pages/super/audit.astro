@@ -1,0 +1,21 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import AuditLog from "@/components/AuditLog.vue";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+
+/**
+ * 管理操作时间线 —— **ADM only**。
+ *
+ * 门槛在 `src/middleware.ts` 的 FLOORS 里，和 `/super/developers`、
+ * `/super/aip-access` 并列在 12 级那一档，而且**必须排在 `/super` 前面**，否则会
+ * 被那条 11 级的规则先匹配上。页面本身不判等级，判的是中间件和 can-api 的
+ * `WithAdmin`。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "audit");
+const tf = useTranslations(locale, "frame");
+---
+
+<AppLayout title={tf("admin.items.audit")}>
+  <AuditLog messages={messages} client:load />
+</AppLayout>

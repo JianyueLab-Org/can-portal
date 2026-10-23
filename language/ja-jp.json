@@ -16,7 +16,8 @@
       "items": {
         "promote": "昇格承認",
         "aipAccess": "データベース権限",
-        "developers": "開発者権限"
+        "developers": "開発者権限",
+        "audit": "操作ログ"
       }
     },
     "activitiesManage": "イベント管理",
@@ -1012,6 +1013,78 @@
       "title": "アプリはあるが権限がない",
       "help": "OAuth アプリを所有しているのに開発者権限を持っていないメンバーです。必ずしも誤りではありません —— アプリを持つ人の権限を取り消すのは正当な操作です。ただしこの列を追加した直後であれば、ここに並ぶのは移行時の埋め戻しから漏れた人たちです。",
       "restore": "再付与"
+    }
+  },
+  "audit": {
+    "eyebrow": "管理者",
+    "title": "操作ログ",
+    "description": "ポータル上で成功した管理操作のすべて。追記のみで、変更も削除もできません。",
+    "filters": {
+      "all": "すべての操作",
+      "actor": "操作者",
+      "target": "対象",
+      "actorPlaceholder": "CAN ID",
+      "targetPlaceholder": "CAN ID"
+    },
+    "groups": {
+      "roster": "名簿",
+      "promotion": "昇格",
+      "points": "ポイント",
+      "activity": "イベント",
+      "prize": "景品",
+      "lottery": "抽選",
+      "feedback": "公示",
+      "server": "サーバー",
+      "access": "権限"
+    },
+    "actions": {
+      "roster": { "update": "名簿を変更" },
+      "promotion": { "raise": "昇格を申請", "decide": "昇格を承認" },
+      "points": { "adjust": "ポイントを調整", "reverse": "ポイントを取り消し" },
+      "activity": {
+        "create": "イベントを作成",
+        "update": "イベントを変更",
+        "addRoute": "ルートを追加",
+        "deleteRoute": "ルートを削除",
+        "addPosition": "ポジションを開放",
+        "updatePosition": "ポジションを変更",
+        "deletePosition": "ポジションを削除",
+        "releasePosition": "ポジションを解放",
+        "attendance": "参加を記録",
+        "settle": "イベントを精算",
+        "cancel": "イベントを中止"
+      },
+      "prize": { "upsert": "景品", "delete": "景品を取り下げ" },
+      "redemption": { "update": "交換を処理" },
+      "lottery": {
+        "create": "抽選を作成",
+        "update": "抽選を変更",
+        "publish": "抽選を公開",
+        "cancel": "抽選を中止"
+      },
+      "feedback": { "upsert": "公示を処理", "delete": "公示を削除" },
+      "server": {
+        "create": "サーバーを追加",
+        "update": "サーバーを変更",
+        "retire": "サーバーを停止"
+      },
+      "aipAccess": { "grant": "資料権限" },
+      "developer": { "set": "開発者権限" }
+    },
+    "columns": {
+      "createdAt": "時刻",
+      "actor": "操作者",
+      "action": "操作",
+      "target": "対象",
+      "summary": "説明"
+    },
+    "emptyTarget": "—",
+    "empty": "まだ記録がありません",
+    "emptyHelp": "成功した管理操作がここに表示されます。公開前の変更は埋め戻されません。",
+    "more": "さらに読み込む",
+    "errors": {
+      "generic": "操作ログを読み込めません。",
+      "forbidden": "操作ログを見られるのは管理者だけです。"
     }
   }
 }

@@ -85,7 +85,7 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   },
 ];
 
-/** ADM 那两条 —— 等级 12。都是「决定别人能做什么」。 */
+/** ADM 那三条 —— 等级 12。都是「决定别人能做什么」，或看他们做过什么。 */
 const ADMIN: Array<{ key: string; href: string; icon: IconName }> = [
   // 航行资料库（can-db）的访问授权。
   { key: "admin.items.aipAccess", href: "/super/aip-access", icon: "key" },
@@ -95,6 +95,8 @@ const ADMIN: Array<{ key: string; href: string; icon: IconName }> = [
     href: "/super/developers",
     icon: "commandLine",
   },
+  // 管理操作时间线。读 can-api 的 `GET /api/v1/super/audit`（WithAdmin）。
+  { key: "admin.items.audit", href: "/super/audit", icon: "clipboardCheck" },
 ];
 
 /**

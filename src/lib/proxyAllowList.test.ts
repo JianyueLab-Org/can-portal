@@ -77,3 +77,21 @@ describe("积分调整", () => {
     expect(lookup(path)).toBeUndefined();
   });
 });
+
+/**
+ * 操作日志只有精确的 GET。带 id、尾斜杠、以及往上跳的形状都不转发。
+ */
+describe("操作日志", () => {
+  test("audit GET is on the list", () => {
+    const entry = lookup("super/audit");
+    expect(entry?.methods).toEqual(["GET"]);
+    expect(entry?.who).toContain("AuditLog.vue");
+  });
+
+  test.each(["super/audit/1", "super/audit/", "super/audit/../roster"])(
+    "%s 不在名单上",
+    (path) => {
+      expect(lookup(path)).toBeUndefined();
+    },
+  );
+});

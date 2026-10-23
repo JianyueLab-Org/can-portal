@@ -34,17 +34,20 @@ describe("buildNavigation", () => {
       "/super/servers",
       "/super/promotions",
     ]);
+    expect(leaves(11)).not.toContain("/super/audit");
   });
 
-  test("ADM adds database and developer access", () => {
+  test("ADM adds database, developer, and audit access", () => {
     expect(groups(12)).toEqual([
       "instructors.title",
       "sup.title",
       "admin.title",
     ]);
-    expect(leaves(12).slice(-2)).toEqual([
+    expect(leaves(12)).toContain("/super/audit");
+    expect(leaves(12).slice(-3)).toEqual([
       "/super/aip-access",
       "/super/developers",
+      "/super/audit",
     ]);
   });
 
