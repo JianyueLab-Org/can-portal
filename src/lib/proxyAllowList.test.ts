@@ -95,3 +95,69 @@ describe("操作日志", () => {
     },
   );
 });
+
+/**
+ * 虚拟航空平台管理（`/super/airlines`）。转发到 can-va-api，不是 can-api。
+ */
+const VA_STAFF: Array<[string, string[]]> = [
+  ["va/staff/applications", ["GET"]],
+  ["va/staff/applications/1/approve", ["POST"]],
+  ["va/staff/applications/12345678901234567890/reject", ["POST"]],
+  ["va/staff/airlines", ["GET"]],
+  ["va/staff/airlines/7/suspend", ["POST"]],
+  ["va/staff/airlines/7/reinstate", ["POST"]],
+  ["va/staff/airlines/7/close", ["POST"]],
+  ["va/staff/airlines/7/adjustments", ["POST"]],
+  ["va/staff/airlines/7/owner", ["PUT"]],
+  ["va/staff/params", ["GET"]],
+  ["va/staff/params/log", ["GET"]],
+  ["va/staff/params/pilot_starting_wallet", ["PUT"]],
+  ["va/staff/airports/import", ["POST"]],
+];
+
+describe("虚拟航空平台管理", () => {
+  test("十三条都在，方法对得上，转发到 can-va-api，who 指向 ManageAirlines.vue", () => {
+    for (const [path, methods] of VA_STAFF) {
+      const entry = lookup(path);
+      expect(entry?.methods).toEqual(methods);
+      expect(entry?.upstream).toBe("va");
+      expect(entry?.who).toContain("ManageAirlines.vue");
+    }
+  });
+
+  test("can-api 的条目不带 upstream", () => {
+    expect(lookup("super/points/adjust")?.upstream).toBeUndefined();
+    expect(lookup("auth/session")?.upstream).toBeUndefined();
+  });
+
+  test("params/log 是精确条目，只有 GET", () => {
+    expect(lookup("va/staff/params/log")?.methods).toEqual(["GET"]);
+  });
+
+  test.each([
+    "va/me",
+    "va/airports",
+    "va/airlines",
+    "va/staff",
+    "va/staff/",
+    "va/staff/applications/",
+    "va/staff/applications/abc/approve",
+    "va/staff/applications/1",
+    "va/staff/applications/1/delete",
+    "va/staff/applications/123456789012345678901/approve",
+    "va/staff/airlines/",
+    "va/staff/airlines/1",
+    "va/staff/airlines/ABC/suspend",
+    "va/staff/airlines/1/owner/x",
+    "va/staff/airlines/1/delete",
+    "va/staff/params/",
+    "va/staff/params/Pilot",
+    "va/staff/params/a/b",
+    "va/staff/params/../airlines",
+    "va/staff/airports",
+    "va/staff/airports/import/x",
+    "internal/va/pilots/100001",
+  ])("%s 不在名单上", (path) => {
+    expect(lookup(path)).toBeUndefined();
+  });
+});

@@ -88,6 +88,9 @@ spec:
             # 个错误页：教员看见「选不出机场」能猜到是数据没来，看见 500 只能猜。
             - name: CAN_DB_ORIGIN
               value: http://app.can-db.svc.cluster.local
+            # 虚拟航空平台（can-va-api）。`/super/airlines` 经本站反代读写它。
+            - name: CAN_VA_API_ORIGIN
+              value: http://app.can-va-api.svc.cluster.local
             # 写操作的 Origin 比对基准。必须是显式值：反代后面从 Host 推出来的
             # 是 http://，浏览器发的是 https://，永远对不上。这个站的写操作是
             # 晋升、结算积分和发奖品，所以这一条配错的代价比在别处大。
