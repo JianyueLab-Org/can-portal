@@ -24,6 +24,7 @@
     "prizesManage": "Prizes",
     "lotteryManage": "Lottery",
     "pointsManage": "Points adjustment",
+    "airlinesManage": "Airline administration",
     "feedbackManage": "Feedback outcomes",
     "signOut": "Sign Out",
     "unrestricted": "Hide NAIP",
@@ -979,6 +980,135 @@
       "port": "Port",
       "sortKey": "Sort",
       "action": "Add"
+    }
+  },
+  "vaAirlines": {
+    "eyebrow": "Virtual airlines",
+    "title": "Airlines",
+    "description": "Review airline applications, act on airlines, and tune economy parameters. Airlines are addressed by number: a closed airline releases its code.",
+    "close": "Close",
+    "keep": "Cancel",
+    "confirm": "Confirm",
+    "tabs": {
+      "applications": "Applications",
+      "airlines": "Airlines",
+      "params": "Parameters",
+      "import": "Airport data"
+    },
+    "applications": {
+      "empty": "No pending applications",
+      "columns": {
+        "airline": "Airline",
+        "applicant": "Applicant",
+        "hub": "Hub",
+        "createdAt": "Submitted",
+        "actions": ""
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Approved. {icao} is open.",
+      "rejected": "Rejected the {icao} application",
+      "rejectTitle": "Reject the {icao} application",
+      "reasonHelp": "The applicant is notified of the reason."
+    },
+    "airlines": {
+      "empty": "No matching airlines",
+      "filter": {
+        "all": "All",
+        "active": "Active",
+        "suspended": "Suspended",
+        "closed": "Closed"
+      },
+      "columns": {
+        "airline": "Airline",
+        "owner": "Owner",
+        "status": "Status",
+        "members": "Members",
+        "balance": "Balance",
+        "actions": ""
+      },
+      "noOwner": "None",
+      "negativeSince": "Negative since {at}",
+      "actions": {
+        "suspend": "Suspend",
+        "reinstate": "Reinstate",
+        "close": "Close",
+        "owner": "Set owner",
+        "adjust": "Adjust"
+      },
+      "dialog": {
+        "suspend": "Suspend {icao}",
+        "close": "Close {icao}",
+        "owner": "Set the owner of {icao}",
+        "adjust": "Adjust the balance of {icao}"
+      },
+      "reasonLabel": "Reason",
+      "closeWarning": "Closing cannot be undone. The airline code is released.",
+      "ownerLabel": "CAN ID",
+      "ownerHelp": "A non-member becomes an active member.",
+      "amountLabel": "Amount (credits)",
+      "amountHelp": "Positive credits, negative debits, up to two decimals.",
+      "noteLabel": "Note",
+      "done": {
+        "suspend": "Suspended {icao}",
+        "reinstate": "Reinstated {icao}",
+        "close": "Closed {icao}",
+        "owner": "{icao} is now owned by {owner}",
+        "adjust": "Posted {amount} to {icao}"
+      }
+    },
+    "params": {
+      "empty": "No parameters",
+      "columns": {
+        "key": "Parameter",
+        "value": "Value",
+        "actions": ""
+      },
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "{key} set to {value}",
+      "help": "Changes apply to later settlements and are logged.",
+      "log": "Change log",
+      "logEmpty": "No changes yet",
+      "logColumns": {
+        "key": "Parameter",
+        "change": "Change",
+        "actor": "By",
+        "at": "At"
+      },
+      "more": "Load more"
+    },
+    "import": {
+      "title": "Airport data import",
+      "help": "Imports from OurAirports every Monday at 01:00 UTC. A file that fails to parse or holds fewer than 90% of current rows leaves the data unchanged.",
+      "action": "Import now",
+      "started": "Import started in the background."
+    },
+    "errors": {
+      "load": "Could not load. Refresh to retry.",
+      "reasonRequired": "Enter a reason.",
+      "usernameRequired": "Enter a CAN ID.",
+      "amount": "Enter a non-zero amount with up to two decimals.",
+      "noteRequired": "Enter a note.",
+      "value": "Enter a number.",
+      "unauthenticated": "Your session has expired. Sign in again.",
+      "forbidden": "Requires SUP (rating 11) or above.",
+      "badOrigin": "Cross-site request refused.",
+      "notFound": "Not found. Someone may have handled it already.",
+      "badRequest": "Invalid request. Check the form.",
+      "codeTaken": "That airline code is already taken.",
+      "airportUnavailable": "The proposed hub airport is withdrawn; the application cannot be approved.",
+      "notPending": "This application has already been handled.",
+      "notActive": "Only active airlines can be suspended.",
+      "notSuspended": "Only suspended airlines can be reinstated.",
+      "noOwner": "Set an owner before reinstating.",
+      "alreadyClosed": "This airline is already closed.",
+      "importRunning": "An import is already running.",
+      "network": "Network error. Try again later.",
+      "unreachable": "The virtual airline service is unreachable. Try again later.",
+      "notAllowed": "This endpoint is not on this site's proxy allow-list.",
+      "actionFailed": "The action failed. Try again later."
     }
   },
   "developers": {

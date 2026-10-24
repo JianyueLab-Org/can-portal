@@ -24,6 +24,7 @@
     "prizesManage": "景品管理",
     "lotteryManage": "抽選管理",
     "pointsManage": "ポイント調整",
+    "airlinesManage": "航空会社管理",
     "feedbackManage": "対応結果の公示",
     "signOut": "ログアウト",
     "unrestricted": "NAIP を隠す",
@@ -979,6 +980,135 @@
       "port": "端口",
       "sortKey": "排序",
       "action": "添加"
+    }
+  },
+  "vaAirlines": {
+    "eyebrow": "バーチャル航空",
+    "title": "航空会社管理",
+    "description": "開設申請の審査、航空会社への措置、経済パラメータの調整。航空会社は番号で指定します。閉鎖するとコードは解放されます。",
+    "close": "閉じる",
+    "keep": "キャンセル",
+    "confirm": "確認",
+    "tabs": {
+      "applications": "開設申請",
+      "airlines": "航空会社",
+      "params": "経済パラメータ",
+      "import": "空港データ"
+    },
+    "applications": {
+      "empty": "審査待ちの申請はありません",
+      "columns": {
+        "airline": "航空会社",
+        "applicant": "申請者",
+        "hub": "ハブ",
+        "createdAt": "提出日時",
+        "actions": ""
+      },
+      "approve": "承認",
+      "reject": "却下",
+      "approved": "承認しました。{icao} が開設されました",
+      "rejected": "{icao} の申請を却下しました",
+      "rejectTitle": "{icao} の申請を却下",
+      "reasonHelp": "理由は申請者に通知されます。"
+    },
+    "airlines": {
+      "empty": "該当する航空会社はありません",
+      "filter": {
+        "all": "すべて",
+        "active": "運航中",
+        "suspended": "停止中",
+        "closed": "閉鎖"
+      },
+      "columns": {
+        "airline": "航空会社",
+        "owner": "オーナー",
+        "status": "状態",
+        "members": "メンバー",
+        "balance": "残高",
+        "actions": ""
+      },
+      "noOwner": "なし",
+      "negativeSince": "{at} からマイナス",
+      "actions": {
+        "suspend": "停止",
+        "reinstate": "再開",
+        "close": "閉鎖",
+        "owner": "オーナー指定",
+        "adjust": "残高調整"
+      },
+      "dialog": {
+        "suspend": "{icao} を停止",
+        "close": "{icao} を閉鎖",
+        "owner": "{icao} のオーナーを指定",
+        "adjust": "{icao} の残高を調整"
+      },
+      "reasonLabel": "理由",
+      "closeWarning": "閉鎖は取り消せません。航空会社コードは解放されます。",
+      "ownerLabel": "CAN ID",
+      "ownerHelp": "メンバーでない場合は正式メンバーとして追加されます。",
+      "amountLabel": "金額（credit）",
+      "amountHelp": "正は入金、負は減算。小数は2桁まで。",
+      "noteLabel": "メモ",
+      "done": {
+        "suspend": "{icao} を停止しました",
+        "reinstate": "{icao} を再開しました",
+        "close": "{icao} を閉鎖しました",
+        "owner": "{icao} のオーナーを {owner} に変更しました",
+        "adjust": "{icao} に {amount} を記帳しました"
+      }
+    },
+    "params": {
+      "empty": "パラメータはありません",
+      "columns": {
+        "key": "パラメータ",
+        "value": "値",
+        "actions": ""
+      },
+      "edit": "変更",
+      "save": "保存",
+      "cancel": "キャンセル",
+      "saved": "{key} を {value} に変更しました",
+      "help": "変更は以後の精算に適用され、記録されます。",
+      "log": "変更履歴",
+      "logEmpty": "変更はまだありません",
+      "logColumns": {
+        "key": "パラメータ",
+        "change": "変更",
+        "actor": "操作者",
+        "at": "日時"
+      },
+      "more": "さらに読み込む"
+    },
+    "import": {
+      "title": "空港データの取り込み",
+      "help": "毎週月曜 01:00 UTC に OurAirports から自動で取り込みます。解析に失敗した場合や行数が現在の 90% 未満の場合は現在のデータを保持します。",
+      "action": "今すぐ取り込む",
+      "started": "バックグラウンドで取り込みを開始しました。"
+    },
+    "errors": {
+      "load": "読み込みに失敗しました。再読み込みしてください。",
+      "reasonRequired": "理由を入力してください。",
+      "usernameRequired": "CAN ID を入力してください。",
+      "amount": "0 以外の金額を小数2桁までで入力してください。",
+      "noteRequired": "メモを入力してください。",
+      "value": "数値を入力してください。",
+      "unauthenticated": "セッションが切れました。再度サインインしてください。",
+      "forbidden": "SUP（レーティング 11）以上が必要です。",
+      "badOrigin": "クロスサイトリクエストは拒否されました。",
+      "notFound": "見つかりません。既に処理された可能性があります。",
+      "badRequest": "リクエストが不正です。入力内容を確認してください。",
+      "codeTaken": "その航空会社コードは使用済みです。",
+      "airportUnavailable": "申請されたハブ空港は廃止されているため承認できません。",
+      "notPending": "この申請は既に処理されています。",
+      "notActive": "停止できるのは運航中の航空会社だけです。",
+      "notSuspended": "再開できるのは停止中の航空会社だけです。",
+      "noOwner": "再開する前にオーナーを指定してください。",
+      "alreadyClosed": "この航空会社は既に閉鎖されています。",
+      "importRunning": "取り込みは既に実行中です。",
+      "network": "ネットワークエラー。しばらくしてから再試行してください。",
+      "unreachable": "バーチャル航空サービスに接続できません。しばらくしてから再試行してください。",
+      "notAllowed": "このエンドポイントは本サイトの転送許可リストにありません。",
+      "actionFailed": "操作に失敗しました。しばらくしてから再試行してください。"
     }
   },
   "developers": {

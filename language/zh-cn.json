@@ -24,6 +24,7 @@
     "prizesManage": "奖品管理",
     "lotteryManage": "抽奖管理",
     "pointsManage": "积分调整",
+    "airlinesManage": "航司管理",
     "feedbackManage": "处理结果公示",
     "signOut": "退出登录",
     "unrestricted": "隐藏 NAIP",
@@ -979,6 +980,135 @@
       "port": "端口",
       "sortKey": "排序",
       "action": "添加"
+    }
+  },
+  "vaAirlines": {
+    "eyebrow": "虚拟航空",
+    "title": "航空公司管理",
+    "description": "审批开航申请，处置航空公司，调整经济参数。航空公司按编号寻址：关闭后代码会释放。",
+    "close": "关闭",
+    "keep": "取消",
+    "confirm": "确认",
+    "tabs": {
+      "applications": "开航申请",
+      "airlines": "航空公司",
+      "params": "经济参数",
+      "import": "机场数据"
+    },
+    "applications": {
+      "empty": "没有待审申请",
+      "columns": {
+        "airline": "航空公司",
+        "applicant": "申请人",
+        "hub": "枢纽",
+        "createdAt": "提交时间",
+        "actions": ""
+      },
+      "approve": "批准",
+      "reject": "驳回",
+      "approved": "已批准，{icao} 已开航",
+      "rejected": "已驳回 {icao} 的申请",
+      "rejectTitle": "驳回 {icao} 的申请",
+      "reasonHelp": "理由会通知申请人。"
+    },
+    "airlines": {
+      "empty": "没有符合条件的航空公司",
+      "filter": {
+        "all": "全部",
+        "active": "运营中",
+        "suspended": "已暂停",
+        "closed": "已关闭"
+      },
+      "columns": {
+        "airline": "航空公司",
+        "owner": "所有者",
+        "status": "状态",
+        "members": "成员",
+        "balance": "余额",
+        "actions": ""
+      },
+      "noOwner": "无",
+      "negativeSince": "自 {at} 起为负",
+      "actions": {
+        "suspend": "暂停",
+        "reinstate": "恢复",
+        "close": "关闭",
+        "owner": "指定所有者",
+        "adjust": "调账"
+      },
+      "dialog": {
+        "suspend": "暂停 {icao}",
+        "close": "关闭 {icao}",
+        "owner": "指定 {icao} 的所有者",
+        "adjust": "调整 {icao} 的余额"
+      },
+      "reasonLabel": "理由",
+      "closeWarning": "关闭不可撤销，航空公司代码随即释放。",
+      "ownerLabel": "CAN ID",
+      "ownerHelp": "不是成员的会直接加为正式成员。",
+      "amountLabel": "金额（credit）",
+      "amountHelp": "正数入账，负数扣减，最多两位小数。",
+      "noteLabel": "备注",
+      "done": {
+        "suspend": "已暂停 {icao}",
+        "reinstate": "已恢复 {icao}",
+        "close": "已关闭 {icao}",
+        "owner": "{icao} 的所有者已改为 {owner}",
+        "adjust": "已为 {icao} 记账 {amount}"
+      }
+    },
+    "params": {
+      "empty": "没有参数",
+      "columns": {
+        "key": "参数",
+        "value": "值",
+        "actions": ""
+      },
+      "edit": "修改",
+      "save": "保存",
+      "cancel": "取消",
+      "saved": "{key} 已改为 {value}",
+      "help": "修改只对之后的结算生效，并记入变更记录。",
+      "log": "变更记录",
+      "logEmpty": "还没有变更",
+      "logColumns": {
+        "key": "参数",
+        "change": "变更",
+        "actor": "操作人",
+        "at": "时间"
+      },
+      "more": "加载更多"
+    },
+    "import": {
+      "title": "机场数据导入",
+      "help": "每周一 01:00 UTC 自动从 OurAirports 导入。文件解析失败或行数少于现有的 90% 时保留现有数据。",
+      "action": "立即导入",
+      "started": "导入已开始，在后台运行。"
+    },
+    "errors": {
+      "load": "读取失败，请刷新重试。",
+      "reasonRequired": "请填写理由。",
+      "usernameRequired": "请填写 CAN ID。",
+      "amount": "请输入非零金额，最多两位小数。",
+      "noteRequired": "请填写备注。",
+      "value": "请输入一个数字。",
+      "unauthenticated": "登录已失效，请重新登录。",
+      "forbidden": "需要监理（11 级）及以上。",
+      "badOrigin": "跨站请求被拒绝。",
+      "notFound": "对象不存在，可能已被他人处理。",
+      "badRequest": "请求有误，请检查填写内容。",
+      "codeTaken": "该航空公司代码已被占用。",
+      "airportUnavailable": "申请的枢纽机场已停用，无法批准。",
+      "notPending": "该申请已被处理。",
+      "notActive": "只有运营中的航空公司可以暂停。",
+      "notSuspended": "只有已暂停的航空公司可以恢复。",
+      "noOwner": "请先指定所有者再恢复。",
+      "alreadyClosed": "该航空公司已关闭。",
+      "importRunning": "导入正在进行中。",
+      "network": "网络连接失败，请稍后再试。",
+      "unreachable": "无法连接到虚拟航空服务，请稍后再试。",
+      "notAllowed": "该接口不在此站的转发白名单内。",
+      "actionFailed": "操作失败，请稍后再试。"
     }
   },
   "developers": {
