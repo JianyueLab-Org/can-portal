@@ -6,7 +6,7 @@
 
 **教员与管理门户** —— `portal.ceruleanavi.net`，Cerulean Aviation Network 的第七个
 Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 `/super/*` 整段搬
-出来的，搬的是**七个页面**；加上这里新写的，一共十二个页面。
+出来的，搬的是**七个页面**；加上这里新写的，一共十三个页面。
 
 `/` 没有页面，302 到当前等级在侧栏里看得见的第一页，由 `src/lib/nav.ts` 的
 `homePath()` 按侧栏同一份数据算出；没有可见页面时改写到 `/denied`。没有卡片首页。
@@ -24,6 +24,7 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 | `/super/feedback`   | `/super/feedback`   | `ManageFeedback.vue`    | 11   |
 | `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 11   |
 | `/super/servers`    | （新）              | `ManageServers.vue`     | 11   |
+| `/super/airlines`   | （新）              | `ManageAirlines.vue`    | 11   |
 | `/super/aip-access` | （新）              | `AipAccess.vue`         | 12   |
 | `/super/developers` | （新）              | `Developers.vue`        | 12   |
 
@@ -120,6 +121,11 @@ ZGZU 的教员看得见花名册，但改不动 ZBPE 的人，那道判断这个
 `notifications`、`notifications/unread`、`notifications/read-all`，`ALLOW_PATTERNS`
 里的 `notifications/{member|broadcast}/{id}`（PATCH）。测试在
 `src/lib/proxyAllowList.test.ts`。
+
+**第二个上游：can-va-api。** `ALLOW_LIST` / `ALLOW_PATTERNS` 里带 `upstream: "va"` 的条目转发到
+`CAN_VA_API_ORIGIN`（`src/lib/config.ts`），其余仍转 can-api。只转 `va/staff/*` 的十三条，
+供 `/super/airlines`（`ManageAirlines.vue`）用。can-va-api 自己按 Origin 判写操作，所以
+这一路的写请求会带上浏览器的 `Origin` 头。can-ui 的站点注册表条目在页面上线后再加。
 
 ## SweatBox 的参考数据在 can-db，不在这个仓库
 
@@ -238,6 +244,8 @@ Astro 两种都认。
 `manage`。改它直接改这里。
 
 `points.manage` 也只有这个站有。改它直接改这里。
+
+`vaAirlines` 也只有这个站有（`/super/airlines`，虚拟航空平台管理）。改它直接改这里。
 
 ## 和 can-web 共享的那些文件
 

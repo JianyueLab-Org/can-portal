@@ -14,6 +14,7 @@ describe("requiredRating", () => {
     expect(requiredRating("/super/prizes")).toBe(11);
     expect(requiredRating("/super/promotions")).toBe(11);
     expect(requiredRating("/super/points")).toBe(11);
+    expect(requiredRating("/super/airlines")).toBe(11);
     expect(requiredRating("/instr/roster")).toBe(8);
     expect(requiredRating("/instr/sweatbox/ZGGG.json")).toBe(8);
   });

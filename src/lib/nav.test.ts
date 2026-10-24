@@ -33,6 +33,7 @@ describe("buildNavigation", () => {
       "/super/feedback",
       "/super/servers",
       "/super/promotions",
+      "/super/airlines",
     ]);
     expect(leaves(11)).not.toContain("/super/audit");
   });

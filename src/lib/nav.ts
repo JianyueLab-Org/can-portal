@@ -61,7 +61,7 @@ const INSTRUCTOR: Array<{ key: string; href: string; icon: IconName }> = [
 ];
 
 /**
- * 监理那一组 —— 等级 11 起，七条。
+ * 监理那一组 —— 等级 11 起，八条。
  *
  * 活动管理是 SUP/ADM（发积分的就是他们），所以配奖品的也是 SUP；处理结果公示
  * 同理。
@@ -82,6 +82,13 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
     key: "admin.items.promote",
     href: "/super/promotions",
     icon: "checkCircle",
+  },
+  // 虚拟航空平台管理：开航审批、处置航空公司、经济参数。can-va-api 的 staff
+  // 路由按 rating ≥ 11 判，和这一组同档。
+  {
+    key: "airlinesManage",
+    href: "/super/airlines",
+    icon: "buildingOffice",
   },
 ];
 
