@@ -125,7 +125,7 @@ ZGZU 的教员看得见花名册，但改不动 ZBPE 的人，那道判断这个
 **第二个上游：can-va-api。** `ALLOW_LIST` / `ALLOW_PATTERNS` 里带 `upstream: "va"` 的条目转发到
 `CAN_VA_API_ORIGIN`（`src/lib/config.ts`），其余仍转 can-api。只转 `va/staff/*` 的十三条，
 供 `/super/airlines`（`ManageAirlines.vue`）用。can-va-api 自己按 Origin 判写操作，所以
-这一路的写请求会带上浏览器的 `Origin` 头。can-ui 的站点注册表条目在页面上线后再加。
+这一路的写请求会带上浏览器的 `Origin` 头。can-ui 的站点注册表从 27.9.0 起带这一页（`airlinesManage`）。
 
 ## SweatBox 的参考数据在 can-db，不在这个仓库
 

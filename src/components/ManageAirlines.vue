@@ -307,6 +307,7 @@ async function save(key: string) {
     paramError.value = t("errors.value");
     return;
   }
+  error.value = "";
   busy.value = `param-${key}`;
   const result = await api<Param>(paramPath(key), {
     method: "PUT",
@@ -568,6 +569,7 @@ onMounted(() => {
                 <Button
                   size="sm"
                   :loading="busy === `param-${row.key}`"
+                  :disabled="busy !== null"
                   @click="save(row.key)"
                 >
                   {{ t("params.save") }}
@@ -576,7 +578,10 @@ onMounted(() => {
                   size="sm"
                   variant="secondary"
                   :disabled="busy === `param-${row.key}`"
-                  @click="editing = null"
+                  @click="
+                    editing = null;
+                    paramError = '';
+                  "
                 >
                   {{ t("params.cancel") }}
                 </Button>
@@ -633,7 +638,11 @@ onMounted(() => {
       <h2 class="text-sm font-semibold text-ink">{{ t("import.title") }}</h2>
       <p class="mt-1 text-sm text-muted">{{ t("import.help") }}</p>
       <div class="mt-4">
-        <Button :loading="busy === 'import'" @click="startImport">
+        <Button
+          :loading="busy === 'import'"
+          :disabled="busy !== null"
+          @click="startImport"
+        >
           {{ t("import.action") }}
         </Button>
       </div>
