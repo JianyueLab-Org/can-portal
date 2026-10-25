@@ -7,7 +7,7 @@
       "dependencies": {
         "@astrojs/node": "^11.0.0",
         "@astrojs/vue": "^7.0.0",
-        "@jianyuelab-org/can-ui": "file:../../.temp/can-ui/jianyuelab-org-can-ui-27.8.0.tgz",
+        "@jianyuelab-org/can-ui": "file:../../.temp/can-ui/jianyuelab-org-can-ui-27.9.0.tgz",
         "@tailwindcss/vite": "^4.3.3",
         "astro": "^7.2.2",
         "tailwindcss": "^4.3.3",
@@ -277,7 +277,7 @@
 
     "@img/sharp-win32-x64": ["@img/sharp-win32-x64@0.35.3", "", { "os": "win32", "cpu": "x64" }, "sha512-D4y1vNeZrIIJCN+uHaWVtH86B+aCrdMYYjicy9pXHvbGZeGYLLSd3wdVuC37FxVXlU1ARsk84eKWfWMXGYEqvA=="],
 
-    "@jianyuelab-org/can-ui": ["@jianyuelab-org/can-ui@../../.temp/can-ui/jianyuelab-org-can-ui-27.8.0.tgz", { "peerDependencies": { "astro": "^6.0.0 || ^7.0.0", "tailwindcss": "^4.0.0", "vue": "^3.5.0" }, "optionalPeers": ["astro"], "bin": { "can-ui-check-pages": "./bin/check-pages.ts" } }, "sha512-HHYSB0UvAA6EXnN0mzZlSToheFciVWcdhLS5gGP+u/6hY/EyXE6sNua+kJN6zW1/QpgCrh2I9tM9USbznpF7cw=="],
+    "@jianyuelab-org/can-ui": ["@jianyuelab-org/can-ui@../../.temp/can-ui/jianyuelab-org-can-ui-27.9.0.tgz", { "peerDependencies": { "astro": "^6.0.0 || ^7.0.0", "tailwindcss": "^4.0.0", "vue": "^3.5.0" }, "optionalPeers": ["astro"], "bin": { "can-ui-check-pages": "./bin/check-pages.ts" } }, "sha512-/qFr7mfxJsM3zUnKn+3mGxRGejx+uT3a0g0WHDNDo0CKzs2193PPeTPtor6HporutDgJX6eq5qX0KPD6VtTnTg=="],
 
     "@jridgewell/gen-mapping": ["@jridgewell/gen-mapping@0.3.13", "", { "dependencies": { "@jridgewell/sourcemap-codec": "^1.5.0", "@jridgewell/trace-mapping": "^0.3.24" } }, "sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA=="],
 
