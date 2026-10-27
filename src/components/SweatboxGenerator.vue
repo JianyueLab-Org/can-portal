@@ -40,6 +40,7 @@ import {
   Icon,
   Input,
   PageHeader,
+  Select,
   Spinner,
 } from "@jianyuelab-org/can-ui";
 import {
@@ -83,6 +84,8 @@ import {
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
   airports: SweatboxIndexEntry[];
   aipAccess: number;
 }>();
@@ -863,6 +866,7 @@ async function copy() {
       v-if="notice"
       variant="success"
       dismissible
+      :messages="chrome"
       class="mb-6"
       @dismiss="notice = ''"
     >
@@ -888,18 +892,18 @@ async function copy() {
                 v-model="airportFilter"
                 class="input mt-1.5"
                 :placeholder="t('setup.airportFilter')"
+                :aria-label="t('setup.airportFilter')"
                 maxlength="4"
               />
-              <select id="sweatbox-airport" v-model="icao" class="input mt-2">
-                <option value="">{{ t("setup.airportPlaceholder") }}</option>
-                <option
-                  v-for="option in airportOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
+              <Select
+                id="sweatbox-airport"
+                v-model="icao"
+                class="mt-2"
+                :options="[
+                  { value: '', label: t('setup.airportPlaceholder') },
+                  ...airportOptions,
+                ]"
+              />
             </div>
             <Input
               v-model="elevationInput"
@@ -908,56 +912,22 @@ async function copy() {
               :hint="t('setup.elevationHint')"
               name="sweatbox-elev"
             />
-            <div>
-              <label
-                for="sweatbox-arr"
-                class="block text-sm font-medium text-ink"
-              >
-                {{ t("setup.arrivalRunway") }}
-              </label>
-              <select
-                id="sweatbox-arr"
-                v-model="arrivalRunwayId"
-                class="input mt-1.5"
-                :disabled="!airport"
-              >
-                <option
-                  v-for="option in runwayOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p class="mt-1.5 text-xs text-faint">
-                {{ t("setup.arrivalRunwayHint") }}
-              </p>
-            </div>
-            <div>
-              <label
-                for="sweatbox-dep"
-                class="block text-sm font-medium text-ink"
-              >
-                {{ t("setup.departureRunway") }}
-              </label>
-              <select
-                id="sweatbox-dep"
-                v-model="departureRunwayId"
-                class="input mt-1.5"
-                :disabled="!airport"
-              >
-                <option
-                  v-for="option in runwayOptions"
-                  :key="option.value"
-                  :value="option.value"
-                >
-                  {{ option.label }}
-                </option>
-              </select>
-              <p class="mt-1.5 text-xs text-faint">
-                {{ t("setup.departureRunwayHint") }}
-              </p>
-            </div>
+            <Select
+              id="sweatbox-arr"
+              v-model="arrivalRunwayId"
+              :label="t('setup.arrivalRunway')"
+              :hint="t('setup.arrivalRunwayHint')"
+              :options="runwayOptions"
+              :disabled="!airport"
+            />
+            <Select
+              id="sweatbox-dep"
+              v-model="departureRunwayId"
+              :label="t('setup.departureRunway')"
+              :hint="t('setup.departureRunwayHint')"
+              :options="runwayOptions"
+              :disabled="!airport"
+            />
           </div>
 
           <!-- Seats -->
@@ -1240,29 +1210,20 @@ async function copy() {
               </Button>
             </div>
 
-            <label
-              for="sweatbox-initial-seat"
-              class="mt-4 block text-sm font-medium text-ink"
-            >
-              {{ t("setup.initialSeat") }}
-            </label>
-            <p class="mt-1 text-xs text-faint">
-              {{ t("setup.initialSeatHint") }}
-            </p>
-            <select
+            <Select
               id="sweatbox-initial-seat"
               v-model="model.defaultPseudopilot"
-              class="input mt-2"
-            >
-              <option value="">{{ t("setup.initialSeatNone") }}</option>
-              <option
-                v-for="seat in pseudopilotOptions"
-                :key="seat"
-                :value="seat"
-              >
-                {{ seat }}
-              </option>
-            </select>
+              class="mt-4"
+              :label="t('setup.initialSeat')"
+              :hint="t('setup.initialSeatHint')"
+              :options="[
+                { value: '', label: t('setup.initialSeatNone') },
+                ...pseudopilotOptions.map((seat) => ({
+                  value: seat,
+                  label: seat,
+                })),
+              ]"
+            />
           </div>
 
           <div v-if="isPicked('APP')" class="mt-6">
@@ -1284,6 +1245,7 @@ async function copy() {
                 v-model="holding.fix"
                 class="input flex-1"
                 list="sweatbox-fixes"
+                :aria-label="t('setup.holdingFix')"
                 placeholder="UU910"
               />
               <input
@@ -1292,7 +1254,11 @@ async function copy() {
                 class="input w-24"
                 :aria-label="t('setup.inbound')"
               />
-              <select v-model.number="holding.turn" class="input w-28">
+              <select
+                v-model.number="holding.turn"
+                class="input w-28"
+                :aria-label="t('setup.holdingTurn')"
+              >
                 <option :value="1">{{ t("setup.right") }}</option>
                 <option :value="-1">{{ t("setup.left") }}</option>
               </select>
@@ -1327,11 +1293,13 @@ async function copy() {
               <input
                 v-model="route.name"
                 class="input w-40"
+                :aria-label="t('setup.routeName')"
                 placeholder="YIN86D01"
               />
               <input
                 v-model="route.points"
                 class="input flex-1"
+                :aria-label="t('setup.routePoints')"
                 placeholder="D016L D189Y D189M YIN"
               />
               <Button
@@ -1481,7 +1449,8 @@ async function copy() {
                             .join(' / ')
                         "
                       >
-                        !
+                        <Icon name="exclamationTriangle" class="size-3.5" />
+                        <span class="sr-only">{{ t("errors.title") }}</span>
                       </Badge>
                     </div>
                   </td>
@@ -1489,11 +1458,16 @@ async function copy() {
                     <input
                       v-model="row.callsign"
                       class="input w-28"
+                      :aria-label="t('aircraft.callsign')"
                       placeholder="CSN3101"
                     />
                   </td>
                   <td class="px-3 py-2">
-                    <select v-model="row.type" class="input w-24">
+                    <select
+                      v-model="row.type"
+                      class="input w-24"
+                      :aria-label="t('aircraft.type')"
+                    >
                       <option
                         v-for="type in PERFORMANCE_TYPES"
                         :key="type"
@@ -1504,7 +1478,11 @@ async function copy() {
                     </select>
                   </td>
                   <td class="px-3 py-2">
-                    <select v-model="row.equipment" class="input w-20">
+                    <select
+                      v-model="row.equipment"
+                      class="input w-20"
+                      :aria-label="t('aircraft.equipment')"
+                    >
                       <option value="">—</option>
                       <option
                         v-for="suffix in EQUIPMENT_SUFFIXES"
@@ -1516,7 +1494,11 @@ async function copy() {
                     </select>
                   </td>
                   <td class="px-3 py-2">
-                    <input v-model="row.cruise" class="input w-24" />
+                    <input
+                      v-model="row.cruise"
+                      class="input w-24"
+                      :aria-label="t('aircraft.cruise')"
+                    />
                   </td>
 
                   <td class="px-3 py-2">
@@ -1524,6 +1506,7 @@ async function copy() {
                       v-if="row.profile === 'GND'"
                       v-model="row.standName"
                       class="input w-32"
+                      :aria-label="t('aircraft.position')"
                       @change="replace(row)"
                     >
                       <option value="">—</option>
@@ -1561,6 +1544,7 @@ async function copy() {
                       v-model.number="row.altitude"
                       type="number"
                       class="input w-24"
+                      :aria-label="t('aircraft.altitude')"
                     />
                   </td>
                   <td class="px-3 py-2">
@@ -1569,6 +1553,7 @@ async function copy() {
                       type="number"
                       min="0"
                       max="359"
+                      :aria-label="t('aircraft.heading')"
                       class="input w-20"
                     />
                   </td>
@@ -1577,6 +1562,7 @@ async function copy() {
                       v-model.number="row.speed"
                       type="number"
                       class="input w-20"
+                      :aria-label="t('aircraft.speed')"
                     />
                   </td>
                   <td class="px-3 py-2">
@@ -1584,6 +1570,7 @@ async function copy() {
                       v-model="row.departure"
                       class="input w-24"
                       maxlength="4"
+                      :aria-label="t('aircraft.origin')"
                     />
                   </td>
                   <td class="px-3 py-2">
@@ -1591,10 +1578,15 @@ async function copy() {
                       v-model="row.destination"
                       class="input w-24"
                       maxlength="4"
+                      :aria-label="t('aircraft.dest')"
                     />
                   </td>
                   <td class="px-3 py-2">
-                    <input v-model="row.route" class="input w-52" />
+                    <input
+                      v-model="row.route"
+                      class="input w-52"
+                      :aria-label="t('aircraft.route')"
+                    />
                   </td>
                   <td class="px-3 py-2">
                     <input
@@ -1602,6 +1594,7 @@ async function copy() {
                       type="number"
                       step="0.5"
                       class="input w-20"
+                      :aria-label="t('aircraft.start')"
                       :placeholder="t('aircraft.startPlaceholder')"
                     />
                   </td>
@@ -1714,7 +1707,7 @@ async function copy() {
       v-model:open="sourcesOpen"
       :title="t('sources.title')"
       :description="t('sources.description')"
-      :close-label="t('cancel')"
+      :messages="chrome"
       size="lg"
     >
       <div class="grid gap-4 sm:grid-cols-2">
@@ -1736,27 +1729,13 @@ async function copy() {
           :hint="t('sources.partnersHint')"
           name="src-partners"
         />
-        <div>
-          <label for="src-equipment" class="block text-sm font-medium text-ink">
-            {{ t("sources.equipment") }}
-          </label>
-          <select
-            id="src-equipment"
-            v-model="sources.equipment"
-            class="input mt-1.5"
-          >
-            <option
-              v-for="suffix in EQUIPMENT_SUFFIXES"
-              :key="suffix.value"
-              :value="suffix.value"
-            >
-              {{ suffix.label }}
-            </option>
-          </select>
-          <p class="mt-1.5 text-xs text-faint">
-            {{ t("sources.equipmentHint") }}
-          </p>
-        </div>
+        <Select
+          id="src-equipment"
+          v-model="sources.equipment"
+          :label="t('sources.equipment')"
+          :hint="t('sources.equipmentHint')"
+          :options="[...EQUIPMENT_SUFFIXES]"
+        />
         <Input
           v-model="sources.cruise"
           :label="t('sources.cruise')"

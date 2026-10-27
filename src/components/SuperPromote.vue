@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   DataTable,
+  Dialog,
   EmptyState,
   Icon,
   Input,
@@ -14,7 +15,7 @@ import {
   Select,
   Skeleton,
   StatCard,
-  useOverlay,
+  Textarea,
 } from "@jianyuelab-org/can-ui";
 import {
   ratingId,
@@ -26,6 +27,8 @@ import { apiFetch } from "@/lib/canApi";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
   locale: string;
   sessionUserId: string;
 }>();
@@ -83,13 +86,14 @@ const error = ref<string | null>(null);
 const searchTerm = ref("");
 const ratingFilter = ref<string>("all");
 const statusFilter = ref<string>("all");
+// The filters show no visible label — the placeholder and the "all …" option
+// say what they are — so each carries a screen-reader-only one.
+const searchId = useId();
+const ratingFilterId = useId();
+const statusFilterId = useId();
 
 // Modal states
 const isPromoteModalOpen = ref(false);
-// Escape to close, focus trapped in the dialog, page behind locked.
-const promoteModal = useOverlay(isPromoteModalOpen);
-// Without this the dialog announces as an unnamed "dialog".
-const promoteTitleId = useId();
 const selectedUser = ref<User | null>(null);
 const selectedToRating = ref<number>(1);
 const comment = ref("");
@@ -317,7 +321,10 @@ const selectedFromRatingLabel = computed(() =>
 
 const modalRatingOptions = computed(() =>
   selectedUser.value
-    ? getRatingOptions(ratingId(selectedUser.value.rating))
+    ? getRatingOptions(ratingId(selectedUser.value.rating)).map((option) => ({
+        value: option.id,
+        label: `${option.short} - ${option.long}`,
+      }))
     : [],
 );
 
@@ -357,7 +364,14 @@ const statusSelectOptions = computed(() => [
   <div v-else class="space-y-6">
     <PageHeader
       :title="t('title')"
-      :description="`${t('instructorOnlyDescription', { description: t('description') })} - ${regionLabel}`"
+      :description="
+        [
+          t('instructorOnlyDescription', { description: t('description') }),
+          regionLabel,
+        ]
+          .filter(Boolean)
+          .join(' · ')
+      "
       icon="shieldCheck"
       flush
     />
@@ -366,6 +380,7 @@ const statusSelectOptions = computed(() => [
       v-if="notice"
       :variant="notice.variant"
       dismissible
+      :messages="chrome"
       @dismiss="notice = null"
     >
       {{ notice.text }}
@@ -389,19 +404,42 @@ const statusSelectOptions = computed(() => [
 
     <!-- Search and Filter -->
     <Card>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-center">
-        <Input v-model="searchTerm" :placeholder="t('searchUser')">
-          <template #leadingIcon>
-            <!-- MagnifyingGlassIcon -->
-            <Icon name="magnifyingGlass" class="size-5" />
-          </template>
-        </Input>
+      <div class="grid grid-cols-1 items-center gap-4 md:grid-cols-4">
+        <div>
+          <label :for="searchId" class="sr-only">{{ t("searchUser") }}</label>
+          <Input
+            :id="searchId"
+            v-model="searchTerm"
+            type="search"
+            :placeholder="t('searchUser')"
+          >
+            <template #leadingIcon>
+              <Icon name="magnifyingGlass" class="size-5" />
+            </template>
+          </Input>
+        </div>
 
-        <Select v-model="ratingFilter" :options="ratingSelectOptions" />
+        <div>
+          <label :for="ratingFilterId" class="sr-only">{{
+            t("currentRating")
+          }}</label>
+          <Select
+            :id="ratingFilterId"
+            v-model="ratingFilter"
+            :options="ratingSelectOptions"
+          />
+        </div>
 
-        <Select v-model="statusFilter" :options="statusSelectOptions" />
+        <div>
+          <label :for="statusFilterId" class="sr-only">{{ t("status") }}</label>
+          <Select
+            :id="statusFilterId"
+            v-model="statusFilter"
+            :options="statusSelectOptions"
+          />
+        </div>
 
-        <div class="text-sm text-muted">
+        <div class="tnum text-sm text-muted" aria-live="polite">
           {{ t("showingUsers", { count: filteredUsers.length }) }}
         </div>
       </div>
@@ -478,7 +516,6 @@ const statusSelectOptions = computed(() => [
               size="sm"
               :class="!isUserActive(row) ? 'opacity-60' : ''"
             >
-              <!-- CheckCircleIcon -->
               <Icon name="checkCircle" class="size-3.5" />
               {{ t("verified") }}
             </Badge>
@@ -488,7 +525,6 @@ const statusSelectOptions = computed(() => [
               size="sm"
               :class="!isUserActive(row) ? 'opacity-60' : ''"
             >
-              <!-- XCircleIcon -->
               <Icon name="xCircle" class="size-3.5" />
               {{ t("notVerified") }}
             </Badge>
@@ -513,7 +549,6 @@ const statusSelectOptions = computed(() => [
               @click="openPromoteModal(row)"
             >
               <template #icon>
-                <!-- PlusIcon -->
                 <Icon name="plus" class="size-4" />
               </template>
               {{ t("promoteUser") }}
@@ -526,119 +561,51 @@ const statusSelectOptions = computed(() => [
       </div>
     </Card>
 
-    <!-- Promote Modal -->
-    <div
-      v-if="isPromoteModalOpen"
-      class="relative z-50"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="promoteTitleId"
+    <Dialog
+      v-model:open="isPromoteModalOpen"
+      :title="t('createPromotionRequest')"
+      :description="
+        t('createPromotionForUser', {
+          name: selectedUser?.name || '',
+          username: selectedUser?.username || '',
+        })
+      "
+      :messages="chrome"
     >
-      <div
-        class="animate-overlay-in fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
-        @click="isPromoteModalOpen = false"
-      ></div>
-      <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div
-          class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
-        >
-          <div
-            ref="promoteModal"
-            tabindex="-1"
-            class="animate-panel-in relative overflow-hidden rounded-xl bg-surface px-4 pb-4 pt-5 text-left shadow-xl sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
-          >
-            <div>
-              <div
-                class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-info-bg"
-              >
-                <!-- StarIcon -->
-                <Icon name="star" class="size-6 text-can" />
-              </div>
-              <div class="mt-3 text-center sm:mt-5">
-                <h3
-                  :id="promoteTitleId"
-                  class="text-base font-semibold leading-6 text-ink"
-                >
-                  {{ t("createPromotionRequest") }}
-                </h3>
-                <div class="mt-2">
-                  <p class="text-sm text-muted">
-                    {{
-                      t("createPromotionForUser", {
-                        name: selectedUser?.name || "",
-                        username: selectedUser?.username || "",
-                      })
-                    }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-5 space-y-4">
-              <Input
-                :label="t('selectFromRating')"
-                disabled
-                :model-value="selectedFromRatingLabel"
-              />
-
-              <div>
-                <label class="block text-sm font-medium text-ink">
-                  {{ t("selectToRating") }}
-                </label>
-                <select v-model.number="selectedToRating" class="input mt-2">
-                  <option
-                    v-for="option in modalRatingOptions"
-                    :key="option.id"
-                    :value="option.id"
-                  >
-                    {{ option.short }} - {{ option.long }}
-                  </option>
-                </select>
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-ink">
-                  {{ t("comment") }}
-                </label>
-                <textarea
-                  :rows="4"
-                  v-model="comment"
-                  :placeholder="t('commentPlaceholder')"
-                  class="input mt-2"
-                ></textarea>
-              </div>
-            </div>
-
-            <AlertBox v-if="formError" variant="danger" class="mt-5">
-              {{ formError }}
-            </AlertBox>
-
-            <div
-              class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3"
-            >
-              <Button
-                type="button"
-                block
-                :loading="submitting"
-                :disabled="submitting"
-                class="sm:col-start-2"
-                @click="handlePromote"
-              >
-                {{ submitting ? t("submitting") : t("submit") }}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                block
-                class="mt-3 sm:col-start-1 sm:mt-0"
-                @click="isPromoteModalOpen = false"
-              >
-                {{ t("cancel") }}
-              </Button>
-            </div>
-          </div>
-        </div>
+      <div class="space-y-4">
+        <Input
+          :label="t('selectFromRating')"
+          disabled
+          :model-value="selectedFromRatingLabel"
+        />
+        <Select
+          v-model="selectedToRating"
+          :label="t('selectToRating')"
+          :options="modalRatingOptions"
+        />
+        <Textarea
+          v-model="comment"
+          :label="t('comment')"
+          :placeholder="t('commentPlaceholder')"
+          :rows="4"
+        />
+        <AlertBox v-if="formError" variant="danger">
+          {{ formError }}
+        </AlertBox>
       </div>
-    </div>
+
+      <template #footer>
+        <Button variant="secondary" @click="isPromoteModalOpen = false">
+          {{ t("cancel") }}
+        </Button>
+        <Button
+          :loading="submitting"
+          :disabled="submitting"
+          @click="handlePromote"
+        >
+          {{ submitting ? t("submitting") : t("submit") }}
+        </Button>
+      </template>
+    </Dialog>
   </div>
 </template>

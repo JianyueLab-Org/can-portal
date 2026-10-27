@@ -20,11 +20,16 @@ import {
   PageHeader,
   Select,
   Skeleton,
+  Textarea,
 } from "@jianyuelab-org/can-ui";
 import { apiFetch, unwrapList } from "@/lib/canApi";
 import { evidenceState, settlementPreview } from "@/lib/activitySettlement";
 
-const props = defineProps<{ messages: Record<string, unknown> }>();
+const props = defineProps<{
+  messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
+}>();
 const t = createTranslator(props.messages);
 
 const ROLE_KEYS = ["pilot", "controller", "sup"] as const;
@@ -504,6 +509,7 @@ onMounted(load);
       class="mb-6"
       :variant="feedback.type === 'success' ? 'success' : 'danger'"
       dismissible
+      :messages="chrome"
       @dismiss="feedback = null"
     >
       {{ feedback.text }}
@@ -521,6 +527,14 @@ onMounted(load);
           :loading-label="t('loading')"
           :empty="t('noActivities')"
         >
+          <!-- Titles wrap: DataTable cells are nowrap, and one long title
+               used to crush the start-time column into a one-word tower and
+               push the actions off the right edge. -->
+          <template #cell-title="{ row }">
+            <span class="block whitespace-normal sm:min-w-40 sm:max-w-xs">{{
+              row.title
+            }}</span>
+          </template>
           <template #cell-board="{ row }">
             <Badge :variant="row.professional ? 'info' : 'neutral'" size="sm">
               {{
@@ -529,7 +543,7 @@ onMounted(load);
             </Badge>
           </template>
           <template #cell-startsAt="{ row }">
-            <div class="whitespace-normal">
+            <div class="whitespace-normal sm:min-w-72">
               {{ formatDate(row.startsAt) }}
               <span v-if="row.endsAt" class="block text-xs text-faint">
                 {{ t("untilTime", { time: formatDate(row.endsAt) }) }}
@@ -555,7 +569,7 @@ onMounted(load);
             </span>
           </template>
           <template #cell-actions="{ row }">
-            <div class="flex justify-end gap-2">
+            <div class="flex flex-wrap justify-end gap-2">
               <Button
                 v-if="row.status === 1"
                 size="sm"
@@ -608,6 +622,7 @@ onMounted(load);
       :activity-title="briefingFor.title"
       :locked="briefingFor.status === 2 || briefingFor.status === 3"
       :messages="messages"
+      :chrome="chrome"
       @close="briefingFor = null"
       @changed="load(true)"
     />
@@ -617,7 +632,7 @@ onMounted(load);
       v-model:open="createOpen"
       :title="t('create')"
       :description="t('createHint')"
-      :close-label="t('close')"
+      :messages="chrome"
     >
       <form ref="createForm" class="space-y-4" @submit.prevent="create">
         <AlertBox v-if="dialogError" variant="danger">{{
@@ -680,7 +695,7 @@ onMounted(load);
       v-model:open="modalOpen"
       :title="current?.title"
       :description="t('attendanceHint')"
-      :close-label="t('close')"
+      :messages="chrome"
     >
       <AlertBox v-if="dialogError" variant="danger" class="mb-4">{{
         dialogError
@@ -751,27 +766,19 @@ onMounted(load);
       v-model:open="editOpen"
       :title="editing?.title"
       :description="t('editHint')"
-      :close-label="t('close')"
+      :messages="chrome"
     >
       <div class="space-y-4">
         <AlertBox v-if="dialogError" variant="danger">{{
           dialogError
         }}</AlertBox>
-        <div>
-          <label
-            for="edit-description"
-            class="block text-sm font-medium text-ink"
-          >
-            {{ t("formDescription") }}
-          </label>
-          <textarea
-            id="edit-description"
-            v-model="editDescription"
-            rows="5"
-            :maxlength="MAX_DESCRIPTION_LENGTH"
-            class="input mt-1.5 resize-y"
-          ></textarea>
-        </div>
+        <Textarea
+          id="edit-description"
+          v-model="editDescription"
+          :label="t('formDescription')"
+          :rows="5"
+          :maxlength="MAX_DESCRIPTION_LENGTH"
+        />
 
         <!-- The start time stays fixed here — see the PATCH route. The end
              time is editable because every activity created before it
@@ -807,7 +814,7 @@ onMounted(load);
       :open="!!cancelTarget"
       size="sm"
       :title="t('cancelTitle')"
-      :close-label="t('close')"
+      :messages="chrome"
       @close="cancelTarget = null"
     >
       <AlertBox v-if="dialogError" variant="danger" class="mb-4">{{

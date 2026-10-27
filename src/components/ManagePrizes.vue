@@ -26,13 +26,18 @@ import {
   Button,
   Card,
   DataTable,
+  Dialog,
   Icon,
   Input,
   PageHeader,
 } from "@jianyuelab-org/can-ui";
 import { apiFetch, unwrapList } from "@/lib/canApi";
 
-const props = defineProps<{ messages: Record<string, unknown> }>();
+const props = defineProps<{
+  messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
+}>();
 const t = createTranslator(props.messages);
 
 interface Prize {
@@ -247,9 +252,42 @@ async function save() {
   }
 }
 
-async function remove(prize: Prize) {
-  if (!window.confirm(t("confirmDelete", { name: prize.name }))) return;
+/**
+ * 删除奖品、取消兑换都先确认 —— 两件都撤不回来。用页内的 Dialog 而不是
+ * `window.confirm`：后者阻塞整页、不跟主题，和本站其余的确认（取消活动、发布抽奖）
+ * 也不是一个样子。
+ */
+const confirming = ref<
+  | { kind: "delete"; prize: Prize }
+  | { kind: "cancel"; redemption: Redemption }
+  | null
+>(null);
+const confirmBusy = ref(false);
+const confirmCopy = computed(() => {
+  const pending = confirming.value;
+  if (!pending) return null;
+  return pending.kind === "delete"
+    ? {
+        title: t("delete"),
+        body: t("confirmDelete", { name: pending.prize.name }),
+      }
+    : { title: t("cancelRedemption"), body: t("confirmCancel") };
+});
 
+async function confirmPending() {
+  const pending = confirming.value;
+  if (!pending) return;
+  confirmBusy.value = true;
+  try {
+    if (pending.kind === "delete") await remove(pending.prize);
+    else await setStatus(pending.redemption, REDEMPTION_CANCELLED);
+  } finally {
+    confirmBusy.value = false;
+    confirming.value = null;
+  }
+}
+
+async function remove(prize: Prize) {
   feedback.value = null;
   try {
     const response = await apiFetch(`/api/v1/super/prize/${prize.id}`, {
@@ -272,9 +310,6 @@ async function remove(prize: Prize) {
 }
 
 async function setStatus(redemption: Redemption, status: number) {
-  if (status === REDEMPTION_CANCELLED && !window.confirm(t("confirmCancel")))
-    return;
-
   busyRedemption.value = redemption.id;
   feedback.value = null;
 
@@ -325,6 +360,7 @@ onMounted(load);
       v-if="feedback"
       :variant="feedback.type === 'success' ? 'success' : 'danger'"
       dismissible
+      :messages="chrome"
       class="mb-6"
       @dismiss="feedback = null"
     >
@@ -394,10 +430,17 @@ onMounted(load);
         :empty-description="t('noPrizesHint')"
       >
         <template #cell-name="{ row }">
-          <span class="font-medium text-ink">{{ row.name }}</span>
-          <span v-if="row.description" class="mt-0.5 block text-xs text-faint">
-            {{ row.description }}
-          </span>
+          <!-- One root: below sm DataTable lays each cell out as a flex row,
+               and sibling spans would sit side by side instead of stacking. -->
+          <div class="min-w-0 whitespace-normal sm:min-w-40 sm:max-w-md">
+            <span class="font-medium text-ink">{{ row.name }}</span>
+            <span
+              v-if="row.description"
+              class="mt-0.5 block text-xs text-faint"
+            >
+              {{ row.description }}
+            </span>
+          </div>
         </template>
         <template #cell-stock="{ row }">
           <Badge :variant="row.stock > 0 ? 'info' : 'neutral'" size="sm">
@@ -409,7 +452,11 @@ onMounted(load);
             <Button size="sm" variant="secondary" @click="edit(row)">
               {{ t("edit") }}
             </Button>
-            <Button size="sm" variant="danger" @click="remove(row)">
+            <Button
+              size="sm"
+              variant="danger"
+              @click="confirming = { kind: 'delete', prize: row }"
+            >
               {{ t("delete") }}
             </Button>
           </div>
@@ -435,9 +482,16 @@ onMounted(load);
         :empty="t('noRedemptions')"
       >
         <template #cell-member="{ row }">
-          <span class="font-medium text-ink">{{ row.name ?? "—" }}</span>
-          <span class="tnum mt-0.5 block font-mono text-xs text-faint">{{
-            row.username
+          <div class="min-w-0">
+            <span class="font-medium text-ink">{{ row.name ?? "—" }}</span>
+            <span class="tnum mt-0.5 block font-mono text-xs text-faint">{{
+              row.username
+            }}</span>
+          </div>
+        </template>
+        <template #cell-prizeName="{ row }">
+          <span class="block whitespace-normal sm:min-w-40 sm:max-w-xs">{{
+            row.prizeName
           }}</span>
         </template>
         <template #cell-status="{ row }">
@@ -462,7 +516,7 @@ onMounted(load);
               size="sm"
               variant="secondary"
               :loading="busyRedemption === row.id"
-              @click="setStatus(row, REDEMPTION_CANCELLED)"
+              @click="confirming = { kind: 'cancel', redemption: row }"
             >
               {{ t("cancelRedemption") }}
             </Button>
@@ -470,5 +524,28 @@ onMounted(load);
         </template>
       </DataTable>
     </Card>
+
+    <Dialog
+      :open="!!confirming"
+      size="sm"
+      :title="confirmCopy?.title"
+      :dismissible="!confirmBusy"
+      :messages="chrome"
+      @close="confirming = null"
+    >
+      <p class="text-sm text-muted">{{ confirmCopy?.body }}</p>
+      <template #footer>
+        <Button
+          variant="secondary"
+          :disabled="confirmBusy"
+          @click="confirming = null"
+        >
+          {{ t("confirmKeep") }}
+        </Button>
+        <Button variant="danger" :loading="confirmBusy" @click="confirmPending">
+          {{ confirmCopy?.title }}
+        </Button>
+      </template>
+    </Dialog>
   </div>
 </template>

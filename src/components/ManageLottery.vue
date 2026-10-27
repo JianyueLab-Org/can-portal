@@ -59,7 +59,11 @@ import {
 } from "@jianyuelab-org/can-ui";
 import { api, unwrapList } from "@/lib/canApi";
 
-const props = defineProps<{ messages: Record<string, unknown> }>();
+const props = defineProps<{
+  messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
+}>();
 const t = createTranslator(props.messages);
 
 const lotteries = ref<LotterySummary[]>([]);
@@ -330,6 +334,7 @@ onMounted(load);
       class="mb-6"
       :variant="feedback.type === 'success' ? 'success' : 'danger'"
       dismissible
+      :messages="chrome"
       @dismiss="feedback = null"
     >
       {{ feedback.text }}
@@ -353,11 +358,17 @@ onMounted(load);
           :empty="t('noLotteries')"
           :empty-description="t('noLotteriesHint')"
         >
+          <!-- Titles wrap and the wrapping columns hold a floor: DataTable
+               cells are nowrap, so one long title used to squeeze the close
+               time and prize list into one-word towers. -->
           <template #cell-title="{ row }">
-            <span class="font-medium text-ink">{{ row.title }}</span>
+            <span
+              class="block whitespace-normal font-medium text-ink sm:min-w-40 sm:max-w-xs"
+              >{{ row.title }}</span
+            >
           </template>
           <template #cell-closesAt="{ row }">
-            <span class="whitespace-normal text-sm">{{
+            <span class="block whitespace-normal text-sm sm:min-w-72">{{
               formatDate(row.closesAt)
             }}</span>
           </template>
@@ -367,15 +378,16 @@ onMounted(load);
             </Badge>
           </template>
           <template #cell-prizes="{ row }">
-            <span class="whitespace-normal text-xs text-muted">{{
-              prizeList(row.prizes)
-            }}</span>
+            <span
+              class="block whitespace-normal text-xs text-muted sm:min-w-40"
+              >{{ prizeList(row.prizes) }}</span
+            >
           </template>
           <template #cell-entryCount="{ row }">
             <span class="tnum">{{ row.entryCount }}</span>
           </template>
           <template #cell-actions="{ row }">
-            <div class="flex justify-end gap-2">
+            <div class="flex flex-wrap justify-end gap-2 sm:min-w-32">
               <Button size="sm" variant="secondary" @click="openDetail(row)">
                 {{ t("actions.view") }}
               </Button>
@@ -414,7 +426,7 @@ onMounted(load);
       size="lg"
       :title="editingId ? t('editor.editTitle') : t('editor.newTitle')"
       :description="t('editor.hint')"
-      :close-label="t('close')"
+      :messages="chrome"
     >
       <form class="space-y-4" @submit.prevent="save">
         <AlertBox v-if="dialogError" variant="danger">{{
@@ -520,7 +532,7 @@ onMounted(load);
       v-model:open="detailOpen"
       size="lg"
       :title="detail?.title ?? t('loading')"
-      :close-label="t('close')"
+      :messages="chrome"
     >
       <Skeleton v-if="detailLoading" variant="text" :count="5" />
       <div v-else-if="detail" class="space-y-6">
@@ -628,7 +640,7 @@ onMounted(load);
           ? t('confirm.publishTitle')
           : t('confirm.cancelTitle')
       "
-      :close-label="t('close')"
+      :messages="chrome"
       @close="pending = null"
     >
       <AlertBox v-if="dialogError" variant="danger" class="mb-4">{{

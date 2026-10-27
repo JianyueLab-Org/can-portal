@@ -2,6 +2,7 @@
 import AppLayout from "@/layouts/AppLayout.astro";
 import ManageFeedback from "@/components/ManageFeedback.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+import { chromeMessages } from "@/lib/chrome";
 
 const locale = getLocale(Astro.cookies);
 const messages = getMessages(locale, "feedback.manage");
@@ -9,5 +10,9 @@ const tf = useTranslations(locale, "frame");
 ---
 
 <AppLayout title={tf("feedbackManage")}>
-  <ManageFeedback messages={messages} client:load />
+  <ManageFeedback
+    messages={messages}
+    chrome={chromeMessages(locale)}
+    client:load
+  />
 </AppLayout>

@@ -208,11 +208,8 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
     }}</AlertBox>
 
     <!-- 授予 -->
-    <Card class="mt-6 p-5">
-      <h2 class="text-sm font-semibold text-ink">{{ t("grant.title") }}</h2>
-      <p class="mt-1 text-sm text-muted">{{ t("grant.help") }}</p>
-
-      <div class="mt-4 max-w-sm">
+    <Card :title="t('grant.title')" :subtitle="t('grant.help')" class="mt-6">
+      <div class="max-w-sm">
         <Input
           v-model="search"
           type="search"
@@ -278,11 +275,13 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
         </template>
 
         <template #cell-username="{ row }">
-          <span class="font-mono font-medium">{{ row.username }}</span>
-          <span class="ml-2 text-muted">{{ row.name }}</span>
-          <Badge v-if="row.username === props.sessionUserId" class="ml-2">{{
-            t("current.you")
-          }}</Badge>
+          <span class="min-w-0">
+            <span class="font-mono font-medium">{{ row.username }}</span>
+            <span class="ml-2 text-muted">{{ row.name }}</span>
+            <Badge v-if="row.username === props.sessionUserId" class="ml-2">{{
+              t("current.you")
+            }}</Badge>
+          </span>
         </template>
 
         <template #cell-rating="{ row }">
@@ -322,8 +321,10 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
 
       <DataTable :columns="columns" :rows="orphaned" row-key="username" dense>
         <template #cell-username="{ row }">
-          <span class="font-mono font-medium">{{ row.username }}</span>
-          <span class="ml-2 text-muted">{{ row.name }}</span>
+          <span class="min-w-0">
+            <span class="font-mono font-medium">{{ row.username }}</span>
+            <span class="ml-2 text-muted">{{ row.name }}</span>
+          </span>
         </template>
 
         <template #cell-rating="{ row }">

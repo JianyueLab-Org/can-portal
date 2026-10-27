@@ -252,11 +252,8 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
     }}</AlertBox>
 
     <!-- 授予 -->
-    <Card class="mt-6 p-5">
-      <h2 class="text-sm font-semibold text-ink">{{ t("grant.title") }}</h2>
-      <p class="mt-1 text-sm text-muted">{{ t("grant.help") }}</p>
-
-      <div class="mt-4 max-w-sm">
+    <Card :title="t('grant.title')" :subtitle="t('grant.help')" class="mt-6">
+      <div class="max-w-sm">
         <Input
           v-model="search"
           type="search"
@@ -282,7 +279,11 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
           <span class="text-xs text-faint">{{ ratingShort(m.rating) }}</span>
 
           <div class="ml-auto flex items-center gap-2">
+            <label :for="`grant-level-${m.username}`" class="sr-only">{{
+              t("current.setLevel")
+            }}</label>
             <Select
+              :id="`grant-level-${m.username}`"
               v-model="pending[m.username]"
               :options="levelOptions"
               :placeholder="t('levels.call')"
@@ -329,13 +330,15 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
         </template>
 
         <template #cell-username="{ row }">
-          <span class="font-mono font-medium">{{ row.username }}</span>
-          <span class="ml-2 text-muted">{{ row.name }}</span>
-          <!-- 标出「这是你」。can-api 会拒绝改自己（409），所以这一行的按钮点下
-               去必然失败 —— 提前说出来比让人点一次好。 -->
-          <Badge v-if="row.username === props.sessionUserId" class="ml-2">{{
-            t("current.you")
-          }}</Badge>
+          <span class="min-w-0">
+            <span class="font-mono font-medium">{{ row.username }}</span>
+            <span class="ml-2 text-muted">{{ row.name }}</span>
+            <!-- 标出「这是你」。can-api 会拒绝改自己（409），所以这一行的按钮点下
+                 去必然失败 —— 提前说出来比让人点一次好。 -->
+            <Badge v-if="row.username === props.sessionUserId" class="ml-2">{{
+              t("current.you")
+            }}</Badge>
+          </span>
         </template>
 
         <template #cell-rating="{ row }">
@@ -363,12 +366,15 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
              难懂。改成直接选目标级别，一步到位，也顺带让「降级」不再是个猜谜。 -->
         <template #cell-actions="{ row }">
           <div class="flex flex-wrap items-center justify-end gap-2">
+            <label :for="`access-level-${row.username}`" class="sr-only">{{
+              t("current.setLevel")
+            }}</label>
             <Select
+              :id="`access-level-${row.username}`"
               :model-value="String(row.access)"
               :options="levelOptions"
               :disabled="busy === row.username"
               class="w-36"
-              :aria-label="t('current.setLevel')"
               @update:model-value="
                 (v: string | number) => setAccess(row.username, Number(v))
               "

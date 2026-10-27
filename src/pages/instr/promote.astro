@@ -2,6 +2,7 @@
 import AppLayout from "@/layouts/AppLayout.astro";
 import SuperPromote from "@/components/SuperPromote.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+import { chromeMessages } from "@/lib/chrome";
 
 const locale = getLocale(Astro.cookies);
 const messages = getMessages(locale, "promotion.super");
@@ -12,6 +13,7 @@ const tf = useTranslations(getLocale(Astro.cookies), "frame");
 <AppLayout title={tf("instructors.items.promotion")}>
   <SuperPromote
     messages={messages}
+    chrome={chromeMessages(locale)}
     locale={locale}
     sessionUserId={sessionUserId}
     client:load

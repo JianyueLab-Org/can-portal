@@ -49,6 +49,8 @@ const props = defineProps<{
   /** Settled or cancelled — the briefing becomes a read-only record. */
   locked: boolean;
   messages: Record<string, unknown>;
+  /** can-ui 自绘按钮的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
 }>();
 const emit = defineEmits<{ (e: "close"): void; (e: "changed"): void }>();
 
@@ -530,13 +532,16 @@ onMounted(load);
     size="lg"
     :title="activityTitle"
     :description="t('briefingHint')"
-    :close-label="t('close')"
+    :messages="chrome"
   >
     <!-- Two lists, one at a time: side by side they would each get half a
          phone's width. In the toolbar slot, so the tabs stay put while the
          list under them scrolls. -->
     <template #toolbar>
-      <div class="flex gap-1 border-b border-subtle px-5 pt-3">
+      <!-- The slot already pads and rules the toolbar; the negative margins
+           seat each tab's underline on that rule and its label on the
+           title's edge. -->
+      <div class="-mb-3 -ml-3 flex gap-1">
         <button
           v-for="entry in [
             { key: 'routes', label: t('routes'), count: routes.length },
@@ -548,6 +553,7 @@ onMounted(load);
           ]"
           :key="entry.key"
           type="button"
+          :aria-pressed="tab === entry.key"
           :class="[
             '-mb-px inline-flex items-center gap-2 border-b-2 px-3 py-2 text-sm font-medium transition',
             tab === entry.key
@@ -567,6 +573,7 @@ onMounted(load);
       class="mb-4"
       :variant="feedback.type === 'success' ? 'success' : 'danger'"
       dismissible
+      :messages="chrome"
       @dismiss="feedback = null"
     >
       {{ feedback.text }}
@@ -824,9 +831,7 @@ onMounted(load);
 
         <div v-else class="mt-3 space-y-3">
           <div v-for="group in stackGroups" :key="group.facility">
-            <p
-              class="text-[0.7rem] font-semibold tracking-wide text-muted uppercase"
-            >
+            <p class="text-xs font-semibold tracking-wide text-muted uppercase">
               {{ facilityCode(group.facility) }} ·
               {{ t(`facilities.${FACILITY_KEYS[group.facility]}`) }}
             </p>
@@ -855,6 +860,9 @@ onMounted(load);
                 <!-- 一个呼号好几个频率是真数据（RJTT_TWR 三个）。摆成选项让人挑，
                      因为一场活动里一个呼号只能开一次。 -->
                 <div v-if="seat.frequencies.length > 1" class="w-32">
+                  <label :for="`stack-freq-${seatKey(seat)}`" class="sr-only"
+                    >{{ seat.callsign }} {{ t("formFrequency") }}</label
+                  >
                   <Select
                     v-model="freqChoice[seatKey(seat)]"
                     :name="`stack-freq-${seatKey(seat)}`"
