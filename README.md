@@ -65,7 +65,7 @@ CI 跑的是同样这两条（`.github/workflows/check.yml`），一字不差。
 管它。换 AIRAC 周期时重新生成：
 
 ```bash
-SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/Sector bun run build:sweatbox
+SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/utils/Sector bun run build:sweatbox
 ```
 
 **这份数据不许进公开仓库。** 它派生自商用 AIRAC 周期和不属于我们的扇区包 —— 这也
