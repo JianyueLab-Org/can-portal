@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   DataTable,
+  Dialog,
   EmptyState,
   Icon,
   Input,
@@ -14,13 +15,15 @@ import {
   Select,
   Skeleton,
   StatCard,
-  useOverlay,
+  Textarea,
 } from "@jianyuelab-org/can-ui";
 import { ratingId, ratingTrans, type RatingRef } from "@/lib/tools";
 import { apiFetch, unwrapList } from "@/lib/canApi";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
   sessionUserId: string;
   viewerRating: number;
   // SUP (11) 起。页面按 `@/lib/config` 算好传进来 —— 那个模块读 process.env，
@@ -57,13 +60,13 @@ const loading = ref(true);
 const error = ref<string | null>(null);
 const searchTerm = ref("");
 const statusFilter = ref<string>("all");
+// The filters show no visible label — the placeholder and the "all …" option
+// say what they are — so each carries a screen-reader-only one.
+const searchId = useId();
+const statusFilterId = useId();
 
 // Modal states
 const isApprovalModalOpen = ref(false);
-// Escape to close, focus trapped in the dialog, page behind locked.
-const approvalModal = useOverlay(isApprovalModalOpen);
-// Without this the dialog announces as an unnamed "dialog".
-const approvalTitleId = useId();
 const selectedPromotion = ref<Promotion | null>(null);
 const approvalComment = ref("");
 const approvalAction = ref<"approve" | "reject">("approve");
@@ -285,6 +288,7 @@ const statusFilterOptions = computed(() => [
       v-if="notice"
       :variant="notice.variant"
       dismissible
+      :messages="chrome"
       @dismiss="notice = null"
     >
       {{ notice.text }}
@@ -313,27 +317,43 @@ const statusFilterOptions = computed(() => [
       <StatCard
         :label="t('rejectedApplications')"
         :value="rejectedPromotions"
-        icon="xMark"
+        icon="xCircle"
         accent="danger"
       />
     </div>
 
     <!-- Search and Filter -->
     <Card>
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <Input
-          v-model="searchTerm"
-          type="text"
-          :placeholder="t('searchApplicantOrInstructor')"
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <div>
+          <label :for="searchId" class="sr-only">{{
+            t("searchApplicantOrInstructor")
+          }}</label>
+          <Input
+            :id="searchId"
+            v-model="searchTerm"
+            type="search"
+            :placeholder="t('searchApplicantOrInstructor')"
+          >
+            <template #leadingIcon>
+              <Icon name="magnifyingGlass" class="size-5" />
+            </template>
+          </Input>
+        </div>
+
+        <div>
+          <label :for="statusFilterId" class="sr-only">{{ t("status") }}</label>
+          <Select
+            :id="statusFilterId"
+            v-model="statusFilter"
+            :options="statusFilterOptions"
+          />
+        </div>
+
+        <div
+          class="tnum flex items-center text-sm text-muted"
+          aria-live="polite"
         >
-          <template #leadingIcon>
-            <Icon name="magnifyingGlass" class="size-5" />
-          </template>
-        </Input>
-
-        <Select v-model="statusFilter" :options="statusFilterOptions" />
-
-        <div class="flex items-center text-sm text-muted">
           {{ t("showingApplicants", { count: filteredPromotions.length }) }}
         </div>
       </div>
@@ -345,7 +365,7 @@ const statusFilterOptions = computed(() => [
         <h2 class="flex items-center gap-3 text-xl font-semibold text-ink">
           <Icon name="academicCap" class="size-6 shrink-0 text-can" />
           {{ t("promotionListTitle") }}
-          <Badge variant="neutral">
+          <Badge variant="neutral" size="sm">
             {{ filteredPromotions.length }}
           </Badge>
         </h2>
@@ -374,6 +394,7 @@ const statusFilterOptions = computed(() => [
         </template>
         <template #cell-status="{ row }">
           <Badge
+            size="sm"
             :variant="
               row.status === 0
                 ? 'warning'
@@ -395,7 +416,7 @@ const statusFilterOptions = computed(() => [
           <span class="text-muted">{{ formatDate(row.createdDate) }}</span>
         </template>
         <template #cell-actions="{ row }">
-          <div v-if="row.status === 0 && canDecide(row)" class="flex space-x-2">
+          <div v-if="row.status === 0 && canDecide(row)" class="flex gap-2">
             <Button
               variant="primary"
               size="sm"
@@ -417,138 +438,64 @@ const statusFilterOptions = computed(() => [
               {{ t("reject") }}
             </Button>
           </div>
-          <span v-if="row.status !== 0" class="text-xs text-faint">
+          <span v-else-if="row.status === 0" class="text-xs text-faint">—</span>
+          <span v-else class="text-xs text-faint">
             {{ t("processed") }}
           </span>
         </template>
       </DataTable>
     </Card>
 
-    <!-- Approval Modal -->
-    <div
-      v-if="isApprovalModalOpen"
-      class="relative z-50"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="approvalTitleId"
+    <Dialog
+      v-model:open="isApprovalModalOpen"
+      :title="
+        approvalAction === 'approve' ? t('confirmApprove') : t('confirmReject')
+      "
+      :description="
+        t(
+          approvalAction === 'approve'
+            ? 'confirmApproveMessage'
+            : 'confirmRejectMessage',
+          {
+            user: selectedPromotion?.applicant || '',
+            from: ratingShortOrEmpty(selectedPromotion?.fromRating),
+            to: ratingShortOrEmpty(selectedPromotion?.toRating),
+          },
+        )
+      "
+      :messages="chrome"
     >
-      <div
-        class="animate-overlay-in fixed inset-0 bg-gray-900/60 backdrop-blur-sm"
-        @click="isApprovalModalOpen = false"
-      ></div>
-      <div class="fixed inset-0 z-10 overflow-y-auto">
-        <div
-          class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0"
-        >
-          <div
-            ref="approvalModal"
-            tabindex="-1"
-            class="animate-panel-in relative overflow-hidden rounded-lg bg-surface px-4 pb-4 pt-5 text-left shadow-xl sm:my-8 sm:w-full sm:max-w-lg sm:p-6"
-          >
-            <div>
-              <div
-                :class="[
-                  'mx-auto flex h-12 w-12 items-center justify-center rounded-full',
-                  approvalAction === 'approve'
-                    ? 'bg-success-bg text-success-fg'
-                    : 'bg-danger-bg text-danger-fg',
-                ]"
-              >
-                <Icon
-                  :name="
-                    approvalAction === 'approve' ? 'checkCircle' : 'xCircle'
-                  "
-                  class="size-6"
-                />
-              </div>
-              <div class="mt-3 text-center sm:mt-5">
-                <h3
-                  :id="approvalTitleId"
-                  class="text-base font-semibold leading-6 text-ink"
-                >
-                  {{
-                    approvalAction === "approve"
-                      ? t("confirmApprove")
-                      : t("confirmReject")
-                  }}
-                </h3>
-                <div class="mt-2">
-                  <p class="text-sm text-muted">
-                    {{
-                      approvalAction === "approve"
-                        ? t("confirmApproveMessage", {
-                            user: selectedPromotion?.applicant || "",
-                            from: ratingShortOrEmpty(
-                              selectedPromotion?.fromRating,
-                            ),
-                            to: ratingShortOrEmpty(selectedPromotion?.toRating),
-                          })
-                        : t("confirmRejectMessage", {
-                            user: selectedPromotion?.applicant || "",
-                            from: ratingShortOrEmpty(
-                              selectedPromotion?.fromRating,
-                            ),
-                            to: ratingShortOrEmpty(selectedPromotion?.toRating),
-                          })
-                    }}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div class="mt-5">
-              <div>
-                <label class="block text-sm font-medium text-ink">
-                  {{ t("approvalComment") }}
-                </label>
-                <div class="mt-1">
-                  <textarea
-                    :rows="4"
-                    v-model="approvalComment"
-                    :placeholder="t('approvalCommentPlaceholder')"
-                    class="input"
-                  ></textarea>
-                </div>
-              </div>
-            </div>
-
-            <AlertBox v-if="formError" variant="danger" class="mt-5">
-              {{ formError }}
-            </AlertBox>
-
-            <div
-              class="mt-5 sm:mt-6 sm:grid sm:grid-flow-row-dense sm:grid-cols-2 sm:gap-3"
-            >
-              <Button
-                type="button"
-                :variant="approvalAction === 'approve' ? 'primary' : 'danger'"
-                block
-                :loading="submitting"
-                :disabled="submitting"
-                class="sm:col-start-2"
-                @click="handleApproval"
-              >
-                {{
-                  submitting
-                    ? t("processing")
-                    : approvalAction === "approve"
-                      ? t("approve")
-                      : t("reject")
-                }}
-              </Button>
-              <Button
-                type="button"
-                variant="secondary"
-                block
-                class="mt-3 sm:col-start-1 sm:mt-0"
-                @click="isApprovalModalOpen = false"
-              >
-                {{ t("cancel") }}
-              </Button>
-            </div>
-          </div>
-        </div>
+      <div class="space-y-4">
+        <Textarea
+          v-model="approvalComment"
+          :label="t('approvalComment')"
+          :placeholder="t('approvalCommentPlaceholder')"
+          :rows="4"
+        />
+        <AlertBox v-if="formError" variant="danger">
+          {{ formError }}
+        </AlertBox>
       </div>
-    </div>
+
+      <template #footer>
+        <Button variant="secondary" @click="isApprovalModalOpen = false">
+          {{ t("cancel") }}
+        </Button>
+        <Button
+          :variant="approvalAction === 'approve' ? 'primary' : 'danger'"
+          :loading="submitting"
+          :disabled="submitting"
+          @click="handleApproval"
+        >
+          {{
+            submitting
+              ? t("processing")
+              : approvalAction === "approve"
+                ? t("approve")
+                : t("reject")
+          }}
+        </Button>
+      </template>
+    </Dialog>
   </div>
 </template>

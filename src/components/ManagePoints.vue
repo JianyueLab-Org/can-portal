@@ -70,6 +70,8 @@ import { api, apiFetch, unwrapList } from "@/lib/canApi";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
   /** 当前操作人的 CAN ID。 */
   sessionUserId: string;
 }>();
@@ -441,6 +443,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
       class="mb-6"
       :variant="feedback.type === 'error' ? 'danger' : feedback.type"
       dismissible
+      :messages="chrome"
       @dismiss="feedback = null"
     >
       {{ feedback.text }}
@@ -710,7 +713,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
       :dismissible="!submitting"
       size="sm"
       :title="t('confirm.title')"
-      :close-label="t('close')"
+      :messages="chrome"
     >
       <AlertBox v-if="dialogError" variant="danger" class="mb-4">{{
         dialogError
@@ -794,7 +797,7 @@ onBeforeUnmount(() => clearTimeout(searchTimer));
       :dismissible="!reversing"
       size="sm"
       :title="t('reverse.title')"
-      :close-label="t('close')"
+      :messages="chrome"
       @close="reverseTarget = null"
     >
       <AlertBox v-if="reverseError" variant="danger" class="mb-4">{{

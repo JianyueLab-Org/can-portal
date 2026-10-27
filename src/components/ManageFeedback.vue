@@ -32,13 +32,19 @@ import {
   Button,
   Card,
   DataTable,
+  Dialog,
   Icon,
   Input,
   PageHeader,
+  Textarea,
 } from "@jianyuelab-org/can-ui";
 import { apiFetch, unwrapList } from "@/lib/canApi";
 
-const props = defineProps<{ messages: Record<string, unknown> }>();
+const props = defineProps<{
+  messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×、AlertBox 的关闭）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
+}>();
 const t = createTranslator(props.messages);
 
 interface Person {
@@ -304,9 +310,50 @@ async function save(publish: boolean) {
   }
 }
 
-async function setStatus(item: FeedbackCase, status: number) {
-  if (status === CASE_DRAFT && !window.confirm(t("confirmUnpublish"))) return;
+/**
+ * 撤下公示、删除都先确认：前者让一篇全网可见的公示消失，后者连编号一起作废。用页内
+ * 的 Dialog 而不是 `window.confirm`：后者阻塞整页、不跟主题，和本站其余的确认也不是
+ * 一个样子。
+ */
+const confirming = ref<{
+  kind: "unpublish" | "delete";
+  item: FeedbackCase;
+} | null>(null);
+const confirmBusy = ref(false);
+const confirmCopy = computed(() => {
+  const pending = confirming.value;
+  if (!pending) return null;
+  return pending.kind === "delete"
+    ? {
+        title: t("delete"),
+        body: t("confirmDelete", { code: pending.item.code }),
+      }
+    : { title: t("unpublish"), body: t("confirmUnpublish") };
+});
 
+async function confirmPending() {
+  const pending = confirming.value;
+  if (!pending) return;
+  confirmBusy.value = true;
+  try {
+    if (pending.kind === "delete") await remove(pending.item);
+    else await setStatus(pending.item, CASE_DRAFT);
+  } finally {
+    confirmBusy.value = false;
+    confirming.value = null;
+  }
+}
+
+/** 公示直接发；撤下要先确认。 */
+function toggleStatus(item: FeedbackCase) {
+  if (item.status === CASE_PUBLISHED) {
+    confirming.value = { kind: "unpublish", item };
+  } else {
+    void setStatus(item, CASE_PUBLISHED);
+  }
+}
+
+async function setStatus(item: FeedbackCase, status: number) {
   busyId.value = item.id;
   try {
     // 整条回传，不是只发一个开关。这条 PATCH 在 can-api 上绑的是 Upsert ——
@@ -341,8 +388,6 @@ async function setStatus(item: FeedbackCase, status: number) {
 }
 
 async function remove(item: FeedbackCase) {
-  if (!window.confirm(t("confirmDelete", { code: item.code }))) return;
-
   busyId.value = item.id;
   try {
     const response = await apiFetch(`/api/v1/super/feedback/${item.id}`, {
@@ -376,6 +421,7 @@ onMounted(load);
       v-if="feedback"
       :variant="feedback.type === 'success' ? 'success' : 'danger'"
       dismissible
+      :messages="chrome"
       class="mb-6"
       @dismiss="feedback = null"
     >
@@ -397,44 +443,40 @@ onMounted(load);
           required
         />
 
-        <div>
-          <label for="summary" class="block text-sm font-medium text-ink">
-            {{ t("fields.summary") }} <span class="text-danger">*</span>
-          </label>
-          <textarea
-            id="summary"
-            v-model="form.summary"
-            rows="3"
-            :maxlength="LIMITS.summary"
-            class="input mt-1.5"
-          ></textarea>
-          <p v-if="errorText('summary')" class="mt-1 text-xs text-danger">
-            {{ errorText("summary") }}
-          </p>
-        </div>
+        <Textarea
+          v-model="form.summary"
+          name="summary"
+          :label="t('fields.summary')"
+          :error="errorText('summary')"
+          :maxlength="LIMITS.summary"
+          :rows="3"
+          required
+        />
 
-        <div>
-          <label for="result" class="block text-sm font-medium text-ink">
-            {{ t("fields.result") }} <span class="text-danger">*</span>
-          </label>
-          <textarea
-            id="result"
-            v-model="form.result"
-            rows="3"
-            :maxlength="LIMITS.result"
-            class="input mt-1.5"
-          ></textarea>
-          <p v-if="errorText('result')" class="mt-1 text-xs text-danger">
-            {{ errorText("result") }}
-          </p>
-        </div>
+        <Textarea
+          v-model="form.result"
+          name="result"
+          :label="t('fields.result')"
+          :error="errorText('result')"
+          :maxlength="LIMITS.result"
+          :rows="3"
+          required
+        />
 
         <div class="grid gap-4 lg:grid-cols-2">
           <!-- Handled by, and who the case is about. Same picker, twice. -->
           <div v-for="picker in pickers" :key="picker.side">
-            <label class="block text-sm font-medium text-ink">
+            <label
+              :for="`case-${picker.side}-search`"
+              class="block text-sm font-medium text-ink"
+            >
               {{ picker.label }}
-              <span v-if="picker.required" class="text-danger">*</span>
+              <span
+                v-if="picker.required"
+                class="text-danger"
+                aria-hidden="true"
+                >*</span
+              >
             </label>
             <p class="mt-0.5 text-xs text-muted">{{ picker.hint }}</p>
 
@@ -461,9 +503,10 @@ onMounted(load);
 
             <div class="mt-2 flex gap-2">
               <input
+                :id="`case-${picker.side}-search`"
                 v-model="search[picker.side]"
                 type="search"
-                class="input text-sm"
+                class="input"
                 :placeholder="t('searchMember')"
                 @keyup.enter="lookup(picker.side)"
               />
@@ -488,7 +531,7 @@ onMounted(load);
                 </button>
               </li>
             </ul>
-            <p v-if="picker.error" class="mt-1 text-xs text-danger">
+            <p v-if="picker.error" class="mt-1.5 text-sm text-danger">
               {{ picker.error }}
             </p>
           </div>
@@ -533,19 +576,30 @@ onMounted(load);
           }}</span>
         </template>
         <template #cell-title="{ row }">
-          <span class="font-medium text-ink">{{ row.title }}</span>
-          <span class="mt-0.5 block max-w-md truncate text-xs text-faint">{{
-            row.summary
-          }}</span>
+          <!-- One root: below sm DataTable lays each cell out as a flex row,
+               and sibling spans would sit side by side instead of stacking.
+               Wraps on wider screens too: DataTable cells are nowrap, and a
+               long title used to push the actions off the right edge. -->
+          <div class="min-w-0 whitespace-normal sm:min-w-48 sm:max-w-md">
+            <span class="font-medium text-ink">{{ row.title }}</span>
+            <span class="mt-0.5 block truncate text-xs text-faint">{{
+              row.summary
+            }}</span>
+          </div>
         </template>
         <template #cell-subjects="{ row }">
-          <span v-if="row.subjects.length" class="text-sm text-ink">
+          <span
+            v-if="row.subjects.length"
+            class="block whitespace-normal text-sm text-ink sm:min-w-24 sm:max-w-xs"
+          >
             {{ row.subjects.map((s) => s.name ?? s.username).join("、") }}
           </span>
           <span v-else class="text-xs text-faint">—</span>
         </template>
         <template #cell-handlers="{ row }">
-          <span class="text-sm text-ink">
+          <span
+            class="block whitespace-normal text-sm text-ink sm:min-w-24 sm:max-w-xs"
+          >
             {{
               row.handlers.map((h) => h.name ?? h.username).join("、") || "—"
             }}
@@ -568,12 +622,7 @@ onMounted(load);
               size="sm"
               :variant="row.status === CASE_PUBLISHED ? 'ghost' : 'primary'"
               :loading="busyId === row.id"
-              @click="
-                setStatus(
-                  row,
-                  row.status === CASE_PUBLISHED ? CASE_DRAFT : CASE_PUBLISHED,
-                )
-              "
+              @click="toggleStatus(row)"
             >
               {{
                 row.status === CASE_PUBLISHED ? t("unpublish") : t("publish")
@@ -583,7 +632,7 @@ onMounted(load);
               size="sm"
               variant="danger"
               :loading="busyId === row.id"
-              @click="remove(row)"
+              @click="confirming = { kind: 'delete', item: row }"
             >
               {{ t("delete") }}
             </Button>
@@ -591,5 +640,28 @@ onMounted(load);
         </template>
       </DataTable>
     </Card>
+
+    <Dialog
+      :open="!!confirming"
+      size="sm"
+      :title="confirmCopy?.title"
+      :dismissible="!confirmBusy"
+      :messages="chrome"
+      @close="confirming = null"
+    >
+      <p class="text-sm text-muted">{{ confirmCopy?.body }}</p>
+      <template #footer>
+        <Button
+          variant="secondary"
+          :disabled="confirmBusy"
+          @click="confirming = null"
+        >
+          {{ t("confirmKeep") }}
+        </Button>
+        <Button variant="danger" :loading="confirmBusy" @click="confirmPending">
+          {{ confirmCopy?.title }}
+        </Button>
+      </template>
+    </Dialog>
   </div>
 </template>

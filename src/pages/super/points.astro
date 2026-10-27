@@ -2,6 +2,7 @@
 import AppLayout from "@/layouts/AppLayout.astro";
 import ManagePoints from "@/components/ManagePoints.vue";
 import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+import { chromeMessages } from "@/lib/chrome";
 
 /**
  * 积分手动调整 —— SUP/ADM（`/super/*` 前缀，中间件按 11 级判）。
@@ -16,5 +17,10 @@ const tf = useTranslations(locale, "frame");
 ---
 
 <AppLayout title={tf("pointsManage")}>
-  <ManagePoints messages={messages} sessionUserId={sessionUserId} client:load />
+  <ManagePoints
+    messages={messages}
+    chrome={chromeMessages(locale)}
+    sessionUserId={sessionUserId}
+    client:load
+  />
 </AppLayout>

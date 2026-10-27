@@ -7,6 +7,7 @@ import {
   Button,
   Card,
   DataTable,
+  Dialog,
   EmptyState,
   Icon,
   Input,
@@ -15,13 +16,14 @@ import {
   Skeleton,
   StatCard,
   Toggle,
-  useOverlay,
 } from "@jianyuelab-org/can-ui";
 import { divisionTrans } from "@/lib/tools";
 import { apiFetch, unwrapList } from "@/lib/canApi";
 
 const props = defineProps<{
   messages: Record<string, unknown>;
+  /** can-ui 自绘按钮（Dialog 的 ×）的文案，见 `@/lib/chrome`。 */
+  chrome: Record<string, unknown>;
   locale: string;
   sessionUserId: string;
   // `status` 由 SUP/ADM 修改；`instructor` / `director` 仍只有 ADM 能写。
@@ -53,13 +55,13 @@ const error = ref<string | null>(null);
 const searchTerm = ref("");
 const statusFilter = ref<string>("all"); // all, active, inactive
 const permissionFilter = ref<string>("all"); // all, instructor, director
+// The filters show no visible label — the placeholder and the "all …" option
+// say what they are — so each carries a screen-reader-only one.
+const searchId = useId();
+const statusFilterId = useId();
+const permissionFilterId = useId();
 const selectedController = ref<Division | null>(null);
 const isManagePanelOpen = ref(false);
-// Escape to close, focus trapped in the dialog, page behind locked.
-const managePanel = useOverlay(isManagePanelOpen);
-// The dialog had role="dialog" + aria-modal but no accessible name, so a
-// screen reader announced it as an unlabelled dialog.
-const manageTitleId = useId();
 const editingController = ref<Division | null>(null);
 const saving = ref(false);
 // Surfaced inside the dialog rather than through alert(), which the rest of
@@ -405,18 +407,45 @@ const permissionOptions = computed(() => [
 
     <!-- Search and Filter -->
     <Card>
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Input type="text" :placeholder="t('searchId')" v-model="searchTerm">
-          <template #leadingIcon>
-            <Icon name="magnifyingGlass" class="size-5" />
-          </template>
-        </Input>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div>
+          <label :for="searchId" class="sr-only">{{ t("searchId") }}</label>
+          <Input
+            :id="searchId"
+            v-model="searchTerm"
+            type="search"
+            :placeholder="t('searchId')"
+          >
+            <template #leadingIcon>
+              <Icon name="magnifyingGlass" class="size-5" />
+            </template>
+          </Input>
+        </div>
 
-        <Select v-model="statusFilter" :options="statusOptions" />
+        <div>
+          <label :for="statusFilterId" class="sr-only">{{ t("status") }}</label>
+          <Select
+            :id="statusFilterId"
+            v-model="statusFilter"
+            :options="statusOptions"
+          />
+        </div>
 
-        <Select v-model="permissionFilter" :options="permissionOptions" />
+        <div>
+          <label :for="permissionFilterId" class="sr-only">{{
+            t("specialTags")
+          }}</label>
+          <Select
+            :id="permissionFilterId"
+            v-model="permissionFilter"
+            :options="permissionOptions"
+          />
+        </div>
 
-        <div class="flex items-center text-sm text-muted">
+        <div
+          class="tnum flex items-center text-sm text-muted"
+          aria-live="polite"
+        >
           {{ t("showing") }} {{ filteredControllers.length }} {{ t("of") }}
           {{ totalControllers }} {{ t("controllersCount") }}
         </div>
@@ -536,197 +565,156 @@ const permissionOptions = computed(() => [
       </div>
     </Card>
 
-    <!-- Management Panel Modal -->
-    <div
-      v-if="isManagePanelOpen"
-      class="fixed inset-0 z-50"
-      role="dialog"
-      aria-modal="true"
-      :aria-labelledby="manageTitleId"
+    <Dialog
+      :open="isManagePanelOpen"
+      size="lg"
+      :title="`${t('manageController')} — ${selectedController?.id ?? ''}`"
+      :messages="chrome"
+      @close="closeManagePanel"
     >
-      <div
-        class="absolute inset-0 bg-gray-900/70 backdrop-blur-sm"
-        @click="closeManagePanel"
-      ></div>
-
-      <!-- One scroll container, not two. The panel used to nest a
-           `max-h-96 overflow-y-auto` body inside a `max-h-[90dvh]
-           overflow-y-auto` shell, so on a laptop the form scrolled inside a
-           384px well while the shell it sat in had room to spare — and on a
-           phone the two fought each other. Now the shell is a flex column
-           whose header and footer are fixed and whose body is the only thing
-           that scrolls. -->
-      <div class="absolute inset-0 flex items-center justify-center p-4">
-        <div
-          ref="managePanel"
-          tabindex="-1"
-          class="relative flex max-h-[90dvh] w-full max-w-2xl flex-col overflow-hidden rounded-card border border-subtle bg-surface shadow-popover"
-        >
-          <div class="shrink-0 border-b border-subtle px-4 py-4 sm:px-6">
-            <h2
-              :id="manageTitleId"
-              class="flex items-center gap-3 text-lg font-semibold text-ink"
-            >
-              <Icon name="cog6Tooth" class="size-6 shrink-0 text-can" />
-              <span class="min-w-0 truncate">
-                {{ t("manageController") }} — {{ selectedController?.id ?? "" }}
-              </span>
-            </h2>
-          </div>
-
-          <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
-            <div v-if="editingController" class="space-y-6">
-              <!-- Basic Info -->
-              <section>
-                <h3
-                  class="mb-3 text-sm font-semibold uppercase tracking-wider text-faint"
-                >
-                  {{ t("basicInfo") }}
-                </h3>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Input
-                    type="text"
-                    label="CAN ID"
-                    :model-value="editingController.id"
-                    disabled
-                  />
-                  <Input
-                    type="text"
-                    :label="t('region')"
-                    :model-value="
-                      divisionTrans(editingController.region, locale)
-                    "
-                    disabled
-                  />
-                </div>
-              </section>
-
-              <!-- Status -->
-              <section>
-                <h3
-                  class="mb-3 text-sm font-semibold uppercase tracking-wider text-faint"
-                >
-                  {{ t("statusManagement") }}
-                </h3>
-                <Toggle
-                  v-model="editingController.status"
-                  :disabled="!canEditStatus"
-                  :label="t('controllerStatus')"
-                  :description="t('controllerStatusDesc')"
-                />
-              </section>
-
-              <!-- Special Permissions — read-only, granted elsewhere, except
-                   `instructor` for an ADM. -->
-              <section>
-                <h3
-                  class="mb-3 text-sm font-semibold uppercase tracking-wider text-faint"
-                >
-                  {{ t("specialPermissions") }}
-                </h3>
-                <div class="space-y-4">
-                  <template v-for="flag in grantedFlags" :key="flag.key">
-                    <Toggle
-                      v-if="flag.key === 'instructor' && canEditInstructor"
-                      v-model="editingController.instructor"
-                      :label="flag.label"
-                      :description="t('instructorPermissionAdminDesc')"
-                    />
-                    <div v-else class="flex items-start justify-between gap-4">
-                      <div class="min-w-0">
-                        <p class="text-sm font-medium text-ink">
-                          {{ flag.label }}
-                        </p>
-                        <p class="mt-0.5 text-sm text-muted">
-                          {{ t("requiresFormalProcess") }}
-                        </p>
-                      </div>
-                      <Badge
-                        v-if="editingController[flag.key]"
-                        :variant="flag.variant"
-                      >
-                        <Icon :name="flag.icon" class="size-4" />
-                        {{ t("authorized") }}
-                      </Badge>
-                      <Badge v-else variant="neutral">
-                        {{ t("unauthorized") }}
-                      </Badge>
-                    </div>
-                  </template>
-                </div>
-              </section>
-
-              <!-- Control Permissions -->
-              <section>
-                <h3
-                  class="mb-3 text-sm font-semibold uppercase tracking-wider text-faint"
-                >
-                  {{ t("controlPermissions") }}
-                </h3>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Toggle
-                    v-for="position in controlPositions"
-                    :key="position.key"
-                    v-model="editingController[position.key]"
-                    :label="position.label"
-                  />
-                </div>
-              </section>
-
-              <!-- Timestamps -->
-              <section>
-                <h3
-                  class="mb-3 text-sm font-semibold uppercase tracking-wider text-faint"
-                >
-                  {{ t("timeInfo") }}
-                </h3>
-                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <Input
-                    type="text"
-                    :label="t('createdAt')"
-                    :model-value="formatDateTime(editingController.createdAt)"
-                    disabled
-                  />
-                  <Input
-                    type="text"
-                    :label="t('lastUpdated')"
-                    :model-value="formatDateTime(editingController.updatedAt)"
-                    disabled
-                  />
-                </div>
-              </section>
-            </div>
-
-            <Skeleton
-              v-else
-              variant="text"
-              :count="4"
-              :label="t('loadingControllerData')"
+      <div v-if="editingController" class="space-y-6">
+        <!-- Basic Info -->
+        <section>
+          <h3
+            class="mb-3 text-sm font-semibold uppercase tracking-wider text-muted"
+          >
+            {{ t("basicInfo") }}
+          </h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              type="text"
+              label="CAN ID"
+              :model-value="editingController.id"
+              disabled
+            />
+            <Input
+              type="text"
+              :label="t('region')"
+              :model-value="divisionTrans(editingController.region, locale)"
+              disabled
             />
           </div>
+        </section>
 
-          <div
-            class="shrink-0 space-y-3 border-t border-subtle px-4 py-4 sm:px-6"
+        <!-- Status -->
+        <section>
+          <h3
+            class="mb-3 text-sm font-semibold uppercase tracking-wider text-muted"
           >
-            <AlertBox v-if="saveError" variant="danger">
-              {{ saveError }}
-            </AlertBox>
-            <div class="flex justify-end gap-3">
-              <Button variant="secondary" @click="closeManagePanel">
-                {{ t("cancel") }}
-              </Button>
-              <Button
-                variant="primary"
-                :disabled="saving"
-                :loading="saving"
-                @click="handleSaveChanges"
-              >
-                {{ saving ? t("saving") : t("saveChanges") }}
-              </Button>
-            </div>
+            {{ t("statusManagement") }}
+          </h3>
+          <Toggle
+            v-model="editingController.status"
+            :disabled="!canEditStatus"
+            :label="t('controllerStatus')"
+            :description="t('controllerStatusDesc')"
+          />
+        </section>
+
+        <!-- Special Permissions — read-only, granted elsewhere, except
+                   `instructor` for an ADM. -->
+        <section>
+          <h3
+            class="mb-3 text-sm font-semibold uppercase tracking-wider text-muted"
+          >
+            {{ t("specialPermissions") }}
+          </h3>
+          <div class="space-y-4">
+            <template v-for="flag in grantedFlags" :key="flag.key">
+              <Toggle
+                v-if="flag.key === 'instructor' && canEditInstructor"
+                v-model="editingController.instructor"
+                :label="flag.label"
+                :description="t('instructorPermissionAdminDesc')"
+              />
+              <div v-else class="flex items-start justify-between gap-4">
+                <div class="min-w-0">
+                  <p class="text-sm font-medium text-ink">
+                    {{ flag.label }}
+                  </p>
+                  <p class="mt-0.5 text-sm text-muted">
+                    {{ t("requiresFormalProcess") }}
+                  </p>
+                </div>
+                <Badge
+                  v-if="editingController[flag.key]"
+                  :variant="flag.variant"
+                >
+                  <Icon :name="flag.icon" class="size-4" />
+                  {{ t("authorized") }}
+                </Badge>
+                <Badge v-else variant="neutral">
+                  {{ t("unauthorized") }}
+                </Badge>
+              </div>
+            </template>
           </div>
-        </div>
+        </section>
+
+        <!-- Control Permissions -->
+        <section>
+          <h3
+            class="mb-3 text-sm font-semibold uppercase tracking-wider text-muted"
+          >
+            {{ t("controlPermissions") }}
+          </h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Toggle
+              v-for="position in controlPositions"
+              :key="position.key"
+              v-model="editingController[position.key]"
+              :label="position.label"
+            />
+          </div>
+        </section>
+
+        <!-- Timestamps -->
+        <section>
+          <h3
+            class="mb-3 text-sm font-semibold uppercase tracking-wider text-muted"
+          >
+            {{ t("timeInfo") }}
+          </h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <Input
+              type="text"
+              :label="t('createdAt')"
+              :model-value="formatDateTime(editingController.createdAt)"
+              disabled
+            />
+            <Input
+              type="text"
+              :label="t('lastUpdated')"
+              :model-value="formatDateTime(editingController.updatedAt)"
+              disabled
+            />
+          </div>
+        </section>
       </div>
-    </div>
+
+      <Skeleton
+        v-else
+        variant="text"
+        :count="4"
+        :label="t('loadingControllerData')"
+      />
+
+      <template #footer>
+        <AlertBox v-if="saveError" variant="danger" class="w-full">
+          {{ saveError }}
+        </AlertBox>
+        <Button variant="secondary" @click="closeManagePanel">
+          {{ t("cancel") }}
+        </Button>
+        <Button
+          variant="primary"
+          :disabled="saving"
+          :loading="saving"
+          @click="handleSaveChanges"
+        >
+          {{ saving ? t("saving") : t("saveChanges") }}
+        </Button>
+      </template>
+    </Dialog>
   </div>
 </template>

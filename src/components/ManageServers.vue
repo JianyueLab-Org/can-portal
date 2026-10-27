@@ -205,11 +205,8 @@ onMounted(load);
       notice
     }}</AlertBox>
 
-    <Card class="mt-6 p-5">
-      <h2 class="text-sm font-semibold text-ink">{{ t("add.title") }}</h2>
-      <p class="mt-1 text-sm text-muted">{{ t("add.help") }}</p>
-
-      <div class="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+    <Card :title="t('add.title')" :subtitle="t('add.help')" class="mt-6">
+      <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Select
           v-model="form.kind"
           :options="kindOptions"
@@ -292,7 +289,8 @@ onMounted(load);
 
         <template #cell-name="{ row }">
           <span
-            :class="row.active ? 'font-medium' : 'font-medium opacity-60'"
+            class="block whitespace-normal font-medium sm:min-w-40 sm:max-w-xs"
+            :class="row.active ? '' : 'opacity-60'"
             >{{ row.name }}</span
           >
         </template>
@@ -302,11 +300,13 @@ onMounted(load);
         </template>
 
         <template #cell-address="{ row }">
-          <span class="font-mono text-xs">{{ addressOf(row) }}</span>
+          <span class="break-all font-mono text-xs">{{ addressOf(row) }}</span>
         </template>
 
         <template #cell-location="{ row }">
-          <span class="text-muted">{{ row.location ?? "—" }}</span>
+          <span class="block whitespace-normal text-muted sm:max-w-48">{{
+            row.location ?? "—"
+          }}</span>
         </template>
 
         <template #cell-state="{ row }">
