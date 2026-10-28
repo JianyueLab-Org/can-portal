@@ -70,7 +70,7 @@ function toggleHideNaip() {
         type="button"
         role="menuitemcheckbox"
         :aria-checked="hideNaip"
-        class="focus-ring tap-row flex w-full items-start gap-2.5 rounded-control px-2.5 py-2 text-left text-sm text-muted transition-colors hover:bg-surface-raised hover:text-ink"
+        class="focus-ring tap-row flex w-full items-start gap-2.5 rounded-control px-2.5 py-2 text-left text-sm text-muted transition-colors hover:bg-surface-sunken hover:text-ink"
         @click="toggleHideNaip"
       >
         <input
