@@ -95,3 +95,36 @@ describe("操作日志", () => {
     },
   );
 });
+
+/**
+ * 投票管理的三条路径。相邻的形状不在。
+ */
+const POLLS: Array<[string, string[]]> = [
+  ["super/poll", ["GET", "POST"]],
+  ["super/poll/1", ["GET", "DELETE"]],
+  ["super/poll/12345678901234567890", ["GET", "DELETE"]],
+  ["super/poll/1/close", ["POST"]],
+];
+
+describe("投票管理", () => {
+  test("三条都在，方法对得上，who 指向 ManagePolls.vue", () => {
+    for (const [path, methods] of POLLS) {
+      const entry = lookup(path);
+      expect(entry?.methods).toEqual(methods);
+      expect(entry?.who).toContain("ManagePolls.vue");
+    }
+  });
+
+  test.each([
+    "super/poll/",
+    "super/poll/abc",
+    "super/poll/123456789012345678901",
+    "super/poll/1/vote",
+    "super/poll/1/close/x",
+    "super/poll/abc/close",
+    "super/polls",
+    "super/poll/../roster",
+  ])("%s 不在名单上", (path) => {
+    expect(lookup(path)).toBeUndefined();
+  });
+});

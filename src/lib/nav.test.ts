@@ -29,6 +29,7 @@ describe("buildNavigation", () => {
       "/super/activities",
       "/super/prizes",
       "/super/lottery",
+      "/super/polls",
       "/super/points",
       "/super/feedback",
       "/super/servers",

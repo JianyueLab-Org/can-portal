@@ -20,6 +20,7 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 | `/super/activities` | `/super/activities` | `ManageActivities.vue`  | 11   |
 | `/super/prizes`     | `/super/prizes`     | `ManagePrizes.vue`      | 11   |
 | `/super/lottery`    | （新）              | `ManageLottery.vue`     | 11   |
+| `/super/polls`      | （新）              | `ManagePolls.vue`       | 11   |
 | `/super/points`     | （新）              | `ManagePoints.vue`      | 11   |
 | `/super/feedback`   | `/super/feedback`   | `ManageFeedback.vue`    | 11   |
 | `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 11   |
@@ -238,6 +239,9 @@ Astro 两种都认。
 `manage`。改它直接改这里。
 
 `points.manage` 也只有这个站有。改它直接改这里。
+
+`polls.manage` 也只有这个站有：can-web 的 `polls` 命名空间是成员端，没有
+`manage`。改它直接改这里。
 
 ## 和 can-web 共享的那些文件
 

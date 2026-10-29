@@ -23,6 +23,7 @@
     "activitiesManage": "Manage Activities",
     "prizesManage": "Prizes",
     "lotteryManage": "Lottery",
+    "pollsManage": "Polls",
     "pointsManage": "Points adjustment",
     "feedbackManage": "Feedback outcomes",
     "signOut": "Sign Out",
@@ -572,6 +573,117 @@
       }
     }
   },
+  "polls": {
+    "manage": {
+      "title": "Polls",
+      "description": "Every poll, including legacy QQ group and Discord server polls. Close early, delete, or create an official poll.",
+      "create": "Create official poll",
+      "list": "Polls",
+      "loading": "Loading polls…",
+      "empty": "No matching polls",
+      "emptyHint": "Change the filters or create an official poll.",
+      "filters": {
+        "status": "Status",
+        "platform": "Scope"
+      },
+      "status": {
+        "all": "All",
+        "open": "Open",
+        "closed": "Closed"
+      },
+      "platform": {
+        "all": "All",
+        "global": "Network-wide",
+        "qq": "QQ group",
+        "discord": "Discord"
+      },
+      "columns": {
+        "title": "Title",
+        "scope": "Scope",
+        "creator": "Creator",
+        "closesAt": "Closes",
+        "votes": "Votes",
+        "actions": "Actions"
+      },
+      "official": "Official",
+      "communityHint": "Only a hash of the community is stored; its name cannot be recovered.",
+      "timeWithLocal": "{zulu} · local {local}",
+      "createdAt": "Created: {time}",
+      "closesAt": "Closes: {time}",
+      "closedAt": "Closed: {time}",
+      "createdBy": "Creator: {cid}",
+      "voteCount": "{count} votes",
+      "actions": {
+        "view": "View",
+        "close": "Close early",
+        "delete": "Delete"
+      },
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next",
+        "summary": "Page {page} of {pages} · {total} polls"
+      },
+      "detail": {
+        "options": "Options and votes",
+        "noVotes": "No votes yet."
+      },
+      "form": {
+        "title": "Create official poll",
+        "hint": "Official polls are network-wide. Members, the website and the bots see an Official badge, not the creator.",
+        "fields": {
+          "title": "Title",
+          "options": "Options",
+          "duration": "Duration"
+        },
+        "optionPlaceholder": "Option {n}",
+        "addOption": "Add option",
+        "removeOption": "Remove option {n}",
+        "optionsHint": "2–10 distinct options, up to 100 characters each.",
+        "submit": "Create",
+        "durations": {
+          "60": "1 hour",
+          "360": "6 hours",
+          "1440": "1 day",
+          "4320": "3 days",
+          "10080": "7 days"
+        },
+        "errors": {
+          "titleRequired": "Enter a title.",
+          "titleTooLong": "The title can be at most 200 characters.",
+          "optionsTooFew": "Add at least 2 options.",
+          "optionsTooMany": "At most 10 options.",
+          "optionTooLong": "Each option can be at most 100 characters.",
+          "optionDuplicate": "Options must be different.",
+          "durationRange": "The duration must be between 1 minute and 7 days."
+        }
+      },
+      "confirm": {
+        "closeTitle": "Close poll early",
+        "closeBody": "The poll stops taking votes. Results are kept.",
+        "closeAction": "Close poll",
+        "deleteTitle": "Delete poll",
+        "deleteBody": "The poll, all its options and every ballot are removed. This cannot be undone.",
+        "deleteAction": "Delete permanently",
+        "keep": "Back"
+      },
+      "done": {
+        "created": "Official poll created.",
+        "closed": "Poll closed.",
+        "deleted": "Poll deleted."
+      },
+      "errors": {
+        "load": "Could not load polls.",
+        "notFound": "The poll does not exist or was deleted.",
+        "closed": "The poll is already closed.",
+        "invalid": "Invalid request. Check what you entered.",
+        "sessionExpired": "Your session has expired. Sign in again.",
+        "forbidden": "You do not have permission to do this.",
+        "network": "Network error. Try again later.",
+        "failed": "The action failed. Try again later."
+      },
+      "close": "Close"
+    }
+  },
   "points": {
     "manage": {
       "title": "Points adjustment",
@@ -1039,6 +1151,7 @@
       "activity": "Activity",
       "prize": "Prize",
       "lottery": "Lottery",
+      "poll": "Polls",
       "feedback": "Feedback",
       "server": "Server",
       "access": "Access"
@@ -1070,6 +1183,11 @@
         "update": "Update lottery",
         "publish": "Publish lottery",
         "cancel": "Cancel lottery"
+      },
+      "poll": {
+        "create": "Create official poll",
+        "close": "Close poll early",
+        "delete": "Delete poll"
       },
       "feedback": { "upsert": "Update feedback", "delete": "Delete feedback" },
       "server": {

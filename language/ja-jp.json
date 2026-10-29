@@ -23,6 +23,7 @@
     "activitiesManage": "イベント管理",
     "prizesManage": "景品管理",
     "lotteryManage": "抽選管理",
+    "pollsManage": "投票管理",
     "pointsManage": "ポイント調整",
     "feedbackManage": "対応結果の公示",
     "signOut": "ログアウト",
@@ -572,6 +573,117 @@
       }
     }
   },
+  "polls": {
+    "manage": {
+      "title": "投票管理",
+      "description": "QQ グループや Discord サーバーの旧投票を含むすべての投票。早期終了、削除、公式投票の作成ができます。",
+      "create": "公式投票を作成",
+      "list": "投票",
+      "loading": "投票を読み込み中…",
+      "empty": "条件に合う投票はありません",
+      "emptyHint": "絞り込みを変えるか、公式投票を作成してください。",
+      "filters": {
+        "status": "状態",
+        "platform": "範囲"
+      },
+      "status": {
+        "all": "すべて",
+        "open": "受付中",
+        "closed": "終了"
+      },
+      "platform": {
+        "all": "すべて",
+        "global": "ネットワーク全体",
+        "qq": "QQ グループ",
+        "discord": "Discord"
+      },
+      "columns": {
+        "title": "タイトル",
+        "scope": "範囲",
+        "creator": "作成者",
+        "closesAt": "締切",
+        "votes": "票数",
+        "actions": "操作"
+      },
+      "official": "公式",
+      "communityHint": "コミュニティはハッシュのみ保存されており、名前は復元できません。",
+      "timeWithLocal": "{zulu} · ローカル {local}",
+      "createdAt": "作成：{time}",
+      "closesAt": "締切：{time}",
+      "closedAt": "終了：{time}",
+      "createdBy": "作成者：{cid}",
+      "voteCount": "{count} 票",
+      "actions": {
+        "view": "表示",
+        "close": "早期終了",
+        "delete": "削除"
+      },
+      "pagination": {
+        "prev": "前へ",
+        "next": "次へ",
+        "summary": "{page} / {pages} ページ · 全 {total} 件"
+      },
+      "detail": {
+        "options": "選択肢と票数",
+        "noVotes": "まだ投票がありません。"
+      },
+      "form": {
+        "title": "公式投票を作成",
+        "hint": "公式投票はネットワーク全体が対象です。メンバー、サイト、ボットには作成者ではなく「公式」バッジが表示されます。",
+        "fields": {
+          "title": "タイトル",
+          "options": "選択肢",
+          "duration": "期間"
+        },
+        "optionPlaceholder": "選択肢 {n}",
+        "addOption": "選択肢を追加",
+        "removeOption": "選択肢 {n} を削除",
+        "optionsHint": "互いに異なる 2〜10 個の選択肢、各 100 文字以内。",
+        "submit": "作成",
+        "durations": {
+          "60": "1 時間",
+          "360": "6 時間",
+          "1440": "1 日",
+          "4320": "3 日",
+          "10080": "7 日"
+        },
+        "errors": {
+          "titleRequired": "タイトルを入力してください。",
+          "titleTooLong": "タイトルは 200 文字以内です。",
+          "optionsTooFew": "選択肢は 2 個以上必要です。",
+          "optionsTooMany": "選択肢は最大 10 個です。",
+          "optionTooLong": "各選択肢は 100 文字以内です。",
+          "optionDuplicate": "選択肢が重複しています。",
+          "durationRange": "期間は 1 分から 7 日の間で指定してください。"
+        }
+      },
+      "confirm": {
+        "closeTitle": "投票を早期終了",
+        "closeBody": "投票の受付を終了します。結果は残ります。",
+        "closeAction": "終了する",
+        "deleteTitle": "投票を削除",
+        "deleteBody": "投票、すべての選択肢とすべての票が削除されます。元に戻せません。",
+        "deleteAction": "完全に削除",
+        "keep": "戻る"
+      },
+      "done": {
+        "created": "公式投票を作成しました。",
+        "closed": "投票を終了しました。",
+        "deleted": "投票を削除しました。"
+      },
+      "errors": {
+        "load": "投票を読み込めませんでした。",
+        "notFound": "投票が存在しないか削除されています。",
+        "closed": "投票はすでに終了しています。",
+        "invalid": "無効なリクエストです。入力内容を確認してください。",
+        "sessionExpired": "セッションの有効期限が切れました。再度サインインしてください。",
+        "forbidden": "この操作の権限がありません。",
+        "network": "ネットワークエラーです。しばらくしてから再試行してください。",
+        "failed": "操作に失敗しました。しばらくしてから再試行してください。"
+      },
+      "close": "閉じる"
+    }
+  },
   "points": {
     "manage": {
       "title": "ポイント調整",
@@ -1039,6 +1151,7 @@
       "activity": "イベント",
       "prize": "景品",
       "lottery": "抽選",
+      "poll": "投票",
       "feedback": "公示",
       "server": "サーバー",
       "access": "権限"
@@ -1067,6 +1180,11 @@
         "update": "抽選を変更",
         "publish": "抽選を公開",
         "cancel": "抽選を中止"
+      },
+      "poll": {
+        "create": "公式投票を作成",
+        "close": "投票を早期終了",
+        "delete": "投票を削除"
       },
       "feedback": { "upsert": "公示を処理", "delete": "公示を削除" },
       "server": {

@@ -61,7 +61,7 @@ const INSTRUCTOR: Array<{ key: string; href: string; icon: IconName }> = [
 ];
 
 /**
- * 监理那一组 —— 等级 11 起，七条。
+ * 监理那一组 —— 等级 11 起，八条。
  *
  * 活动管理是 SUP/ADM（发积分的就是他们），所以配奖品的也是 SUP；处理结果公示
  * 同理。
@@ -71,6 +71,8 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
   { key: "prizesManage", href: "/super/prizes", icon: "gift" },
   // 抽奖。和奖品同一档（11）：奖品是 SUP 配的，拿奖品开抽奖的也是 SUP。
   { key: "lotteryManage", href: "/super/lottery", icon: "sparkles" },
+  // 投票管理。同一档（11）：can-api 的路由是 `WithSup`。
+  { key: "pollsManage", href: "/super/polls", icon: "chartBar" },
   // 积分手动调整。和奖品、抽奖同一档（11）：can-api 的路由是 `WithSup`。
   { key: "pointsManage", href: "/super/points", icon: "adjustments" },
   { key: "feedbackManage", href: "/super/feedback", icon: "megaphone" },

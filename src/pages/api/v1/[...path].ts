@@ -84,6 +84,12 @@ const ALLOW_LIST: Record<string, Allowed> = {
     who: "ManageLottery.vue 列表与新建草稿",
   },
 
+  // 投票（`/super/polls`）。can-api 那边是 `WithSup`。
+  "super/poll": {
+    methods: ["GET", "POST"],
+    who: "ManagePolls.vue 列表（筛选、翻页）与发起官方投票",
+  },
+
   // 积分手动调整（`/super/points`）。can-api 那边四条都是 `WithSup`。撤销在下面
   // 的模式里。
   "super/points/balance": {
@@ -201,6 +207,17 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     test: /^super\/lottery\/[0-9]{1,20}\/(publish|cancel)$/,
     methods: ["POST"],
     who: "ManageLottery.vue 发布 / 取消",
+  },
+  {
+    test: /^super\/poll\/[0-9]{1,20}$/,
+    methods: ["GET", "DELETE"],
+    who: "ManagePolls.vue 读一个投票（含各选项票数）/ 删除",
+  },
+  {
+    // 只有 close 一个动作，写死而不是 `[a-z]+`。
+    test: /^super\/poll\/[0-9]{1,20}\/close$/,
+    methods: ["POST"],
+    who: "ManagePolls.vue 提前结束",
   },
   {
     // 只有 reverse 一个动作，写死而不是 `[a-z]+`。

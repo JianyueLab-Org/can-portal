@@ -84,7 +84,7 @@ describe("audit dictionary", () => {
     // 点号键 `"roster.update"` 对不上 `actions.roster.update`，查不到就原样返回
     // 键。方括号 `dict[action]` 测的是另一条路，所以这里必须走翻译器。
     const actions = ACTION_GROUPS.flatMap((group) => group.actions);
-    expect(actions).toHaveLength(30);
+    expect(actions).toHaveLength(33);
     for (const locale of LOCALES) {
       const t = createTranslator(at(dictionary(locale), "audit"));
       for (const action of actions) {
