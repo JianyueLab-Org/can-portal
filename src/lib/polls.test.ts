@@ -11,6 +11,7 @@ import {
   createOfficialPoll,
   deleteStaffPoll,
   getStaffPoll,
+  hasTurnout,
   isPollOpen,
   listStaffPolls,
   memberShare,
@@ -125,13 +126,18 @@ describe("wire shape", () => {
     expect(calls[0].url).toBe("/api/v1/super/poll/7");
   });
 
-  test("detail without the active-member counts is an invalid response", async () => {
+  test("detail without the active-member counts still opens, without turnout", async () => {
     mockFetch(200, envelope({ poll: poll() }));
-    expect((await getStaffPoll(7)).ok).toBe(false);
+    const plain = await getStaffPoll(7);
+    expect(plain.ok && hasTurnout(plain.data)).toBe(false);
     const noVoters: Partial<StaffPollDetail> = detail();
     delete noVoters.activeVoters;
     mockFetch(200, envelope({ poll: noVoters }));
-    expect((await getStaffPoll(7)).ok).toBe(false);
+    const partial = await getStaffPoll(7);
+    expect(partial.ok && hasTurnout(partial.data)).toBe(false);
+    mockFetch(200, envelope({ poll: detail() }));
+    const full = await getStaffPoll(7);
+    expect(full.ok && hasTurnout(full.data)).toBe(true);
   });
 
   test("create posts exactly title, options and durationMinutes", async () => {

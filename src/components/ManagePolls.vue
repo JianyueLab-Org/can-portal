@@ -26,6 +26,7 @@ import {
   createOfficialPoll,
   deleteStaffPoll,
   getStaffPoll,
+  hasTurnout,
   isPollOpen,
   listStaffPolls,
   optionPercent,
@@ -36,6 +37,7 @@ import {
   type PollDraftErrors,
   type PollPlatformFilter,
   type PollStatusFilter,
+  type StaffPoll,
   type StaffPollDetail,
   type StaffPollSummary,
 } from "@/lib/polls";
@@ -87,7 +89,7 @@ const saving = ref(false);
 
 // 详情。
 const detailOpen = ref(false);
-const detail = ref<StaffPollDetail | null>(null);
+const detail = ref<StaffPoll | StaffPollDetail | null>(null);
 const detailLoading = ref(false);
 
 // 结束 / 删除的确认。
@@ -100,7 +102,7 @@ const acting = ref(false);
 const pages = computed(() => pageCount(total.value, pageSize.value));
 
 const turnout = computed(() =>
-  detail.value ? pollTurnout(detail.value) : null,
+  detail.value && hasTurnout(detail.value) ? pollTurnout(detail.value) : null,
 );
 
 const statusSegments = computed(() =>

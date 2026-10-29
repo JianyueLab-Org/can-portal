@@ -145,18 +145,24 @@ async function pollRequest(
 
 export async function getStaffPoll(
   id: number,
-): Promise<ApiResult<StaffPollDetail>> {
-  const result = await pollRequest(`/api/v1/super/poll/${id}`);
-  if (!result.ok) return result;
-  const poll = result.data as Partial<StaffPollDetail>;
-  if (
-    typeof poll.activeMembers !== "number" ||
-    typeof poll.activeVoters !== "number" ||
-    !Array.isArray(poll.options) ||
-    poll.options.some((option) => typeof option.activeVotes !== "number")
-  )
-    return invalidResponse("activeMembers");
-  return { ok: true, data: poll as StaffPollDetail };
+): Promise<ApiResult<StaffPoll | StaffPollDetail>> {
+  return pollRequest(`/api/v1/super/poll/${id}`);
+}
+
+/**
+ * 详情带不带参与情况。can-api 还没滚完时会有旧副本回不带这些字段的详情；
+ * 那时详情照常打开，只是不显示参与情况。
+ */
+export function hasTurnout(
+  poll: StaffPoll | StaffPollDetail,
+): poll is StaffPollDetail {
+  const candidate = poll as Partial<StaffPollDetail>;
+  return (
+    typeof candidate.activeMembers === "number" &&
+    typeof candidate.activeVoters === "number" &&
+    Array.isArray(candidate.options) &&
+    candidate.options.every((option) => typeof option.activeVotes === "number")
+  );
 }
 
 /** 官方投票：全站范围，can-api 记下创建人。 */
