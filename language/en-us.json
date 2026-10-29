@@ -625,7 +625,14 @@
       },
       "detail": {
         "options": "Options and votes",
-        "noVotes": "No votes yet."
+        "noVotes": "No votes yet.",
+        "turnout": {
+          "title": "Share of active members",
+          "base": "{count} active members now",
+          "hint": "The base is current active members (rating ≥ 1, account not closed), counted now, also for closed polls. Ballots from members no longer active are left out here but still count in the votes above.",
+          "share": "{count} members · {share}%",
+          "notVoted": "Not voted"
+        }
       },
       "form": {
         "title": "Create official poll",

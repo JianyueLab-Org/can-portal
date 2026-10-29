@@ -13,12 +13,15 @@ import {
   getStaffPoll,
   isPollOpen,
   listStaffPolls,
+  memberShare,
   optionPercent,
   pageCount,
+  pollTurnout,
   pollListPath,
   shortHash,
   validatePollDraft,
   type StaffPoll,
+  type StaffPollDetail,
   type StaffPollSummary,
 } from "./polls";
 
@@ -75,6 +78,19 @@ function poll(overrides: Partial<StaffPoll> = {}): StaffPoll {
   };
 }
 
+function detail(overrides: Partial<StaffPollDetail> = {}): StaffPollDetail {
+  return {
+    ...summary(),
+    options: [
+      { number: 1, text: "ZGGG", votes: 2, activeVotes: 1 },
+      { number: 2, text: "ZSPD", votes: 1, activeVotes: 1 },
+    ],
+    activeMembers: 3,
+    activeVoters: 2,
+    ...overrides,
+  };
+}
+
 function envelope(data: unknown) {
   return { status: 200, data, timestamp: "2026-10-29T00:00:00Z" };
 }
@@ -103,10 +119,19 @@ describe("wire shape", () => {
     expect(result.ok).toBe(false);
   });
 
-  test("detail unwraps data.poll", async () => {
-    const calls = mockFetch(200, envelope({ poll: poll() }));
-    expect(await getStaffPoll(7)).toEqual({ ok: true, data: poll() });
+  test("detail unwraps data.poll with the active-member counts", async () => {
+    const calls = mockFetch(200, envelope({ poll: detail() }));
+    expect(await getStaffPoll(7)).toEqual({ ok: true, data: detail() });
     expect(calls[0].url).toBe("/api/v1/super/poll/7");
+  });
+
+  test("detail without the active-member counts is an invalid response", async () => {
+    mockFetch(200, envelope({ poll: poll() }));
+    expect((await getStaffPoll(7)).ok).toBe(false);
+    const noVoters: Partial<StaffPollDetail> = detail();
+    delete noVoters.activeVoters;
+    mockFetch(200, envelope({ poll: noVoters }));
+    expect((await getStaffPoll(7)).ok).toBe(false);
   });
 
   test("create posts exactly title, options and durationMinutes", async () => {
@@ -271,6 +296,45 @@ describe("helpers", () => {
     expect(pageCount(51, 50)).toBe(2);
     expect(optionPercent(1, 3)).toBe(33);
     expect(optionPercent(0, 0)).toBe(0);
+  });
+
+  test("memberShare rounds to one decimal, half up", () => {
+    expect(memberShare(1, 3)).toBe(33.3);
+    expect(memberShare(2, 3)).toBe(66.7);
+    expect(memberShare(1, 16)).toBe(6.3);
+    expect(memberShare(1, 8)).toBe(12.5);
+    expect(memberShare(3, 3)).toBe(100);
+    expect(memberShare(0, 3)).toBe(0);
+  });
+
+  test("memberShare is 0 without active members", () => {
+    expect(memberShare(0, 0)).toBe(0);
+    expect(memberShare(2, 0)).toBe(0);
+  });
+
+  test("pollTurnout shares each option and the not-voted rest", () => {
+    expect(pollTurnout(detail())).toEqual({
+      activeMembers: 3,
+      options: [
+        { number: 1, text: "ZGGG", activeVotes: 1, share: 33.3 },
+        { number: 2, text: "ZSPD", activeVotes: 1, share: 33.3 },
+      ],
+      notVoted: 1,
+      notVotedShare: 33.3,
+    });
+  });
+
+  test("pollTurnout with no active members is all zero", () => {
+    const turnout = pollTurnout(
+      detail({
+        activeMembers: 0,
+        activeVoters: 0,
+        options: [{ number: 1, text: "ZGGG", votes: 4, activeVotes: 0 }],
+      }),
+    );
+    expect(turnout.options[0].share).toBe(0);
+    expect(turnout.notVoted).toBe(0);
+    expect(turnout.notVotedShare).toBe(0);
   });
 });
 

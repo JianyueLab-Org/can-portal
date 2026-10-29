@@ -30,12 +30,13 @@ import {
   listStaffPolls,
   optionPercent,
   pageCount,
+  pollTurnout,
   shortHash,
   validatePollDraft,
   type PollDraftErrors,
   type PollPlatformFilter,
   type PollStatusFilter,
-  type StaffPoll,
+  type StaffPollDetail,
   type StaffPollSummary,
 } from "@/lib/polls";
 import type { ApiFailure } from "@/lib/canApi";
@@ -86,7 +87,7 @@ const saving = ref(false);
 
 // 详情。
 const detailOpen = ref(false);
-const detail = ref<StaffPoll | null>(null);
+const detail = ref<StaffPollDetail | null>(null);
 const detailLoading = ref(false);
 
 // 结束 / 删除的确认。
@@ -97,6 +98,10 @@ const pending = ref<{
 const acting = ref(false);
 
 const pages = computed(() => pageCount(total.value, pageSize.value));
+
+const turnout = computed(() =>
+  detail.value ? pollTurnout(detail.value) : null,
+);
 
 const statusSegments = computed(() =>
   POLL_STATUS_FILTERS.map((value) => ({ value, label: t(`status.${value}`) })),
@@ -208,12 +213,10 @@ async function save() {
 /** 请求令牌：迟到的回答不该盖掉后打开的那一个。 */
 let detailRequestId = 0;
 
-async function openDetail(poll: StaffPollSummary) {
+async function loadDetail(id: number) {
   const requestId = ++detailRequestId;
-  detail.value = null;
-  detailOpen.value = true;
   detailLoading.value = true;
-  const result = await getStaffPoll(poll.id);
+  const result = await getStaffPoll(id);
   if (requestId !== detailRequestId) return;
   detailLoading.value = false;
   if (!result.ok) {
@@ -222,6 +225,12 @@ async function openDetail(poll: StaffPollSummary) {
     return;
   }
   detail.value = result.data;
+}
+
+function openDetail(poll: StaffPollSummary) {
+  detail.value = null;
+  detailOpen.value = true;
+  void loadDetail(poll.id);
 }
 
 function ask(kind: "close" | "delete", poll: StaffPollSummary) {
@@ -244,14 +253,15 @@ async function confirmAction() {
     return;
   }
   pending.value = null;
-  if (detail.value?.id === p.poll.id) {
-    if (p.kind === "delete") detailOpen.value = false;
-    else if ("options" in result.data) detail.value = result.data;
-  }
   feedback.value = {
     type: "success",
     text: t(p.kind === "close" ? "done.closed" : "done.deleted"),
   };
+  // 结束的回答没有活跃成员统计，详情重新取一次。
+  if (detail.value?.id === p.poll.id) {
+    if (p.kind === "delete") detailOpen.value = false;
+    else void loadDetail(p.poll.id);
+  }
   await load();
 }
 
@@ -564,6 +574,60 @@ onMounted(load);
                   :style="{
                     width: `${optionPercent(option.votes, detail.voteCount)}%`,
                   }"
+                />
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section v-if="turnout">
+          <h3
+            class="mb-1 text-xs font-semibold uppercase tracking-wider text-muted"
+          >
+            {{ t("detail.turnout.title") }} ·
+            {{ t("detail.turnout.base", { count: turnout.activeMembers }) }}
+          </h3>
+          <p class="mb-2 text-xs text-faint">{{ t("detail.turnout.hint") }}</p>
+          <ul class="space-y-1.5">
+            <li
+              v-for="option in turnout.options"
+              :key="option.number"
+              class="rounded-control bg-surface-sunken px-3 py-2"
+            >
+              <div class="flex items-center justify-between gap-3 text-sm">
+                <span class="min-w-0 break-words text-ink"
+                  >{{ option.number }}. {{ option.text }}</span
+                >
+                <span class="tnum shrink-0 text-muted">{{
+                  t("detail.turnout.share", {
+                    count: option.activeVotes,
+                    share: option.share.toFixed(1),
+                  })
+                }}</span>
+              </div>
+              <div class="mt-1.5 h-1.5 rounded-full bg-surface-raised">
+                <div
+                  class="h-1.5 rounded-full bg-can"
+                  :style="{ width: `${option.share}%` }"
+                />
+              </div>
+            </li>
+            <li class="rounded-control bg-surface-sunken px-3 py-2">
+              <div class="flex items-center justify-between gap-3 text-sm">
+                <span class="min-w-0 text-muted">{{
+                  t("detail.turnout.notVoted")
+                }}</span>
+                <span class="tnum shrink-0 text-muted">{{
+                  t("detail.turnout.share", {
+                    count: turnout.notVoted,
+                    share: turnout.notVotedShare.toFixed(1),
+                  })
+                }}</span>
+              </div>
+              <div class="mt-1.5 h-1.5 rounded-full bg-surface-raised">
+                <div
+                  class="h-1.5 rounded-full bg-faint"
+                  :style="{ width: `${turnout.notVotedShare}%` }"
                 />
               </div>
             </li>
