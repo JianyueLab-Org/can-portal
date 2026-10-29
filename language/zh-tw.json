@@ -23,6 +23,7 @@
     "activitiesManage": "活動管理",
     "prizesManage": "獎品管理",
     "lotteryManage": "抽獎管理",
+    "pollsManage": "投票管理",
     "pointsManage": "積分調整",
     "feedbackManage": "處理結果公示",
     "signOut": "登出",
@@ -572,6 +573,117 @@
       }
     }
   },
+  "polls": {
+    "manage": {
+      "title": "投票管理",
+      "description": "檢視所有投票，包括 QQ 群和 Discord 伺服器裡的舊投票；提前結束、刪除，或發起官方投票。",
+      "create": "發起官方投票",
+      "list": "投票",
+      "loading": "正在載入投票…",
+      "empty": "沒有符合條件的投票",
+      "emptyHint": "換一個篩選條件，或發起一個官方投票。",
+      "filters": {
+        "status": "狀態",
+        "platform": "範圍"
+      },
+      "status": {
+        "all": "全部",
+        "open": "進行中",
+        "closed": "已結束"
+      },
+      "platform": {
+        "all": "全部",
+        "global": "全站",
+        "qq": "QQ 群",
+        "discord": "Discord"
+      },
+      "columns": {
+        "title": "標題",
+        "scope": "範圍",
+        "creator": "建立者",
+        "closesAt": "截止",
+        "votes": "票數",
+        "actions": "操作"
+      },
+      "official": "官方",
+      "communityHint": "社群只保存了雜湊，群名無法找回。",
+      "timeWithLocal": "{zulu} · 本地 {local}",
+      "createdAt": "建立：{time}",
+      "closesAt": "截止：{time}",
+      "closedAt": "結束：{time}",
+      "createdBy": "建立者：{cid}",
+      "voteCount": "{count} 票",
+      "actions": {
+        "view": "檢視",
+        "close": "提前結束",
+        "delete": "刪除"
+      },
+      "pagination": {
+        "prev": "上一頁",
+        "next": "下一頁",
+        "summary": "第 {page} / {pages} 頁，共 {total} 個"
+      },
+      "detail": {
+        "options": "選項與票數",
+        "noVotes": "還沒有人投票。"
+      },
+      "form": {
+        "title": "發起官方投票",
+        "hint": "官方投票面向全站，成員、網站和機器人只看到「官方」標記，不顯示建立者。",
+        "fields": {
+          "title": "標題",
+          "options": "選項",
+          "duration": "時長"
+        },
+        "optionPlaceholder": "選項 {n}",
+        "addOption": "新增選項",
+        "removeOption": "刪除選項 {n}",
+        "optionsHint": "2–10 個互不相同的選項，每個不超過 100 字。",
+        "submit": "發起",
+        "durations": {
+          "60": "1 小時",
+          "360": "6 小時",
+          "1440": "1 天",
+          "4320": "3 天",
+          "10080": "7 天"
+        },
+        "errors": {
+          "titleRequired": "請填寫標題。",
+          "titleTooLong": "標題不能超過 200 字。",
+          "optionsTooFew": "至少需要 2 個選項。",
+          "optionsTooMany": "最多 10 個選項。",
+          "optionTooLong": "每個選項不能超過 100 字。",
+          "optionDuplicate": "選項不能重複。",
+          "durationRange": "時長須在 1 分鐘到 7 天之間。"
+        }
+      },
+      "confirm": {
+        "closeTitle": "提前結束投票",
+        "closeBody": "結束後不再接受投票，結果保留。",
+        "closeAction": "結束投票",
+        "deleteTitle": "刪除投票",
+        "deleteBody": "刪除後投票、全部選項和所有選票都會被移除，無法復原。",
+        "deleteAction": "永久刪除",
+        "keep": "返回"
+      },
+      "done": {
+        "created": "官方投票已發起。",
+        "closed": "投票已結束。",
+        "deleted": "投票已刪除。"
+      },
+      "errors": {
+        "load": "載入投票失敗。",
+        "notFound": "投票不存在或已被刪除。",
+        "closed": "投票已經結束。",
+        "invalid": "請求無效，請檢查填寫的內容。",
+        "sessionExpired": "登入已過期，請重新登入。",
+        "forbidden": "沒有權限執行此操作。",
+        "network": "網路連線失敗，請稍後再試。",
+        "failed": "操作失敗，請稍後再試。"
+      },
+      "close": "關閉"
+    }
+  },
   "points": {
     "manage": {
       "title": "積分調整",
@@ -1039,6 +1151,7 @@
       "activity": "活動",
       "prize": "獎品",
       "lottery": "抽獎",
+      "poll": "投票",
       "feedback": "公示",
       "server": "伺服器",
       "access": "權限"
@@ -1067,6 +1180,11 @@
         "update": "改抽獎",
         "publish": "發布抽獎",
         "cancel": "取消抽獎"
+      },
+      "poll": {
+        "create": "新建官方投票",
+        "close": "提前結束投票",
+        "delete": "刪除投票"
       },
       "feedback": { "upsert": "處理公示", "delete": "刪公示" },
       "server": {

@@ -43,6 +43,10 @@ export const ACTION_GROUPS: Array<{ group: string; actions: string[] }> = [
       "lottery.cancel",
     ],
   },
+  {
+    group: "poll",
+    actions: ["poll.create", "poll.close", "poll.delete"],
+  },
   { group: "feedback", actions: ["feedback.upsert", "feedback.delete"] },
   {
     group: "server",
