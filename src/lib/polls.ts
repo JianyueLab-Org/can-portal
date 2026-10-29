@@ -62,6 +62,21 @@ export interface StaffPoll extends StaffPollSummary {
   options: StaffPollOption[];
 }
 
+/**
+ * `GET /api/v1/super/poll/{id}` 多给的参与情况。活跃成员 = 帐号未注销且
+ * rating ≥ 1，按请求那一刻算，已结束的投票也一样。不再活跃的成员的选票不计入
+ * `active*`，仍计入 `votes`。
+ */
+export interface StaffPollDetailOption extends StaffPollOption {
+  activeVotes: number;
+}
+
+export interface StaffPollDetail extends StaffPoll {
+  options: StaffPollDetailOption[];
+  activeMembers: number;
+  activeVoters: number;
+}
+
 export interface StaffPollPage {
   polls: StaffPollSummary[];
   total: number;
@@ -128,8 +143,26 @@ async function pollRequest(
   return { ok: true, data: poll };
 }
 
-export function getStaffPoll(id: number): Promise<ApiResult<StaffPoll>> {
+export async function getStaffPoll(
+  id: number,
+): Promise<ApiResult<StaffPoll | StaffPollDetail>> {
   return pollRequest(`/api/v1/super/poll/${id}`);
+}
+
+/**
+ * 详情带不带参与情况。can-api 还没滚完时会有旧副本回不带这些字段的详情；
+ * 那时详情照常打开，只是不显示参与情况。
+ */
+export function hasTurnout(
+  poll: StaffPoll | StaffPollDetail,
+): poll is StaffPollDetail {
+  const candidate = poll as Partial<StaffPollDetail>;
+  return (
+    typeof candidate.activeMembers === "number" &&
+    typeof candidate.activeVoters === "number" &&
+    Array.isArray(candidate.options) &&
+    candidate.options.every((option) => typeof option.activeVotes === "number")
+  );
 }
 
 /** 官方投票：全站范围，can-api 记下创建人。 */
@@ -220,6 +253,42 @@ export function pageCount(total: number, pageSize: number): number {
 export function optionPercent(votes: number, total: number): number {
   if (!(total > 0) || !(votes > 0)) return 0;
   return Math.round((votes / total) * 100);
+}
+
+/** 占活跃成员的百分比，保留一位小数，四舍五入；没有活跃成员时是 0。 */
+export function memberShare(count: number, activeMembers: number): number {
+  if (!(activeMembers > 0) || !(count > 0)) return 0;
+  return Math.round((count * 1000) / activeMembers) / 10;
+}
+
+export interface PollTurnoutOption {
+  number: number;
+  text: string;
+  activeVotes: number;
+  share: number;
+}
+
+export interface PollTurnout {
+  activeMembers: number;
+  options: PollTurnoutOption[];
+  notVoted: number;
+  notVotedShare: number;
+}
+
+/** 每个选项和未投票的人各占当前活跃成员的多少。 */
+export function pollTurnout(poll: StaffPollDetail): PollTurnout {
+  const notVoted = Math.max(0, poll.activeMembers - poll.activeVoters);
+  return {
+    activeMembers: poll.activeMembers,
+    options: poll.options.map((option) => ({
+      number: option.number,
+      text: option.text,
+      activeVotes: option.activeVotes,
+      share: memberShare(option.activeVotes, poll.activeMembers),
+    })),
+    notVoted,
+    notVotedShare: memberShare(notVoted, poll.activeMembers),
+  };
 }
 
 /** `polls.manage.form.errors` 下的键。 */
