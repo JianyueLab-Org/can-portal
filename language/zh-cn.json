@@ -640,7 +640,8 @@
         "fields": {
           "title": "标题",
           "options": "选项",
-          "duration": "时长"
+          "duration": "时长",
+          "description": "说明（选填）"
         },
         "optionPlaceholder": "选项 {n}",
         "addOption": "添加选项",
@@ -661,8 +662,10 @@
           "optionsTooMany": "最多 10 个选项。",
           "optionTooLong": "每个选项不能超过 100 字。",
           "optionDuplicate": "选项不能重复。",
-          "durationRange": "时长须在 1 分钟到 7 天之间。"
-        }
+          "durationRange": "时长须在 1 分钟到 7 天之间。",
+          "descriptionTooLong": "说明不能超过 2000 字。"
+        },
+        "descriptionHint": "纯文本，最多 2000 字，支持换行。"
       },
       "confirm": {
         "closeTitle": "提前结束投票",

@@ -640,7 +640,8 @@
         "fields": {
           "title": "Title",
           "options": "Options",
-          "duration": "Duration"
+          "duration": "Duration",
+          "description": "Description (optional)"
         },
         "optionPlaceholder": "Option {n}",
         "addOption": "Add option",
@@ -661,8 +662,10 @@
           "optionsTooMany": "At most 10 options.",
           "optionTooLong": "Each option can be at most 100 characters.",
           "optionDuplicate": "Options must be different.",
-          "durationRange": "The duration must be between 1 minute and 7 days."
-        }
+          "durationRange": "The duration must be between 1 minute and 7 days.",
+          "descriptionTooLong": "The description must be at most 2000 characters."
+        },
+        "descriptionHint": "Plain text, up to 2000 characters. Line breaks are preserved."
       },
       "confirm": {
         "closeTitle": "Close poll early",

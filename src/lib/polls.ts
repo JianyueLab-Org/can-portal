@@ -27,6 +27,7 @@ export const POLL_PAGE_SIZE = 50;
 
 /** 和成员表单同一套上限，照 can-api 的 `store.NormalizePollInput`。 */
 export const POLL_TITLE_MAX = 200;
+export const POLL_DESCRIPTION_MAX = 2000;
 export const POLL_OPTION_MAX = 100;
 export const POLL_OPTIONS_MIN = 2;
 export const POLL_OPTIONS_MAX = 10;
@@ -59,6 +60,7 @@ export interface StaffPollOption {
 }
 
 export interface StaffPoll extends StaffPollSummary {
+  description: string | null;
   options: StaffPollOption[];
 }
 
@@ -86,6 +88,7 @@ export interface StaffPollPage {
 
 export interface PollDraft {
   title: string;
+  description?: string;
   options: string[];
   durationMinutes: number;
 }
@@ -173,6 +176,9 @@ export function createOfficialPoll(
     method: "POST",
     body: JSON.stringify({
       title: draft.title,
+      ...(draft.description?.trim()
+        ? { description: draft.description.trim() }
+        : {}),
       options: draft.options,
       durationMinutes: draft.durationMinutes,
     }),
@@ -295,6 +301,7 @@ export function pollTurnout(poll: StaffPollDetail): PollTurnout {
 export type PollDraftError =
   | "titleRequired"
   | "titleTooLong"
+  | "descriptionTooLong"
   | "optionsTooFew"
   | "optionsTooMany"
   | "optionTooLong"
@@ -304,6 +311,7 @@ export type PollDraftError =
 export const POLL_DRAFT_ERRORS: PollDraftError[] = [
   "titleRequired",
   "titleTooLong",
+  "descriptionTooLong",
   "optionsTooFew",
   "optionsTooMany",
   "optionTooLong",
@@ -313,6 +321,7 @@ export const POLL_DRAFT_ERRORS: PollDraftError[] = [
 
 export interface PollDraftErrors {
   title?: PollDraftError;
+  description?: PollDraftError;
   options?: PollDraftError;
   duration?: PollDraftError;
 }
@@ -331,6 +340,7 @@ function codePoints(value: string): number {
  */
 export function validatePollDraft(input: {
   title: string;
+  description?: string;
   options: string[];
   durationMinutes: number;
 }): PollDraftCheck {
@@ -339,6 +349,10 @@ export function validatePollDraft(input: {
   const title = input.title.trim();
   if (!title) errors.title = "titleRequired";
   else if (codePoints(title) > POLL_TITLE_MAX) errors.title = "titleTooLong";
+
+  const description = input.description?.trim() ?? "";
+  if (codePoints(description) > POLL_DESCRIPTION_MAX)
+    errors.description = "descriptionTooLong";
 
   const options = input.options.map((o) => o.trim()).filter(Boolean);
   if (options.length < POLL_OPTIONS_MIN) errors.options = "optionsTooFew";
@@ -356,7 +370,15 @@ export function validatePollDraft(input: {
   )
     errors.duration = "durationRange";
 
-  if (errors.title || errors.options || errors.duration)
+  if (errors.title || errors.description || errors.options || errors.duration)
     return { ok: false, errors };
-  return { ok: true, draft: { title, options, durationMinutes: duration } };
+  return {
+    ok: true,
+    draft: {
+      title,
+      ...(description ? { description } : {}),
+      options,
+      durationMinutes: duration,
+    },
+  };
 }

@@ -640,7 +640,8 @@
         "fields": {
           "title": "標題",
           "options": "選項",
-          "duration": "時長"
+          "duration": "時長",
+          "description": "說明（選填）"
         },
         "optionPlaceholder": "選項 {n}",
         "addOption": "新增選項",
@@ -661,8 +662,10 @@
           "optionsTooMany": "最多 10 個選項。",
           "optionTooLong": "每個選項不能超過 100 字。",
           "optionDuplicate": "選項不能重複。",
-          "durationRange": "時長須在 1 分鐘到 7 天之間。"
-        }
+          "durationRange": "時長須在 1 分鐘到 7 天之間。",
+          "descriptionTooLong": "說明不能超過 2000 字。"
+        },
+        "descriptionHint": "純文字，最多 2000 字，支援換行。"
       },
       "confirm": {
         "closeTitle": "提前結束投票",

@@ -71,6 +71,12 @@ SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/utils/Sector bun run build:s
 **这份数据不许进公开仓库。** 它派生自商用 AIRAC 周期和不属于我们的扇区包 —— 这也
 是这个仓库必须保持私有的原因，详见 `AGENTS.md`。
 
+## 投票
+
+官方投票的标题必填，说明选填，最多 2000 个 Unicode 码点。
+说明按纯文本显示，保留换行，不渲染 HTML。
+先更新 can-api 的可空说明列，再部署 can-api，最后部署前端。
+
 ## 部署
 
 `deploy/k8s.yaml`，jyl-tyo 集群，namespace `can-portal`，Ingress 走

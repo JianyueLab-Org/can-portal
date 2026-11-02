@@ -55,6 +55,7 @@ import {
   Segmented,
   Select,
   Skeleton,
+  Textarea,
 } from "@jianyuelab-org/can-ui";
 
 const props = defineProps<{
@@ -82,6 +83,7 @@ const dialogError = ref<string | null>(null);
 // 发起官方投票。
 const editorOpen = ref(false);
 const draftTitle = ref("");
+const draftDescription = ref("");
 const draftOptions = ref<string[]>(["", ""]);
 const draftDuration = ref<string | number>(POLL_DURATION_DEFAULT);
 const fieldErrors = ref<PollDraftErrors>({});
@@ -171,6 +173,7 @@ watch(page, () => void load());
 
 function openCreate() {
   draftTitle.value = "";
+  draftDescription.value = "";
   draftOptions.value = ["", ""];
   draftDuration.value = POLL_DURATION_DEFAULT;
   fieldErrors.value = {};
@@ -191,6 +194,7 @@ async function save() {
   if (saving.value) return;
   const check = validatePollDraft({
     title: draftTitle.value,
+    description: draftDescription.value,
     options: draftOptions.value,
     durationMinutes: Number(draftDuration.value),
   });
@@ -436,6 +440,19 @@ onMounted(load);
           :maxlength="POLL_TITLE_MAX"
           required
         />
+        <Textarea
+          v-model="draftDescription"
+          name="poll-description"
+          :label="t('form.fields.description')"
+          :hint="t('form.descriptionHint')"
+          :error="
+            fieldErrors.description
+              ? t(`form.errors.${fieldErrors.description}`)
+              : undefined
+          "
+          :disabled="saving"
+          :rows="4"
+        />
         <fieldset>
           <legend class="text-sm font-medium text-ink">
             {{ t("form.fields.options") }}
@@ -509,6 +526,12 @@ onMounted(load);
     >
       <Skeleton v-if="detailLoading" variant="text" :count="5" />
       <div v-else-if="detail" class="space-y-6">
+        <p
+          v-if="detail.description"
+          class="text-sm leading-relaxed break-words whitespace-pre-line text-ink"
+        >
+          {{ detail.description }}
+        </p>
         <div class="space-y-1.5 text-sm">
           <p class="flex flex-wrap items-center gap-2">
             <Badge
