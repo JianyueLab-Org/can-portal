@@ -71,6 +71,7 @@ function summary(overrides: Partial<StaffPollSummary> = {}): StaffPollSummary {
 function poll(overrides: Partial<StaffPoll> = {}): StaffPoll {
   return {
     ...summary(),
+    description: null,
     options: [
       { number: 1, text: "ZGGG", votes: 2 },
       { number: 2, text: "ZSPD", votes: 1 },
@@ -82,6 +83,7 @@ function poll(overrides: Partial<StaffPoll> = {}): StaffPoll {
 function detail(overrides: Partial<StaffPollDetail> = {}): StaffPollDetail {
   return {
     ...summary(),
+    description: null,
     options: [
       { number: 1, text: "ZGGG", votes: 2, activeVotes: 1 },
       { number: 2, text: "ZSPD", votes: 1, activeVotes: 1 },
@@ -372,5 +374,62 @@ describe("polls.manage dictionary", () => {
       }
       expect(typeof getMessages(locale, "frame").pollsManage).toBe("string");
     }
+  });
+});
+
+describe("poll descriptions", () => {
+  const base = { title: "T", options: ["A", "B"], durationMinutes: 60 };
+
+  test("trims descriptions while preserving markup as plain text and line breaks", () => {
+    const result = validatePollDraft({
+      ...base,
+      description: "  <b>说明</b>\n第二行  ",
+    });
+    expect(result).toEqual({
+      ok: true,
+      draft: { ...base, description: "<b>说明</b>\n第二行" },
+    });
+  });
+
+  test("blank or omitted descriptions leave title-only creates unchanged", () => {
+    expect(validatePollDraft({ ...base, description: " \n " })).toEqual({
+      ok: true,
+      draft: base,
+    });
+    expect(validatePollDraft(base)).toEqual({ ok: true, draft: base });
+  });
+
+  test("the description limit counts Unicode code points", () => {
+    expect(
+      validatePollDraft({ ...base, description: "😀".repeat(2000) }).ok,
+    ).toBe(true);
+    expect(
+      validatePollDraft({ ...base, description: "😀".repeat(2001) }),
+    ).toEqual({
+      ok: false,
+      errors: { description: "descriptionTooLong" },
+    });
+  });
+});
+
+test("official create carries its optional plain-text description", async () => {
+  const draft = {
+    title: "T",
+    description: "说明\n第二行",
+    options: ["A", "B"],
+    durationMinutes: 60,
+  };
+  const calls = mockFetch(
+    201,
+    envelope({ poll: poll({ description: draft.description }) }),
+  );
+  const result = await createOfficialPoll(draft);
+  expect(calls[0].body).toEqual(draft);
+  expect(result.ok && result.data.description).toBe(draft.description);
+  await createOfficialPoll({ ...draft, description: "" });
+  expect(calls[1].body).toEqual({
+    title: "T",
+    options: ["A", "B"],
+    durationMinutes: 60,
   });
 });

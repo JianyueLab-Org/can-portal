@@ -640,7 +640,8 @@
         "fields": {
           "title": "タイトル",
           "options": "選択肢",
-          "duration": "期間"
+          "duration": "期間",
+          "description": "説明（任意）"
         },
         "optionPlaceholder": "選択肢 {n}",
         "addOption": "選択肢を追加",
@@ -661,8 +662,10 @@
           "optionsTooMany": "選択肢は最大 10 個です。",
           "optionTooLong": "各選択肢は 100 文字以内です。",
           "optionDuplicate": "選択肢が重複しています。",
-          "durationRange": "期間は 1 分から 7 日の間で指定してください。"
-        }
+          "durationRange": "期間は 1 分から 7 日の間で指定してください。",
+          "descriptionTooLong": "説明は 2000 文字以内にしてください。"
+        },
+        "descriptionHint": "2000 文字以内のプレーンテキスト。改行を使用できます。"
       },
       "confirm": {
         "closeTitle": "投票を早期終了",
