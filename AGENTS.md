@@ -11,6 +11,10 @@ Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 
 `/` 没有页面，302 到当前等级在侧栏里看得见的第一页，由 `src/lib/nav.ts` 的
 `homePath()` 按侧栏同一份数据算出；没有可见页面时改写到 `/denied`。没有卡片首页。
 
+Unsafe proxy requests require `Origin` to equal `PUBLIC_ORIGIN`.
+Missing, `null`, and foreign origins return 403 `bad_origin` before forwarding.
+Safe requests and direct server-to-server can-api calls do not require Origin.
+
 | 这里                | 原来在 can-web      | 岛屿                    | 门槛 |
 | ------------------- | ------------------- | ----------------------- | ---- |
 | `/`                 | （新）              | 无页面，302             | 8    |
