@@ -55,15 +55,7 @@ spec:
       labels:
         app: can-portal
     spec:
-      # **包的可见性不跟着仓库变。** can-controller 的清单里记着这一点：一个在
-      # 仓库还私有时第一次推上去的 GHCR 包会继承「私有」，之后把仓库改公开**不会**
-      # 改它，而且只能在网页上手动改（REST API 没有那个端点）。
-      #
-      # 所以这几行留着，直到有人去网页上把 ghcr.io/jianyuelab-org/can-portal 这个
-      # 包改成 public。改完就可以删掉它们 —— 顺序反了会让全站拉不起来（症状是
-      # ImagePullBackOff，在 `kubectl get pods` 上只表现为「起不来」）。
-      imagePullSecrets:
-        - name: ghcr-pull
+      # 包是公开的，不声明 imagePullSecrets：凭据失效时 GHCR 返回 403，不会退回匿名拉取。
       containers:
         - name: app
           # 按 sha 钉住，别用 :latest —— 那个标签没有回滚故事：没有更早的标签
