@@ -29,9 +29,14 @@ import { DENIED_PATH, noAccessReason } from "@/lib/access";
  *   着把 `<!doctype html>` 当 JSON 解析。
  * - `/healthz` 是探活，理由写在那个文件里：它必须能在 can-api 挂掉时照样回
  *   200，否则上游一抖，kubelet 就会把这边的 Pod 一起滚掉。
+ * - `/health` 是给外部监控的依赖检查，不需要会话。
  */
 function isUnguarded(pathname: string): boolean {
-  return pathname.startsWith("/api/") || pathname === "/healthz";
+  return (
+    pathname.startsWith("/api/") ||
+    pathname === "/healthz" ||
+    pathname === "/health"
+  );
 }
 
 export const onRequest = defineMiddleware(async (context, next) => {

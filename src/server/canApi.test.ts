@@ -254,7 +254,7 @@ describe("existing middleware guards", () => {
     expectSecurityHeaders(result.response);
   });
 
-  for (const path of ["/healthz", "/api/v1/super/prizes"]) {
+  for (const path of ["/healthz", "/health", "/api/v1/super/prizes"]) {
     test(`${path} still bypasses page session resolution`, async () => {
       const result = await visit(path);
       expect(result.response.status).toBe(200);
