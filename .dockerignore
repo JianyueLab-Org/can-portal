@@ -1,4 +1,4 @@
-# Keep manifests, .npmrc, source, public assets, language, scripts and build configs.
+# Keep manifests, source, public assets, language, scripts, build configs and deploy.
 # Dependencies and build output are recreated inside the image.
 **/node_modules
 **/dist
@@ -13,11 +13,8 @@
 **/.idea
 **/.DS_Store
 **/.env*
+**/.npmrc
 **/npm-debug.log*
 
 # Licensed navigation data is not a frontend build input.
 **/navdata
-
-Dockerfile
-.dockerignore
-deploy

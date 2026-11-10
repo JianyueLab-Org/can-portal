@@ -79,9 +79,10 @@ SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/utils/Sector bun run build:s
 
 ## 部署
 
-`.dockerignore` 从构建上下文排除所有层级的 `.env*`、本地依赖、构建产物、Git 元数据和
-`navdata/`（包括 `data/navdata/`）。`.npmrc`、源码（含 SweatBox 性能表）、`public/`、
-词典和脚本保留；运行配置由容器环境变量提供，包令牌使用 BuildKit 的 `github_token` secret。
+`.dockerignore` 从构建上下文排除所有层级的 `.env*`、`.npmrc`、本地依赖、构建产物、Git 元数据和
+`navdata/`（包括 `data/navdata/`）。源码（含 SweatBox 性能表）、`public/`、词典、脚本、`Dockerfile`、`.dockerignore` 和 `deploy/` 保留。
+构建阶段生成无凭据的 `.npmrc`，其中令牌为字面的 `${GITHUB_TOKEN}` 占位符。
+运行配置由容器环境变量提供，包令牌仅通过 BuildKit 的 `github_token` secret 传入；运行镜像不复制 `.npmrc`。
 
 `deploy/k8s.yaml`，jyl-tyo 集群，namespace `can-portal`，Ingress 走
 `cloudflare-tunnel`。推 `main` 就部署（`.github/workflows/deploy.yml`）。
