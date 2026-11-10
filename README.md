@@ -84,6 +84,12 @@ SECTOR_REPO=~/Documents/Dev/CeruleanAviationNetwork/utils/Sector bun run build:s
 构建阶段生成无凭据的 `.npmrc`，其中令牌为字面的 `${GITHUB_TOKEN}` 占位符。
 运行配置由容器环境变量提供，包令牌仅通过 BuildKit 的 `github_token` secret 传入；运行镜像不复制 `.npmrc`。
 
+本地构建须先设置具有 `read:packages` 权限的 `GITHUB_TOKEN`，并显式传入 secret：
+
+```bash
+docker build --secret id=github_token,env=GITHUB_TOKEN -t can-portal .
+```
+
 `deploy/k8s.yaml`，jyl-tyo 集群，namespace `can-portal`，Ingress 走
 `cloudflare-tunnel`。推 `main` 就部署（`.github/workflows/deploy.yml`）。
 
