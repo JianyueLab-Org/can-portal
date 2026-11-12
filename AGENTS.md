@@ -126,6 +126,8 @@ ZGZU 的教员看得见花名册，但改不动 ZBPE 的人，那道判断这个
 里的 `notifications/{member|broadcast}/{id}`（PATCH）。测试在
 `src/lib/proxyAllowList.test.ts`。
 
+反代响应逐条保留上游的 `Set-Cookie`，不合并或按逗号拆分；`Expires` 中的逗号原样保留。
+
 ## SweatBox 的参考数据在 can-db，不在这个仓库
 
 `/instr/sweatbox` 仍然一个 can-api 调用都没有，但它读的东西变了：从前是
