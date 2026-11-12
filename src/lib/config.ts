@@ -62,6 +62,15 @@ export const CAN_DB_ORIGIN =
   clean(process.env.CAN_DB_ORIGIN) || "http://127.0.0.1:8080";
 
 /**
+ * can-va-api 的 origin —— 虚拟航空平台。`/super/airlines` 的数据全部来自它。
+ *
+ * 服务端专用：只有反代（`src/pages/api/v1/[...path].ts`）读它，岛屿打的是本站
+ * 的 `/api/v1/va/staff/*`。兜底成本地开发地址，理由同 `CAN_DB_ORIGIN`。
+ */
+export const CAN_VA_API_ORIGIN =
+  clean(process.env.CAN_VA_API_ORIGIN) || "http://127.0.0.1:8090";
+
+/**
  * 本站自己的 origin，写操作的 Origin 头要和它比对。
  *
  * 必须是**显式配置**的值，不能从 `Host` 头推：这个站跑在 TLS 终止的反代后面，

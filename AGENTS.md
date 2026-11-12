@@ -6,7 +6,7 @@
 
 **教员与管理门户** —— `portal.ceruleanavi.net`，Cerulean Aviation Network 的第七个
 Web 组件、第六个 can-api 卫星站。它是从 can-web 的 `/instr/*` 和 `/super/*` 整段搬
-出来的，搬的是**七个页面**；加上这里新写的，一共十二个页面。
+出来的，搬的是**七个页面**。虚拟航空平台管理位于 `/super/airlines`。
 
 `/` 没有页面，302 到当前等级在侧栏里看得见的第一页，由 `src/lib/nav.ts` 的
 `homePath()` 按侧栏同一份数据算出；没有可见页面时改写到 `/denied`。没有卡片首页。
@@ -29,6 +29,7 @@ Safe requests and direct server-to-server can-api calls do not require Origin.
 | `/super/feedback`   | `/super/feedback`   | `ManageFeedback.vue`    | 11   |
 | `/super/promotions` | `/super/promotions` | `SuperPromotions.vue`   | 11   |
 | `/super/servers`    | （新）              | `ManageServers.vue`     | 11   |
+| `/super/airlines`   | （新）              | `ManageAirlines.vue`    | 11   |
 | `/super/aip-access` | （新）              | `AipAccess.vue`         | 12   |
 | `/super/developers` | （新）              | `Developers.vue`        | 12   |
 
@@ -40,7 +41,7 @@ Safe requests and direct server-to-server can-api calls do not require Origin.
 
 ## 四条不变量
 
-**没有数据库口令。** 一条都没有，将来也不该有。所有数据都来自 can-api。
+**没有数据库口令。** 成员数据来自 can-api，虚拟航空数据来自 can-va-api。
 
 **没有 Secret，一个都没有。** 和 can-efb / can-controller 一样，比 can-dev 更严：
 这个站不参与 OAuth，也不签会话。会话是 can-api 签在**父域** `.ceruleanavi.net`
@@ -118,13 +119,28 @@ ZGZU 的教员看得见花名册，但改不动 ZBPE 的人，那道判断这个
 建一遍当年拆掉的网关，而且是在一个专门用来放高权限操作的域名上。**加一条之前先写
 清楚谁在用它**，那个 `who` 字段不是装饰：没有它，以后没人敢删任何一条。
 
-鉴权不在这一层判，理由写在那个文件里。注意中间件对 `/api/` 前缀是放行的，所以一
-个不够格的成员理论上可以直接打这些路径 —— 他会拿到 can-api 的 403，这正是设计。
+can-api 路由的权限由上游判。中间件对 `/api/` 前缀放行。
+can-va-api 管理反代先校验会话和 SUP 评级，上游仍独立鉴权。
 
 通知铃（`Frame.vue` 的 `notifications`）走同一个反代：`ALLOW_LIST` 里的
 `notifications`、`notifications/unread`、`notifications/read-all`，`ALLOW_PATTERNS`
 里的 `notifications/{member|broadcast}/{id}`（PATCH）。测试在
 `src/lib/proxyAllowList.test.ts`。
+
+**第二个上游：can-va-api。** `ALLOW_LIST` / `ALLOW_PATTERNS` 里带 `upstream: "va"` 的条目转发到
+`CAN_VA_API_ORIGIN`（`src/lib/config.ts`），其余仍转 can-api。
+只转明确列出的 `va/staff/*` 和 `GET va/airports/{ICAO}`，供 `/super/airlines` 使用。
+页面和 VA 反代要求 rating >= 11。VA 反代拒绝 Authorization，转发成员 cookie。
+写请求先校验 `PUBLIC_ORIGIN`，再向 can-va-api 原样转发 Origin。
+can-va-api 的 `ALLOWED_ORIGINS` 必须包含门户地址，本地为 `http://localhost:4328`。
+机型支持新建、编辑、启用和停用；ICAO 代码不可更改。金额表单用信用点，API 用整数最小单位。
+机场等级支持 1–5 级覆盖，重置发送 `{tier: null}`。机场查询仅使用 OurAirports 数据。
+`src/lib/vaProxy.test.ts` 覆盖会话、评级、Origin 和上游转发。
+`src/lib/vaCatalogue.test.ts` 覆盖金额转换、机型校验和机场覆盖重置。
+
+can-ui 保留当前正式依赖 `27.9.0`，不使用本地 tarball 或旧分支替换新版组件。
+开发联调可临时链接已集成的 can-ui 工作树。发布门户前需先发布合并 VA 注册表的 can-ui，再更新正式依赖。
+本分支不执行部署或发布。
 
 ## SweatBox 的参考数据在 can-db，不在这个仓库
 
@@ -246,6 +262,8 @@ Astro 两种都认。
 
 `polls.manage` 也只有这个站有：can-web 的 `polls` 命名空间是成员端，没有
 `manage`。改它直接改这里。
+
+`vaAirlines` 也只有这个站有（`/super/airlines`，虚拟航空平台管理）。改它直接改这里。
 
 ## 和 can-web 共享的那些文件
 

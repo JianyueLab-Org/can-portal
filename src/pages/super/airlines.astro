@@ -1,0 +1,17 @@
+---
+import AppLayout from "@/layouts/AppLayout.astro";
+import ManageAirlines from "@/components/ManageAirlines.vue";
+import { getLocale, getMessages, useTranslations } from "@/lib/i18n";
+
+/**
+ * 虚拟航空平台管理 —— SUP/ADM（`/super/*` 前缀，中间件按 11 级判）。
+ * 数据来自 can-va-api，经本站反代的 `va/staff/*` 条目。
+ */
+const locale = getLocale(Astro.cookies);
+const messages = getMessages(locale, "vaAirlines");
+const tf = useTranslations(locale, "frame");
+---
+
+<AppLayout title={tf("airlinesManage")}>
+  <ManageAirlines messages={messages} client:load />
+</AppLayout>

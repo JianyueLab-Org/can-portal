@@ -85,6 +85,13 @@ const SUP: Array<{ key: string; href: string; icon: IconName }> = [
     href: "/super/promotions",
     icon: "checkCircle",
   },
+  // 虚拟航空平台管理：开航审批、处置航空公司、经济参数。can-va-api 的 staff
+  // 路由按 rating ≥ 11 判，和这一组同档。
+  {
+    key: "airlinesManage",
+    href: "/super/airlines",
+    icon: "buildingOffice",
+  },
 ];
 
 /** ADM 那三条 —— 等级 12。都是「决定别人能做什么」，或看他们做过什么。 */

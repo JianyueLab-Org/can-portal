@@ -1,5 +1,7 @@
 import type { APIRoute } from "astro";
-import { CAN_API_ORIGIN, origin } from "@/lib/config";
+import { CAN_API_ORIGIN, CAN_VA_API_ORIGIN, origin } from "@/lib/config";
+import { resolveSession } from "@/server/canApi";
+import { RATING_SUP } from "@jianyuelab-org/can-ui/sites";
 
 export const prerender = false;
 
@@ -20,7 +22,7 @@ export const prerender = false;
  * 作。一个通配的 `/api/*` 转发等于在这里重建一遍当年拆掉的网关，而且是在一个专
  * 门用来放高权限操作的域名上。每一条都写清楚谁在用。
  *
- * 鉴权本身**不在这里判**。can-api 每条路由自己有守卫（`WithSuper` / `WithSup`
+ * can-api 的鉴权不在这里判。每条路由自己有守卫（`WithSuper` / `WithSup`
  * 加上每个 handler 内部按 division 的那一层），在这里再抄一份只会有两份可能不一
  * 致的判断 —— 而**宽的那一份会先被人发现**。这一层只管三件事：这个路径允许被转
  * 发吗、这个方法允许吗、写操作的 Origin 对吗。
@@ -30,6 +32,9 @@ export const prerender = false;
  * `/api/` 前缀是放行的，所以一个不够格的成员理论上可以直接打这些路径 —— 他会拿
  * 到 can-api 的 403，这正是设计：如果这里也判一次 rating，那么哪天两处数字不一
  * 致，症状会是一个「界面能开、接口 404」的页面，比一个干脆的 403 难查得多。
+ *
+ * VA 管理是单独的上游：显式条目另行要求成员会话和 SUP 评级，并拒绝 Authorization。
+ * can-va-api 在每条 staff 路由上再次校验权限；本站不转发任何 internal-key 端点。
  */
 
 interface Allowed {
@@ -37,6 +42,8 @@ interface Allowed {
   methods: string[];
   /** 谁在用它 —— 没有这一句，以后没人敢删任何一条。 */
   who: string;
+  /** 转发到哪。缺省是 can-api；`va` 是 can-va-api（`CAN_VA_API_ORIGIN`）。 */
+  upstream?: "va";
 }
 
 /** 精确匹配的路径。 */
@@ -140,6 +147,38 @@ const ALLOW_LIST: Record<string, Allowed> = {
   // 管理操作时间线。只转发精确的 GET：带 id、尾斜杠都不在这张表上。
   "super/audit": { methods: ["GET"], who: "AuditLog.vue 管理操作时间线" },
 
+  // 虚拟航空平台管理（`/super/airlines`）。转发到 can-va-api，只转 staff 这一组；
+  // can-va-api 那边按会话判 rating ≥ 11。
+  "va/staff/aircraft-types": {
+    methods: ["GET", "POST"],
+    who: "ManageAirlines.vue aircraft catalogue",
+    upstream: "va",
+  },
+  "va/staff/applications": {
+    methods: ["GET"],
+    who: "ManageAirlines.vue 待审申请",
+    upstream: "va",
+  },
+  "va/staff/airlines": {
+    methods: ["GET"],
+    who: "ManageAirlines.vue 航空公司列表",
+    upstream: "va",
+  },
+  "va/staff/params": {
+    methods: ["GET"],
+    who: "ManageAirlines.vue 经济参数",
+    upstream: "va",
+  },
+  "va/staff/params/log": {
+    methods: ["GET"],
+    who: "ManageAirlines.vue 参数变更记录",
+    upstream: "va",
+  },
+  "va/staff/airports/import": {
+    methods: ["POST"],
+    who: "ManageAirlines.vue 手动触发机场导入",
+    upstream: "va",
+  },
   // 通知铃（`Frame.vue` 的 `notifications`）。标记一条已读在下面的模式里。
   notifications: { methods: ["GET"], who: "CanFrame 通知铃：列表" },
   "notifications/unread": { methods: ["GET"], who: "CanFrame 通知铃：未读数" },
@@ -159,6 +198,24 @@ const ALLOW_LIST: Record<string, Allowed> = {
  * 顺序上精确表先查，这一点是**必须**的而不是顺手 —— 见 `lookup()`。
  */
 const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
+  {
+    test: /^va\/staff\/aircraft-types\/[A-Z0-9]{2,4}$/,
+    methods: ["PATCH"],
+    who: "ManageAirlines.vue aircraft catalogue edits and activation",
+    upstream: "va",
+  },
+  {
+    test: /^va\/staff\/airports\/[A-Z]{4}\/tier$/,
+    methods: ["PUT"],
+    who: "ManageAirlines.vue airport tier override and reset",
+    upstream: "va",
+  },
+  {
+    test: /^va\/airports\/[A-Z]{4}$/,
+    methods: ["GET"],
+    who: "ManageAirlines.vue airport effective tier lookup",
+    upstream: "va",
+  },
   {
     // SuperPromote 读调用者自己的资料，为的是知道自己的等级（目标等级以它封顶）。
     //
@@ -252,6 +309,31 @@ const ALLOW_PATTERNS: Array<Allowed & { test: RegExp }> = [
     who: "Developers.vue 授予 / 撤销",
   },
   {
+    test: /^va\/staff\/applications\/[0-9]{1,20}\/(approve|reject)$/,
+    methods: ["POST"],
+    who: "ManageAirlines.vue 批准 / 驳回申请",
+    upstream: "va",
+  },
+  {
+    test: /^va\/staff\/airlines\/[0-9]{1,20}\/(suspend|reinstate|close|adjustments)$/,
+    methods: ["POST"],
+    who: "ManageAirlines.vue 暂停 / 恢复 / 关闭 / 调账",
+    upstream: "va",
+  },
+  {
+    test: /^va\/staff\/airlines\/[0-9]{1,20}\/owner$/,
+    methods: ["PUT"],
+    who: "ManageAirlines.vue 指定所有者",
+    upstream: "va",
+  },
+  {
+    // `params/log` 是精确条目，先查到，所以 PUT 它是 405 而不是被这里当成参数名。
+    test: /^va\/staff\/params\/[a-z][a-z0-9_]{0,63}$/,
+    methods: ["PUT"],
+    who: "ManageAirlines.vue 改一个经济参数",
+    upstream: "va",
+  },
+  {
     test: /^notifications\/(member|broadcast)\/[0-9]{1,20}$/,
     methods: ["PATCH"],
     who: "CanFrame 通知铃：标记一条已读",
@@ -324,13 +406,52 @@ const handler: APIRoute = async (context) => {
     }
   }
 
-  const target = CAN_API_ORIGIN + "/api/v1/" + rest + context.url.search;
+  // VA management is cookie-only and SUP-only even when called outside its page.
+  if (entry.upstream === "va") {
+    if (context.request.headers.has("authorization")) {
+      return Response.json(
+        {
+          error: "insufficient_scope",
+          message: "Use a member session cookie.",
+        },
+        { status: 403 },
+      );
+    }
+    const session = await resolveSession(context);
+    if (session.state === "unavailable") {
+      return Response.json(
+        { error: "unreachable", message: "Identity service unavailable." },
+        { status: 503 },
+      );
+    }
+    if (session.state === "signed-out") {
+      return Response.json(
+        { error: "unauthenticated", message: "Sign in required." },
+        { status: 401 },
+      );
+    }
+    if (session.user.rating < RATING_SUP) {
+      return Response.json(
+        { error: "forbidden", message: "SUP rating required." },
+        { status: 403 },
+      );
+    }
+  }
+
+  const base = entry.upstream === "va" ? CAN_VA_API_ORIGIN : CAN_API_ORIGIN;
+  const target = base + "/api/v1/" + rest + context.url.search;
 
   const headers = new Headers();
   const cookie = context.request.headers.get("cookie");
   if (cookie) headers.set("cookie", cookie);
   const contentType = context.request.headers.get("content-type");
   if (contentType) headers.set("content-type", contentType);
+  // can-va-api 自己按 ALLOWED_ORIGINS 判写操作，所以把浏览器的 Origin 原样带过
+  // 去（上面已经确认它等于本站）。can-api 那一路不带，行为不变。
+  const sentOrigin = context.request.headers.get("origin");
+  if (entry.upstream === "va" && UNSAFE.has(method) && sentOrigin) {
+    headers.set("origin", sentOrigin);
+  }
 
   let upstream: Response;
   try {
@@ -346,9 +467,10 @@ const handler: APIRoute = async (context) => {
       signal: AbortSignal.timeout(15_000),
     } as RequestInit);
   } catch (error) {
-    console.error(`can-api ${rest} unreachable:`, error);
+    const name = entry.upstream === "va" ? "can-va-api" : "can-api";
+    console.error(`${name} ${rest} unreachable:`, error);
     return Response.json(
-      { error: "unreachable", message: "无法连接到 can-api，请稍后再试。" },
+      { error: "unreachable", message: `无法连接到 ${name}，请稍后再试。` },
       { status: 502 },
     );
   }
@@ -368,4 +490,5 @@ const handler: APIRoute = async (context) => {
 export const GET = handler;
 export const POST = handler;
 export const PATCH = handler;
+export const PUT = handler;
 export const DELETE = handler;

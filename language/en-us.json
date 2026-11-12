@@ -1,5 +1,6 @@
 {
   "frame": {
+    "airlinesManage": "Airline administration",
     "instructors": {
       "title": "Instructors",
       "items": {
@@ -1222,6 +1223,178 @@
     "errors": {
       "generic": "The audit log could not be read.",
       "forbidden": "Only an administrator can view the audit log."
+    }
+  },
+  "vaAirlines": {
+    "title": "Airlines",
+    "description": "Review airline applications, act on airlines, and tune economy parameters. Airlines are addressed by number: a closed airline releases its code.",
+    "close": "Close",
+    "keep": "Cancel",
+    "confirm": "Confirm",
+    "tabs": {
+      "applications": "Applications",
+      "airlines": "Airlines",
+      "params": "Parameters",
+      "import": "Airport data",
+      "catalogue": "Aircraft types"
+    },
+    "applications": {
+      "empty": "No pending applications",
+      "columns": {
+        "airline": "Airline",
+        "applicant": "Applicant",
+        "hub": "Hub",
+        "createdAt": "Submitted",
+        "actions": ""
+      },
+      "approve": "Approve",
+      "reject": "Reject",
+      "approved": "Approved. {icao} is open.",
+      "rejected": "Rejected the {icao} application",
+      "rejectTitle": "Reject the {icao} application",
+      "reasonHelp": "The applicant is notified of the reason."
+    },
+    "airlines": {
+      "empty": "No matching airlines",
+      "filter": {
+        "all": "All",
+        "active": "Active",
+        "suspended": "Suspended",
+        "closed": "Closed"
+      },
+      "columns": {
+        "airline": "Airline",
+        "owner": "Owner",
+        "status": "Status",
+        "members": "Members",
+        "balance": "Balance",
+        "actions": ""
+      },
+      "noOwner": "None",
+      "negativeSince": "Negative since {at}",
+      "actions": {
+        "suspend": "Suspend",
+        "reinstate": "Reinstate",
+        "close": "Close",
+        "owner": "Set owner",
+        "adjust": "Adjust"
+      },
+      "dialog": {
+        "suspend": "Suspend {icao}",
+        "close": "Close {icao}",
+        "owner": "Set the owner of {icao}",
+        "adjust": "Adjust the balance of {icao}"
+      },
+      "reasonLabel": "Reason",
+      "closeWarning": "Closing cannot be undone. The airline code is released.",
+      "ownerLabel": "CAN ID",
+      "ownerHelp": "A non-member becomes an active member.",
+      "amountLabel": "Amount (credits)",
+      "amountHelp": "Positive credits, negative debits, up to two decimals.",
+      "noteLabel": "Note",
+      "done": {
+        "suspend": "Suspended {icao}",
+        "reinstate": "Reinstated {icao}",
+        "close": "Closed {icao}",
+        "owner": "{icao} is now owned by {owner}",
+        "adjust": "Posted {amount} to {icao}"
+      }
+    },
+    "params": {
+      "empty": "No parameters",
+      "columns": {
+        "key": "Parameter",
+        "value": "Value",
+        "actions": ""
+      },
+      "edit": "Edit",
+      "save": "Save",
+      "cancel": "Cancel",
+      "saved": "{key} set to {value}",
+      "help": "Changes apply to later settlements and are logged.",
+      "log": "Change log",
+      "logEmpty": "No changes yet",
+      "logColumns": {
+        "key": "Parameter",
+        "change": "Change",
+        "actor": "By",
+        "at": "At"
+      },
+      "more": "Load more"
+    },
+    "import": {
+      "title": "Airport data import",
+      "help": "Imports from OurAirports every Monday at 01:00 UTC. A file that fails to parse or holds fewer than 90% of current rows leaves the data unchanged.",
+      "action": "Import now",
+      "started": "Import started in the background."
+    },
+    "errors": {
+      "load": "Could not load. Refresh to retry.",
+      "reasonRequired": "Enter a reason.",
+      "usernameRequired": "Enter a CAN ID.",
+      "amount": "Enter a non-zero amount with up to two decimals.",
+      "noteRequired": "Enter a note.",
+      "value": "Enter a number.",
+      "unauthenticated": "Your session has expired. Sign in again.",
+      "forbidden": "Requires SUP (rating 11) or above.",
+      "badOrigin": "Cross-site request refused.",
+      "notFound": "Not found. Someone may have handled it already.",
+      "badRequest": "Invalid request. Check the form.",
+      "codeTaken": "That airline code is already taken.",
+      "airportUnavailable": "The proposed hub airport is withdrawn; the application cannot be approved.",
+      "notPending": "This application has already been handled.",
+      "notActive": "Only active airlines can be suspended.",
+      "notSuspended": "Only suspended airlines can be reinstated.",
+      "noOwner": "Set an owner before reinstating.",
+      "alreadyClosed": "This airline is already closed.",
+      "importRunning": "An import is already running.",
+      "network": "Network error. Try again later.",
+      "unreachable": "The virtual airline service is unreachable. Try again later.",
+      "notAllowed": "This endpoint is not on this site's proxy allow-list.",
+      "actionFailed": "The action failed. Try again later.",
+      "insufficientScope": "Use a signed-in member session, not an OAuth bearer token.",
+      "bookingsActive": "Cancel active bookings before closing the airline.",
+      "typeExists": "That aircraft type code already exists."
+    },
+    "catalogue": {
+      "help": "Maintain the aircraft catalogue. Deactivation stops new acquisitions; existing aircraft and historical reports remain unchanged. Monetary inputs are credits, with up to two decimals.",
+      "active": "Active",
+      "inactive": "Inactive",
+      "name": "Name",
+      "capacity": "Seats / cargo",
+      "price": "Purchase price",
+      "state": "State",
+      "empty": "No aircraft types",
+      "create": "Create aircraft type",
+      "edit": "Edit aircraft type",
+      "icao": "ICAO type (immutable)",
+      "activate": "Activate",
+      "deactivate": "Deactivate",
+      "saved": "Saved {icao}.",
+      "invalidType": "Check the type code (2–4 letters or digits), name and non-negative numbers. Seats, cargo and range must be whole numbers; cruise speed and range must be positive. Money allows up to two decimals.",
+      "fields": {
+        "seats": "Seats",
+        "cargoKg": "Cargo capacity (kg)",
+        "price": "Purchase price (credits)",
+        "leasePerDay": "Daily lease (credits)",
+        "burnKgPerHr": "Fuel burn (kg/h)",
+        "cruiseKt": "Cruise speed (kt)",
+        "rangeNm": "Range (NM)",
+        "maintPerHr": "Maintenance (credits/h)"
+      }
+    },
+    "tiers": {
+      "title": "Airport tier overrides",
+      "help": "Default tiers come from OurAirports airport type and scheduled service. Override with tier 1–5; reset removes the override and restores the calculated tier. Tier 5 is staff-only.",
+      "airport": "Airport ICAO",
+      "lookup": "Look up",
+      "current": "Effective tier: {tier}",
+      "tier": "Override tier",
+      "save": "Apply override",
+      "reset": "Reset to default",
+      "saved": "Airport tier override saved.",
+      "resetDone": "Override removed; default tier restored.",
+      "invalidTier": "Enter a four-letter airport ICAO and a whole tier from 1 to 5."
     }
   }
 }
